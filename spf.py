@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.2  2005/06/21 16:46:09  kitterma
+# Updated definition of SPF, added reference to the sourceforge project site, and deleted obsolete Microsoft Caller ID for Email XML translation routine
+#
 # Revision 1.1.1.1  2005/06/20 19:57:32  customdesigned
 # Move Python SPF to its own module.
 #
@@ -198,7 +201,9 @@ except NameError:
 DEFAULT_SPF = 'v=spf1 a/24 mx/24 ptr'
 
 # maximum DNS lookups allowed
-MAX_LOOKUP = 100
+MAX_LOOKUP = 10 #draft-schlitt-spf-classic-02 Para 10.1
+MAX_MX = 10 #draft-schlitt-spf-classic-02 Para 10.1
+MAX_PTR = 10 #draft-schlitt-spf-classic-02 Para 10.1
 MAX_RECURSION = 20
 
 class TempError(Exception):
@@ -357,6 +362,9 @@ class query(object):
 				exps['fail'] = exps['unknown'] = \
 					self.get_explanation(m[1])
 			elif m[0] == 'redirect':
+                                self.lookups = self.lookups + 1
+                                if self.lookups > MAX_LOOKUP:
+                                    raise PermError('To many DNS lookups')
 				redirect = self.expand(m[1])
 			elif m[0] == 'default':
 				# default=- is the same as default=fail
@@ -381,6 +389,9 @@ class query(object):
 			    result = 'pass'
 
 		    if m in ['a', 'mx', 'ptr', 'prt', 'exists', 'include']:
+                            self.lookups = self.lookups + 1
+                            if self.lookups > MAX_LOOKUP:
+                                raise PermError('To many DNS lookups')
 			    arg = self.expand(arg)
 
 		    if m == 'include':
@@ -610,15 +621,22 @@ class query(object):
 		pre: qtype in ['A', 'AAAA', 'MX', 'PTR', 'TXT', 'SPF']
 		post: isinstance(__return__, types.ListType)
 		"""
-		self.lookups += 1
-		if self.lookups > MAX_LOOKUP:
-			raise PermError('Too many DNS lookups')
 		result = self.cache.get( (name, qtype) )
 		cname = None
 		if not result:
+                        mxcount = 0
+                        ptrcount = 0
 			req = DNS.DnsRequest(name, qtype=qtype)
 			resp = req.req()
 			for a in resp.answers:
+                                if a['typename'] == 'MX':
+                                    mxcount = mxcount + 1
+                                    if mxcount > MAX_MX:
+                                        raise PermError('To many MX lookups')
+                                if a['typename'] == 'PTR':
+                                    ptrcount = ptrcount + 1
+                                    if ptrcount > MAX_PTR:
+                                        raise PermError('To many PTR lookups')
 				# key k: ('wayforward.net', 'A'), value v
 				k, v = (a['name'], a['typename']), a['data']
 				if k == (name, 'CNAME'):
