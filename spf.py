@@ -47,6 +47,13 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.3  2005/06/22 00:08:24  kitterma
+# Changes from draft-mengwong overall DNS lookup and recursion
+# depth limits to draft-schlitt-spf-classic-02 DNS lookup, MX lookup, and
+# PTR lookup limits.  Recursion code is still present and functioning, but
+# it should be impossible to trip it.  Committing this change now because odds
+# of breakage when I delete the recursion code may be high.
+#
 # Revision 1.2  2005/06/21 16:46:09  kitterma
 # Updated definition of SPF, added reference to the sourceforge project site, and deleted obsolete Microsoft Caller ID for Email XML translation routine
 #
@@ -364,7 +371,7 @@ class query(object):
 			elif m[0] == 'redirect':
                                 self.lookups = self.lookups + 1
                                 if self.lookups > MAX_LOOKUP:
-                                    raise PermError('To many DNS lookups')
+                                    raise PermError('Too many DNS lookups')
 				redirect = self.expand(m[1])
 			elif m[0] == 'default':
 				# default=- is the same as default=fail
@@ -391,7 +398,7 @@ class query(object):
 		    if m in ['a', 'mx', 'ptr', 'prt', 'exists', 'include']:
                             self.lookups = self.lookups + 1
                             if self.lookups > MAX_LOOKUP:
-                                raise PermError('To many DNS lookups')
+                                raise PermError('Too many DNS lookups')
 			    arg = self.expand(arg)
 
 		    if m == 'include':
@@ -632,11 +639,11 @@ class query(object):
                                 if a['typename'] == 'MX':
                                     mxcount = mxcount + 1
                                     if mxcount > MAX_MX:
-                                        raise PermError('To many MX lookups')
+                                        raise PermError('Too many MX lookups')
                                 if a['typename'] == 'PTR':
                                     ptrcount = ptrcount + 1
                                     if ptrcount > MAX_PTR:
-                                        raise PermError('To many PTR lookups')
+                                        raise PermError('Too many PTR lookups')
 				# key k: ('wayforward.net', 'A'), value v
 				k, v = (a['name'], a['typename']), a['data']
 				if k == (name, 'CNAME'):
