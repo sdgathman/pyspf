@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.4  2005/06/22 15:54:54  customdesigned
+# Correct spelling.
+#
 # Revision 1.3  2005/06/22 00:08:24  kitterma
 # Changes from draft-mengwong overall DNS lookup and recursion
 # depth limits to draft-schlitt-spf-classic-02 DNS lookup, MX lookup, and
@@ -218,10 +221,11 @@ class TempError(Exception):
 
 class PermError(Exception):
 	"Permanent SPF error"
-	def __init__(self,msg,mech=None):
+	def __init__(self,msg,mech=None,ext=None):
 	  Exception.__init__(self,msg,mech)
 	  self.msg = msg
 	  self.mech = mech
+	  self.ext = ext
 	def __str__(self):
 	  if self.mech:
 	    return '%s: %s'%(self.msg,self.mech)
@@ -262,7 +266,7 @@ class query(object):
 
 	Also keeps cache: DNS cache.
 	"""
-	def __init__(self, i, s, h,local=None,receiver=None):
+	def __init__(self, i, s, h,local=None,receiver=None,strict=True):
 		self.i, self.s, self.h = i, s, h
 		if not s and h:
 		  self.s = 'postmaster@' + h
@@ -277,6 +281,7 @@ class query(object):
 		self.exps = dict(EXPLANATIONS)
 		self.local = local	# local policy
     		self.lookups = 0
+		self.strict = strict
 
 	def set_default_explanation(self,exp):
 		exps = self.exps
@@ -302,6 +307,11 @@ class query(object):
 	result in ['fail', 'softfail', 'neutral' 'unknown', 'pass', 'error']
 		"""
 		self.mech = []		# unknown mechanisms
+		# If not strict, certain PermErrors (mispelled
+		# mechanisms, strict processing limits exceeded)
+		# will continue processing.  However, the exception
+		# that strict processing would raise is saved here
+		self.perm_error = None
 		if self.i.startswith('127.'):
 			return ('pass', 250, 'local connections always pass')
 
@@ -311,7 +321,12 @@ class query(object):
 			    spf = self.dns_spf(self.d)
 			if self.local and spf:
 			    spf += ' ' + self.local
-			return self.check1(spf, self.d, 0)
+			rc = self.check1(spf, self.d, 0)
+			if self.perm_error:
+			  # extended processing succeeded, but strict failed
+			  self.perm_error.ext = rc
+			  raise self.perm_error
+			return rc
 		except DNS.DNSError,x:
 			return ('error', 450, 'SPF DNS Error: ' + str(x))
 		except TempError,x:
@@ -321,8 +336,8 @@ class query(object):
 		    self.mech.append(x.mech)
 		    # Pre-Lentczner draft treats this as an unknown result
 		    # and equivalent to no SPF record.
-		    # return ('unknown', 550, 'SPF Permanent Error: ' + str(x))
-		    return ('error', 550, 'SPF Permanent Error: ' + str(x))
+		    return ('unknown', 550, 'SPF Permanent Error: ' + str(x))
+		    # return ('error', 550, 'SPF Permanent Error: ' + str(x))
 
 	def check1(self, spf, domain, recursion):
 		# spf rfc: 3.7 Processing Limits
@@ -362,22 +377,20 @@ class query(object):
 		# Look for modifiers
 		#
 		for m in spf:
-			m = RE_MODIFIER.split(m)[1:]
-			if len(m) != 2: continue
+		    m = RE_MODIFIER.split(m)[1:]
+		    if len(m) != 2: continue
 
-			if m[0] == 'exp':
-				exps['fail'] = exps['unknown'] = \
-					self.get_explanation(m[1])
-			elif m[0] == 'redirect':
-                                self.lookups = self.lookups + 1
-                                if self.lookups > MAX_LOOKUP:
-                                    raise PermError('Too many DNS lookups')
-				redirect = self.expand(m[1])
-			elif m[0] == 'default':
-				# default=- is the same as default=fail
-				default = RESULTS.get(m[1], default)
+		    if m[0] == 'exp':
+			exps['fail'] = exps['unknown'] = \
+				self.get_explanation(m[1])
+		    elif m[0] == 'redirect':
+		        self.check_lookups()
+			redirect = self.expand(m[1])
+		    elif m[0] == 'default':
+			# default=- is the same as default=fail
+			default = RESULTS.get(m[1], default)
 
-			# spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
+		    # spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
 
 		# Look for mechanisms
 		#
@@ -395,10 +408,8 @@ class query(object):
 			    # default pass
 			    result = 'pass'
 
-		    if m in ['a', 'mx', 'ptr', 'prt', 'exists', 'include']:
-                            self.lookups = self.lookups + 1
-                            if self.lookups > MAX_LOOKUP:
-                                raise PermError('Too many DNS lookups')
+		    if m in ['a', 'mx', 'ptr', 'exists', 'include']:
+		    	    self.check_lookups()
 			    arg = self.expand(arg)
 
 		    if m == 'include':
@@ -432,6 +443,13 @@ class query(object):
 				    break
 
 		    elif m in ('ip4', 'ipv4', 'ip') and arg != self.d:
+		        try:
+			  if m != 'ip4':
+			    raise PermError('Unknown mechanism found',mech)
+			except PermError, x:
+			  if self.strict: raise
+			  if not self.perm_error:
+			    self.perm_error = x
 			try:
 			    if cidrmatch(self.i, [arg], cidrlength):
 				break
@@ -439,15 +457,29 @@ class query(object):
 			    raise PermError('syntax error',mech)
 			    
 		    elif m in ('ip6', 'ipv6'):
-		    # Until we support IPV6, we should never
-		    # get an IPv6 connection.  So this mech
-		    # will never match.
-			    pass
+		        try:
+			  if m != 'ip6':
+			    raise PermError('Unknown mechanism found',mech)
+			except PermError, x:
+			  if self.strict: raise
+			  if not self.perm_error:
+			    self.perm_error = x
+			# Until we support IPV6, we should never
+			# get an IPv6 connection.  So this mech
+			# will never match.
+			pass
 
 		    elif m in ('ptr', 'prt'):
-			    if domainmatch(self.validated_ptrs(self.i),
-					   arg):
-				    break
+		        try:
+			  if m != 'ptr':
+			    raise PermError('Unknown mechanism found',mech)
+			except PermError, x:
+			  if self.strict: raise
+			  if not self.perm_error:
+			    self.perm_error = x
+			  self.check_lookups()
+			if domainmatch(self.validated_ptrs(self.i), arg):
+				break
 
 		    else:
 		      # unknown mechanisms cause immediate unknown
@@ -465,6 +497,17 @@ class query(object):
 		    return (result, 550, exps[result])
 		else:
 		    return (result, 250, exps[result])
+
+	def check_lookups(self):
+	    self.lookups = self.lookups + 1
+	    if self.lookups > MAX_LOOKUP:
+	      try:
+		if self.strict or not self.perm_error:
+		  raise PermError('Too many DNS lookups')
+	      except PermError,x:
+		if self.strict or self.lookups > MAX_LOOKUP*4:
+		  raise x
+		self.perm_error = x
 
 	def get_explanation(self, spec):
 		"""Expand an explanation."""
