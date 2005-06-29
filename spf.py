@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.5  2005/06/28 17:48:56  customdesigned
+# Support extended processing results when a PermError should strictly occur.
+#
 # Revision 1.4  2005/06/22 15:54:54  customdesigned
 # Correct spelling.
 #
@@ -413,18 +416,19 @@ class query(object):
 			    arg = self.expand(arg)
 
 		    if m == 'include':
-		      if arg != self.d:
-			res,code,txt = self.check1(self.dns_spf(arg),
-					  arg, recursion + 1)
-			if res == 'pass':
-			  break
-			if res == 'none':
-			  raise PermError(
-			    'No valid SPF record for included domain: %s'%arg,
-			    mech)
-			continue
-		      else:
+		      if arg == self.d:
+		        if mech != 'include':
+			  raise PermError('include has trivial recursion',mech)
 			raise PermError('include mechanism missing domain',mech)
+		      res,code,txt = self.check1(self.dns_spf(arg),
+					arg, recursion + 1)
+		      if res == 'pass':
+			break
+		      if res == 'none':
+			raise PermError(
+			  'No valid SPF record for included domain: %s'%arg,
+			  mech)
+		      continue
 		    elif m == 'all':
 			    break
 
