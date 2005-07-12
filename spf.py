@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.6  2005/06/29 14:46:26  customdesigned
+# Distinguish trivial recursion from missing arg for diagnostic purposes.
+#
 # Revision 1.5  2005/06/28 17:48:56  customdesigned
 # Support extended processing results when a PermError should strictly occur.
 #
@@ -57,11 +60,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Changes from draft-mengwong overall DNS lookup and recursion
 # depth limits to draft-schlitt-spf-classic-02 DNS lookup, MX lookup, and
 # PTR lookup limits.  Recursion code is still present and functioning, but
-# it should be impossible to trip it.  Committing this change now because odds
-# of breakage when I delete the recursion code may be high.
+# it should be impossible to trip it.
 #
 # Revision 1.2  2005/06/21 16:46:09  kitterma
-# Updated definition of SPF, added reference to the sourceforge project site, and deleted obsolete Microsoft Caller ID for Email XML translation routine
+# Updated definition of SPF, added reference to the sourceforge project site,
+# and deleted obsolete Microsoft Caller ID for Email XML translation routine.
 #
 # Revision 1.1.1.1  2005/06/20 19:57:32  customdesigned
 # Move Python SPF to its own module.
@@ -486,9 +489,17 @@ class query(object):
 				break
 
 		    else:
-		      # unknown mechanisms cause immediate unknown
+		      # unknown mechanisms cause immediate PermError
 		      # abort results
-		      raise PermError('Unknown mechanism found',mech)
+		      # first see if it might be an bad qualifier instead
+		      # of an unknown mechanism (no change to the result, just
+		      # fine tune the error).
+		      # eat one character and try again:
+		      m = m[1:]
+		      if m in ['a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all']:
+                          raise PermError('Unknown qualifier, IETF draft para 4.6.1, found in',mech)
+		      else:
+                          raise PermError('Unknown mechanism found',mech)
 		else:
 		    # no matches
 		    if redirect:
