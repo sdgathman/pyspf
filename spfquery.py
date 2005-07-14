@@ -1,10 +1,13 @@
-#!/usr/bin/python2.3
+#!/usr/bin/python2.4
 
 # Author: Stuart D. Gathman <stuart@bmsi.com>
 # Copyright 2004 Business Management Systems, Inc.
 # This code is under the GNU General Public License.  See COPYING for details.
 
 # $Log$
+# Revision 1.1.1.1  2005/06/20 19:57:32  customdesigned
+# Move Python SPF to its own module.
+#
 # Revision 1.2  2005/06/02 04:18:55  customdesigned
 # Update copyright notices after reading article on /.
 #

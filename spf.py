@@ -47,6 +47,12 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.7  2005/07/12 21:43:56  kitterma
+# Added processing to clarify some cases of unknown
+# qualifier errors (to distinguish between unknown qualifier and
+# unknown mechanism).
+# Also cleaned up comments from previous updates.
+#
 # Revision 1.6  2005/06/29 14:46:26  customdesigned
 # Distinguish trivial recursion from missing arg for diagnostic purposes.
 #
@@ -190,11 +196,12 @@ JOINERS = {'l': '.', 's': '.'}
 
 RESULTS = {'+': 'pass', '-': 'fail', '?': 'neutral', '~': 'softfail',
            'pass': 'pass', 'fail': 'fail', 'unknown': 'unknown',
-	   'neutral': 'neutral', 'softfail': 'softfail',
+	   'error': 'error', 'neutral': 'neutral', 'softfail': 'softfail',
 	   'none': 'none', 'deny': 'fail' }
 
 EXPLANATIONS = {'pass': 'sender SPF verified', 'fail': 'access denied',
-                'unknown': 'SPF unknown',
+                'unknown': 'permanent error in processing',
+                'error': 'temporary error in processing',
 		'softfail': 'domain in transition',
 		'neutral': 'access neither permitted nor denied',
 		'none': ''
@@ -343,7 +350,6 @@ class query(object):
 		    # Pre-Lentczner draft treats this as an unknown result
 		    # and equivalent to no SPF record.
 		    return ('unknown', 550, 'SPF Permanent Error: ' + str(x))
-		    # return ('error', 550, 'SPF Permanent Error: ' + str(x))
 
 	def check1(self, spf, domain, recursion):
 		# spf rfc: 3.7 Processing Limits
@@ -387,8 +393,7 @@ class query(object):
 		    if len(m) != 2: continue
 
 		    if m[0] == 'exp':
-			exps['fail'] = exps['unknown'] = \
-				self.get_explanation(m[1])
+			self.set_default_explanation(self.get_explanation(m[1]))
 		    elif m[0] == 'redirect':
 		        self.check_lookups()
 			redirect = self.expand(m[1])
@@ -414,7 +419,7 @@ class query(object):
 			    # default pass
 			    result = 'pass'
 
-		    if m in ['a', 'mx', 'ptr', 'exists', 'include']:
+		    if m in ('a', 'mx', 'ptr', 'exists', 'include'):
 		    	    self.check_lookups()
 			    arg = self.expand(arg)
 
@@ -496,7 +501,7 @@ class query(object):
 		      # fine tune the error).
 		      # eat one character and try again:
 		      m = m[1:]
-		      if m in ['a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all']:
+		      if m in ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all'):
                           raise PermError('Unknown qualifier, IETF draft para 4.6.1, found in',mech)
 		      else:
                           raise PermError('Unknown mechanism found',mech)
@@ -712,7 +717,9 @@ class query(object):
 			result = self.dns(cname, qtype)
 		return result
 
-	def get_header(self,res,receiver):
+	def get_header(self,res,receiver=None):
+	  if not receiver:
+	    receiver = self.r
 	  if res in ('pass','fail','softfail'):
 	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s;' % (
 	  	res,receiver,self.get_header_comment(res),self.i,
@@ -743,10 +750,10 @@ class query(object):
 		    	% (self.i,sender)
 		    #"%s does not designate permitted sender hosts" % sender
 		elif res == 'unknown': return \
-		    "error in processing during lookup of domain of %s: %s" \
+		    "permanent error in processing domain of %s: %s" \
 		    	% (sender, self.prob)
 		elif res == 'error': return \
-		    "error in processing during lookup of %s" % sender
+		    "temporary error in processing during lookup of %s" % sender
 		elif res == 'fail': return \
 		    "domain of %s does not designate %s as permitted sender" \
 			% (sender,self.i)
@@ -790,7 +797,7 @@ def parse_mechanism(str, d):
 	>>> parse_mechanism('a/24', 'foo.com')
 	('a', 'foo.com', 24)
 
-	>>> parse_mechanism('a:bar.com/16', 'foo.com')
+	>>> parse_mechanism('A:bar.com/16', 'foo.com')
 	('a', 'bar.com', 16)
 	"""
 	a = str.split('/')
@@ -801,9 +808,9 @@ def parse_mechanism(str, d):
 
 	b = a.split(':')
 	if len(b) == 2:
-		return b[0], b[1], port
+		return b[0].lower(), b[1], port
 	else:
-		return a, d, port
+		return a.lower(), d, port
 
 def reverse_dots(name):
 	"""Reverse dotted IP addresses or domain names.
