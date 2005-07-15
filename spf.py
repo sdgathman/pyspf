@@ -47,6 +47,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.10  2005/07/15 16:17:05  customdesigned
+# Start type99 support.
+# Make Scott's "/" support in parse_mechanism more elegant as requested.
+# Add test case for "/" support.
+#
 # Revision 1.9  2005/07/15 03:33:14  kitterma
 # Fix for bug 1238403 - Crash if non-CIDR / present.  Also added
 # validation check for valid IPv4 CIDR range.
@@ -357,7 +362,8 @@ class query(object):
 			return ('error', 450, 'SPF Temporary Error: ' + str(x))
 		except PermError,x:
 		    self.prob = x.msg
-		    self.mech.append(x.mech)
+		    if x.mech:
+		      self.mech.append(x.mech)
 		    # Pre-Lentczner draft treats this as an unknown result
 		    # and equivalent to no SPF record.
 		    return ('unknown', 550, 'SPF Permanent Error: ' + str(x))
