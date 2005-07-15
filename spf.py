@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.12  2005/07/15 19:12:09  customdesigned
+# Official IANA SPF record (type 99) support.
+#
 # Revision 1.11  2005/07/15 18:03:02  customdesigned
 # Fix unknown Received-SPF header broken by result changes
 #
@@ -732,19 +735,27 @@ class query(object):
 			resp = req.req()
 			#resp.show()
 			for a in resp.answers:
-                                if a['typename'] == 'MX':
-                                    mxcount = mxcount + 1
-                                    if mxcount > MAX_MX:
-                                        raise PermError('Too many MX lookups')
-                                if a['typename'] == 'PTR':
-                                    ptrcount = ptrcount + 1
-                                    if ptrcount > MAX_PTR:
-                                        raise PermError('Too many PTR lookups')
-				# key k: ('wayforward.net', 'A'), value v
-				k, v = (a['name'], a['typename']), a['data']
-				if k == (name, 'CNAME'):
-					cname = v
-				self.cache.setdefault(k, []).append(v)
+			    if a['typename'] == 'MX':
+				mxcount = mxcount + 1
+				if mxcount > MAX_MX:
+				  print mxcount,self.strict,self.perm_error
+				  try:
+				    if self.strict or not self.perm_error:
+				      raise PermError('Too many MX lookups')
+				  except PermError,x:
+				    if self.strict or mxcount > MAX_MX*4:
+				      raise x
+				    self.perm_error = x
+				  print "lax"
+			    if a['typename'] == 'PTR':
+				ptrcount = ptrcount + 1
+				if ptrcount > MAX_PTR:
+				    raise PermError('Too many PTR lookups')
+			    # key k: ('wayforward.net', 'A'), value v
+			    k, v = (a['name'], a['typename']), a['data']
+			    if k == (name, 'CNAME'):
+				    cname = v
+			    self.cache.setdefault(k, []).append(v)
 			result = self.cache.get( (name, qtype), [])
 		if not result and cname:
 			result = self.dns(cname, qtype)
@@ -1030,7 +1041,9 @@ if __name__ == '__main__':
 			receiver=socket.gethostname())
 	elif len(sys.argv) == 5:
 		i, s, h = sys.argv[2:]
-		q = query(i=i, s=s, h=h, receiver=socket.gethostname())
+		q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
+			strict=False)
 		print q.check(sys.argv[1])
+		if q.perm_error: print q.perm_error.ext
 	else:
 		print USAGE
