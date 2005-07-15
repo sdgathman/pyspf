@@ -47,6 +47,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.8  2005/07/14 04:18:01  customdesigned
+# Bring explanations and Received-SPF header into line with
+# the unknown=PermErr and error=TempErr convention.
+# Hope my case-sensitive mech fix doesn't clash with Scotts.
+#
 # Revision 1.7  2005/07/12 21:43:56  kitterma
 # Added processing to clarify some cases of unknown
 # qualifier errors (to distinguish between unknown qualifier and
@@ -801,11 +806,27 @@ def parse_mechanism(str, d):
 	('a', 'bar.com', 16)
 	"""
 	a = str.split('/')
-	if len(a) == 2:
-		a, port = a[0], int(a[1])
-	else:
-		a, port = str, 32
-
+	#Start change to avoid errors with / in the domainpart of a mechanism
+	#Sourceforge pySPF bug #1238403.  Yes, this is ugly.  If I'd had more
+	#time, I'd have written something more elegant.
+	port = -1
+	if len(a) > 1:                             #Change the solution to a 
+                                                   #general solution if / is
+                                                   #present.
+            if a[len(a)-1].isdigit():              #Is the right most part
+                if (0 < (int(a[len(a)-1])) < 33):  #after the / a in the 
+                                                   #valid ipv4 CIDR range.
+                    x = 0
+                    domainpart = ""
+                    while x < (len(a)-1):          #Put the string back 
+                        domainpiece = a[x]         #together if non-CIDR 
+                        domainpart += domainpiece  #/ are present.
+                        if x != (len(a)-2):
+                            domainpart += "/"
+                        x += 1
+		    a, port = domainpart, int(a[len(a)-1])
+        if port == -1:
+            a, port = str, 32                      #Default CIDR length to 32
 	b = a.split(':')
 	if len(b) == 2:
 		return b[0].lower(), b[1], port
