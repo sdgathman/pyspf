@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.11  2005/07/15 18:03:02  customdesigned
+# Fix unknown Received-SPF header broken by result changes
+#
 # Revision 1.10  2005/07/15 16:17:05  customdesigned
 # Start type99 support.
 # Make Scott's "/" support in parse_mechanism more elegant as requested.
@@ -190,6 +193,10 @@ import struct  # for pack() and unpack()
 import time    # for time()
 
 import DNS	# http://pydns.sourceforge.net
+# patch in type99
+DNS.Type.SPF = 99
+DNS.Type.typemap[99] = 'SPF'
+DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
 
 # 32-bit IPv4 address mask
 MASK = 0xFFFFFFFFL
@@ -651,12 +658,12 @@ class query(object):
 		name.  Returns None if not found, or if more than one record
 		is found.
 		"""
+		a = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
+		if len(a) == 1:
+			return a[0]
 		a = [t for t in self.dns_txt(domain) if t.startswith('v=spf1')]
 		if len(a) == 1:
 			return a[0]
-		#a = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
-		#if len(a) == 1:
-		#	return a[0]
 		if DELEGATE:
 		  a = [t
 		    for t in self.dns_txt(domain+'._spf.'+DELEGATE)
@@ -672,9 +679,9 @@ class query(object):
 		  return [''.join(a) for a in self.dns(domainname, 'TXT')]
 		return []
 	def dns_99(self, domainname):
-		"Get a list of TYPE99 records for a domain name."
+		"Get a list of type SPF=99 records for a domain name."
 		if domainname:
-		  return [''.join(a) for a in self.dns(domainname, 'TYPE99')]
+		  return [''.join(a) for a in self.dns(domainname, 'SPF')]
 		return []
 
 	def dns_mx(self, domainname):
@@ -723,6 +730,7 @@ class query(object):
                         ptrcount = 0
 			req = DNS.DnsRequest(name, qtype=qtype)
 			resp = req.req()
+			#resp.show()
 			for a in resp.answers:
                                 if a['typename'] == 'MX':
                                     mxcount = mxcount + 1
@@ -822,8 +830,8 @@ def parse_mechanism(str, d):
 	>>> parse_mechanism('a/24', 'foo.com')
 	('a', 'foo.com', 24)
 
-	>>> parse_mechanism('A:bar.com/16', 'foo.com')
-	('a', 'bar.com', 16)
+	>>> parse_mechanism('A:foo:bar.com/16', 'foo.com')
+	('a', 'foo:bar.com', 16)
 
 	>>> parse_mechanism('-exists:%{i}.%{s1}.100/86400.rate.%{d}','foo.com')
 	('-exists', '%{i}.%{s1}.100/86400.rate.%{d}', 32)
