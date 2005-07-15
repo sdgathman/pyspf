@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.9  2005/07/15 03:33:14  kitterma
+# Fix for bug 1238403 - Crash if non-CIDR / present.  Also added
+# validation check for valid IPv4 CIDR range.
+#
 # Revision 1.8  2005/07/14 04:18:01  customdesigned
 # Bring explanations and Received-SPF header into line with
 # the unknown=PermErr and error=TempErr convention.
@@ -193,6 +197,8 @@ RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
 
 # Regular expression to break up a macro expansion
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
+
+RE_CIDR = re.compile(r'/(1[0-9]*|2[0-9]*|3[0-2]*)$')
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
@@ -640,21 +646,29 @@ class query(object):
 		is found.
 		"""
 		a = [t for t in self.dns_txt(domain) if t.startswith('v=spf1')]
-		if not a:
-		  if DELEGATE:
-		    a = [t
-		      for t in self.dns_txt(domain+'._spf.'+DELEGATE)
-			if t.startswith('v=spf1')
-		    ]
-
 		if len(a) == 1:
 			return a[0]
+		#a = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
+		#if len(a) == 1:
+		#	return a[0]
+		if DELEGATE:
+		  a = [t
+		    for t in self.dns_txt(domain+'._spf.'+DELEGATE)
+		      if t.startswith('v=spf1')
+		  ]
+		  if len(a) == 1:
+			  return a[0]
 		return None
 
 	def dns_txt(self, domainname):
 		"Get a list of TXT records for a domain name."
 		if domainname:
 		  return [''.join(a) for a in self.dns(domainname, 'TXT')]
+		return []
+	def dns_99(self, domainname):
+		"Get a list of TYPE99 records for a domain name."
+		if domainname:
+		  return [''.join(a) for a in self.dns(domainname, 'TYPE99')]
 		return []
 
 	def dns_mx(self, domainname):
@@ -804,30 +818,17 @@ def parse_mechanism(str, d):
 
 	>>> parse_mechanism('A:bar.com/16', 'foo.com')
 	('a', 'bar.com', 16)
+
+	>>> parse_mechanism('-exists:%{i}.%{s1}.100/86400.rate.%{d}','foo.com')
+	('-exists', '%{i}.%{s1}.100/86400.rate.%{d}', 32)
 	"""
-	a = str.split('/')
-	#Start change to avoid errors with / in the domainpart of a mechanism
-	#Sourceforge pySPF bug #1238403.  Yes, this is ugly.  If I'd had more
-	#time, I'd have written something more elegant.
-	port = -1
-	if len(a) > 1:                             #Change the solution to a 
-                                                   #general solution if / is
-                                                   #present.
-            if a[len(a)-1].isdigit():              #Is the right most part
-                if (0 < (int(a[len(a)-1])) < 33):  #after the / a in the 
-                                                   #valid ipv4 CIDR range.
-                    x = 0
-                    domainpart = ""
-                    while x < (len(a)-1):          #Put the string back 
-                        domainpiece = a[x]         #together if non-CIDR 
-                        domainpart += domainpiece  #/ are present.
-                        if x != (len(a)-2):
-                            domainpart += "/"
-                        x += 1
-		    a, port = domainpart, int(a[len(a)-1])
-        if port == -1:
-            a, port = str, 32                      #Default CIDR length to 32
-	b = a.split(':')
+	a = RE_CIDR.split(str)
+	if len(a) == 3:
+		a, port = a[0], int(a[1])
+	else:
+		a, port = str, 32
+
+	b = a.split(':',1)
 	if len(b) == 2:
 		return b[0].lower(), b[1], port
 	else:
