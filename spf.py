@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.14  2005/07/15 20:34:11  customdesigned
+# Check whether DNS package already supports SPF before patching
+#
 # Revision 1.13  2005/07/15 20:01:22  customdesigned
 # Allow extended results for MX limit
 #
@@ -386,8 +389,16 @@ class query(object):
 		# spf rfc: 3.7 Processing Limits
 		#
 		if recursion > MAX_RECURSION:
-			self.prob =  'Too many levels of recursion'
-			return ('unknown', 250, 'SPF recursion limit exceeded')
+			# This should never happen in strict mode
+			# because of the other limits we check,
+			# so if it does, there is something wrong with
+			# our code.  It is not a PermError because there is not
+			# necessarily anything wrong with the SPF record.
+			if self.strict:
+			  raise AssertionError('Too many levels of recursion')
+			# As an extended result, however, it should be
+			# a PermError.
+			raise PermError('Too many levels of recursion')
 		try:
 			tmp, self.d = self.d, domain
 			return self.check0(spf,recursion)
@@ -852,6 +863,9 @@ def parse_mechanism(str, d):
 
 	>>> parse_mechanism('-exists:%{i}.%{s1}.100/86400.rate.%{d}','foo.com')
 	('-exists', '%{i}.%{s1}.100/86400.rate.%{d}', 32)
+
+	>>> parse_mechanism('mx::%%%_/.Claranet.de/27','foo.com')
+	('mx', ':%%%_/.Claranet.de', 27)
 	"""
 	a = RE_CIDR.split(str)
 	if len(a) == 3:
