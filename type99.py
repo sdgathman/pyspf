@@ -1,4 +1,5 @@
 #!/usr/bin/python2.4
+#
 # Copy Bind zonefiles to stdout, removing TYPE99 RRs and
 # adding a TYPE99 RR for each TXT RR encountered.
 # This can be used to maintain SPF records as TXT RRs
@@ -7,6 +8,9 @@
 # filtering through this script will refresh the TYPE99 RRs.
 # 
 # $Log$
+# Revision 1.1  2005/07/17 02:39:42  customdesigned
+# Utility to maintain TYPE99 copies of SPF TXT RRs.
+#
 
 import sys
 import fileinput
@@ -38,7 +42,7 @@ if sys.argv[1] == '-' or len(srs.argv) > 2:
     m = RE_TXT.match(line)
     if m:
       phrase = dnstxt(m.group('str'))
-      s = m.expand(r'\g<rr>') + 'TYPE99 \# %i'%len(phrase)
+      s = m.group('rr') + 'TYPE99 \# %i'%len(phrase)
       print s,''.join(["%02x"%ord(c) for c in phrase])
 else:
   phrase = dnstxt(sys.argv[1])
