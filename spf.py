@@ -47,6 +47,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.20  2005/07/18 20:21:47  kitterma
+# Change to dns_spf to go ahead and check for a type 99 (SPF) record even if a
+# TXT record is found and make sure if type SPF is present that they are
+# identical when using strict processing.
+#
 # Revision 1.19  2005/07/18 19:36:00  kitterma
 # Change to require at least one dot in a domain name.  Added PermError
 # description to indicate FQDN should be used.  This is a common error.
@@ -702,12 +707,12 @@ class query(object):
 		# for performance, check for most common case of TXT first
 		a = [t for t in self.dns_txt(domain) if t.startswith('v=spf1')]
 		if len(a) == 1:
-			if not strict:
+			if not self.strict:
                             return a[0]   			
 		# check official SPF type first when it becomes more popular
 		b = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
 		if len(b) == 1:
-                        if strict and len(a) == 1:
+                        if self.strict and len(a) == 1:
                             if a[0] != b[0]:
                                 raise PermError('v=spf1 records of both type TXT \
                                 and SPF (type 99) present, but not identical')
