@@ -47,6 +47,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.18  2005/07/18 17:13:37  kitterma
+# Change macro processing to raise PermError on an unknown macro.
+# schlitt-spf-classic-02 para 8.1.  Change exp modifier processing to ignore
+# exp strings with syntax errors.  schlitt-spf-classic-02 para 6.2.
+#
 # Revision 1.17  2005/07/18 14:35:34  customdesigned
 # Remove debugging printf
 #
@@ -887,8 +892,12 @@ def parse_mechanism(str, d):
 
 	b = a.split(':',1)
 	if len(b) == 2:
+                if b[1].find('.') == -1:
+                    raise PermError('Invalid domain found (use FQDN)', b[1])
 		return b[0].lower(), b[1], port
 	else:
+                if d.find('.') == -1:
+                    raise PermError('Invalid domain found (use FQDN)', d)
 		return a.lower(), d, port
 
 def reverse_dots(name):
