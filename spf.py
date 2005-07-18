@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.15  2005/07/15 21:17:36  customdesigned
+# Recursion limit raises AssertionError in strict mode, PermError otherwise.
+#
 # Revision 1.14  2005/07/15 20:34:11  customdesigned
 # Check whether DNS package already supports SPF before patching
 #
@@ -755,7 +758,6 @@ class query(object):
 			    if a['typename'] == 'MX':
 				mxcount = mxcount + 1
 				if mxcount > MAX_MX:
-				  print mxcount,self.strict,self.perm_error
 				  try:
 				    if self.strict or not self.perm_error:
 				      raise PermError('Too many MX lookups')
