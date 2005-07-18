@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.19  2005/07/18 19:36:00  kitterma
+# Change to require at least one dot in a domain name.  Added PermError
+# description to indicate FQDN should be used.  This is a common error.
+#
 # Revision 1.18  2005/07/18 17:13:37  kitterma
 # Change macro processing to raise PermError on an unknown macro.
 # schlitt-spf-classic-02 para 8.1.  Change exp modifier processing to ignore
@@ -698,11 +702,16 @@ class query(object):
 		# for performance, check for most common case of TXT first
 		a = [t for t in self.dns_txt(domain) if t.startswith('v=spf1')]
 		if len(a) == 1:
-			return a[0]
+			if not strict:
+                            return a[0]   			
 		# check official SPF type first when it becomes more popular
-		a = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
-		if len(a) == 1:
-			return a[0]
+		b = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
+		if len(b) == 1:
+                        if strict and len(a) == 1:
+                            if a[0] != b[0]:
+                                raise PermError('v=spf1 records of both type TXT \
+                                and SPF (type 99) present, but not identical')
+                        return b[0]
 		if DELEGATE:
 		  a = [t
 		    for t in self.dns_txt(domain+'._spf.'+DELEGATE)
