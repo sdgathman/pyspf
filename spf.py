@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.16  2005/07/18 14:34:14  customdesigned
+# Forgot to remove debugging print
+#
 # Revision 1.15  2005/07/15 21:17:36  customdesigned
 # Recursion limit raises AssertionError in strict mode, PermError otherwise.
 #
@@ -765,7 +768,6 @@ class query(object):
 				    if self.strict or mxcount > MAX_MX*4:
 				      raise x
 				    self.perm_error = x
-				  print "lax"
 			    if a['typename'] == 'PTR':
 				ptrcount = ptrcount + 1
 				if ptrcount > MAX_PTR:
