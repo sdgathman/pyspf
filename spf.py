@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.17  2005/07/18 14:35:34  customdesigned
+# Remove debugging printf
+#
 # Revision 1.16  2005/07/18 14:34:14  customdesigned
 # Forgot to remove debugging print
 #
@@ -441,7 +444,10 @@ class query(object):
 		    if len(m) != 2: continue
 
 		    if m[0] == 'exp':
-			self.set_default_explanation(self.get_explanation(m[1]))
+                        try:
+                            self.set_default_explanation(self.get_explanation(m[1]))
+                        except PermError:
+                            pass
 		    elif m[0] == 'redirect':
 		        self.check_lookups()
 			redirect = self.expand(m[1])
@@ -668,8 +674,10 @@ class query(object):
 				letter = macro[2].lower()
 				if letter == 'p':
 					self.getp()
-				expansion = getattr(self, letter, '')
+				expansion = getattr(self, letter, 'Macro Error')
 				if expansion:
+                                        if expansion == 'Macro Error':
+                                            raise PermError('Unknown Macro Encountered') 
 					result += expand_one(expansion,
 						macro[3:-1],
 					        JOINERS.get(letter))
