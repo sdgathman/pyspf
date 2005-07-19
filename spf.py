@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.22  2005/07/19 05:02:29  customdesigned
+# FQDN test was broken.  Added test case.  Move FQDN test to after
+# macro expansion.
+#
 # Revision 1.21  2005/07/18 20:46:27  kitterma
 # Fixed reference problem in 1.20
 #
@@ -746,7 +750,13 @@ class query(object):
 		"""Get a list of IP addresses for all MX exchanges for a
 		domain name.
 		"""
-		return [a for mx in self.dns(domainname, 'MX') \
+# draft-schlitt-spf-classic-02 section 5.4 "mx"
+# To prevent DoS attacks, more than 10 MX names MUST NOT be looked up
+		if self.strict:
+		  max = MAX_MX
+		else:
+		  max = MAX_MX * 4
+		return [a for mx in self.dns(domainname, 'MX')[:max] \
 		          for a in self.dns_a(mx[1])]
 
 	def dns_a(self, domainname):
@@ -761,7 +771,12 @@ class query(object):
 		"""Figure out the validated PTR domain names for a given IP
 		address.
 		"""
-		return [p for p in self.dns_ptr(i) if i in self.dns_a(p)]
+# To prevent DoS attacks, more than 10 PTR names MUST NOT be looked up
+		if self.strict:
+		  max = MAX_PTR
+		else:
+		  max = MAX_PTR * 4
+		return [p for p in self.dns_ptr(i)[:max] if i in self.dns_a(p)]
 
 	def dns_ptr(self, i):
 		"""Get a list of domain names for an IP address."""
@@ -784,26 +799,10 @@ class query(object):
 		result = self.cache.get( (name, qtype) )
 		cname = None
 		if not result:
-                        mxcount = 0
-                        ptrcount = 0
 			req = DNS.DnsRequest(name, qtype=qtype)
 			resp = req.req()
 			#resp.show()
 			for a in resp.answers:
-			    if a['typename'] == 'MX':
-				mxcount = mxcount + 1
-				if mxcount > MAX_MX:
-				  try:
-				    if self.strict or not self.perm_error:
-				      raise PermError('Too many MX lookups')
-				  except PermError,x:
-				    if self.strict or mxcount > MAX_MX*4:
-				      raise x
-				    self.perm_error = x
-			    if a['typename'] == 'PTR':
-				ptrcount = ptrcount + 1
-				if ptrcount > MAX_PTR:
-				    raise PermError('Too many PTR lookups')
 			    # key k: ('wayforward.net', 'A'), value v
 			    k, v = (a['name'], a['typename']), a['data']
 			    if k == (name, 'CNAME'):
