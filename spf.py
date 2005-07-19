@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.21  2005/07/18 20:46:27  kitterma
+# Fixed reference problem in 1.20
+#
 # Revision 1.20  2005/07/18 20:21:47  kitterma
 # Change to dns_spf to go ahead and check for a type 99 (SPF) record even if a
 # TXT record is found and make sure if type SPF is present that they are
@@ -488,8 +491,10 @@ class query(object):
 			    result = 'pass'
 
 		    if m in ('a', 'mx', 'ptr', 'exists', 'include'):
-		    	    self.check_lookups()
-			    arg = self.expand(arg)
+		      self.check_lookups()
+		      arg = self.expand(arg)
+		      if not (0 < arg.find('.') < len(arg) - 1):
+			raise PermError('Invalid domain found (use FQDN)', arg)
 
 		    if m == 'include':
 		      if arg == self.d:
@@ -897,6 +902,9 @@ def parse_mechanism(str, d):
 
 	>>> parse_mechanism('mx::%%%_/.Claranet.de/27','foo.com')
 	('mx', ':%%%_/.Claranet.de', 27)
+
+	>>> parse_mechanism('mx:%{d}/27','foo.com')
+	('mx', '%{d}', 27)
 	"""
 	a = RE_CIDR.split(str)
 	if len(a) == 3:
@@ -906,12 +914,8 @@ def parse_mechanism(str, d):
 
 	b = a.split(':',1)
 	if len(b) == 2:
-                if b[1].find('.') == -1:
-                    raise PermError('Invalid domain found (use FQDN)', b[1])
 		return b[0].lower(), b[1], port
 	else:
-                if d.find('.') == -1:
-                    raise PermError('Invalid domain found (use FQDN)', d)
 		return a.lower(), d, port
 
 def reverse_dots(name):
