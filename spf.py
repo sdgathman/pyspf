@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.23  2005/07/19 15:22:50  customdesigned
+# MX and PTR limits are MUST NOT check limits, and do not result in PermErr.
+# Also, check belongs in mx and ptr specific methods, not in dns() method.
+#
 # Revision 1.22  2005/07/19 05:02:29  customdesigned
 # FQDN test was broken.  Added test case.  Move FQDN test to after
 # macro expansion.
@@ -731,8 +735,8 @@ class query(object):
 		    for t in self.dns_txt(domain+'._spf.'+DELEGATE)
 		      if t.startswith('v=spf1')
 		  ]
-		  if len(a) == 1:
-			  return a[0]
+		if len(a) == 1:
+		    return a[0]
 		return None
 
 	def dns_txt(self, domainname):
