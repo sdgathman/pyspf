@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.24  2005/07/19 18:11:52  kitterma
+# Fix to change that compares type TXT and type SPF records.  Bug in the change
+# prevented records from being returned if it was published as TXT, but not SPF.
+#
 # Revision 1.23  2005/07/19 15:22:50  customdesigned
 # MX and PTR limits are MUST NOT check limits, and do not result in PermErr.
 # Also, check belongs in mx and ptr specific methods, not in dns() method.
@@ -254,7 +258,7 @@ RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
 # Regular expression to break up a macro expansion
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
 
-RE_CIDR = re.compile(r'/(1[0-9]*|2[0-9]*|3[0-2]*)$')
+RE_CIDR = re.compile(r'/([1-9]|1[0-9]*|2[0-9]*|3[0-2]*)$')
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
@@ -295,6 +299,8 @@ MAX_LOOKUP = 10 #draft-schlitt-spf-classic-02 Para 10.1
 MAX_MX = 10 #draft-schlitt-spf-classic-02 Para 10.1
 MAX_PTR = 10 #draft-schlitt-spf-classic-02 Para 10.1
 MAX_RECURSION = 20
+ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
+COMMON_MISTAKES = { 'prt': 'ptr', 'ip': 'ip4', 'ipv4': 'ip4', 'ipv6': 'ip6' }
 
 class TempError(Exception):
 	"Temporary SPF error"
@@ -383,8 +389,30 @@ class query(object):
 
 	def check(self, spf=None):
 		"""
-	Returns (result, mta-status-code, explanation) where
-	result in ['fail', 'softfail', 'neutral' 'unknown', 'pass', 'error']
+	Returns (result, mta-status-code, explanation) where result
+	in ['fail', 'softfail', 'neutral' 'unknown', 'pass', 'error', 'none']
+
+	Examples:
+	>>> q = query(s='strong-bad@email.example.com',
+	...           h='mx.example.org', i='192.0.2.3')
+	>>> q.check(spf='v=spf1 ?all')
+	('neutral', 250, 'access neither permitted nor denied')
+
+	>>> q.check(spf='v=spf1 ip4:192/8 ?all moo')
+	('unknown', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+
+	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ~all')
+	('pass', 250, 'sender SPF verified')
+
+	>>> q.check(spf='v=spf1 ip4:192.1.0.0/16 ~all')
+	('softfail', 250, 'domain in transition')
+
+	>>> q.check(spf='v=spf1 -ip4:192.1.0.0/6 ~all')
+	('fail', 550, 'access denied')
+
+	# Assumes DNS available
+	>>> q.check()
+	('none', 250, '')
 		"""
 		self.mech = []		# unknown mechanisms
 		# If not strict, certain PermErrors (mispelled
@@ -439,6 +467,64 @@ class query(object):
 		finally:
 			self.d = tmp
 
+	def validate_mechanism(self,mech):
+		"""Parse and validate a mechanism.
+	Returns mech,m,arg,cidrlength,result
+
+	Examples:
+	>>> q = query(s='strong-bad@email.example.com',
+	...           h='mx.example.org', i='192.0.2.3')
+	>>> q.validate_mechanism('A')
+	('A', 'a', 'email.example.com', 32, 'pass')
+
+	>>> q.validate_mechanism('?mx:%{d}/27')
+	('?mx:%{d}/27', 'mx', 'email.example.com', 27, 'neutral')
+
+	>>> q.validate_mechanism('-mx::%%%_/.Clara.de/27')
+	('-mx::%%%_/.Clara.de/27', 'mx', ':% /.Clara.de', 27, 'fail')
+
+	>>> q.validate_mechanism('~exists:%{i}.%{s1}.100/86400.rate.%{d}')
+	('~exists:%{i}.%{s1}.100/86400.rate.%{d}', 'exists', '192.0.2.3.com.100/86400.rate.email.example.com', 32, 'softfail')
+		"""
+		# a mechanism
+		m, arg, cidrlength = parse_mechanism(mech, self.d)
+		# map '?' '+' or '-' to 'unknown' 'pass' or 'fail'
+		if m:
+		  result = RESULTS.get(m[0])
+		  if result:
+			# eat '?' '+' or '-'
+			m = m[1:]
+		  else:
+			# default pass
+			result = 'pass'
+		if m in COMMON_MISTAKES:
+		  try:
+		    raise PermError('Unknown mechanism found',mech)
+		  except PermError, x:
+		    if self.strict: raise
+		    m = COMMON_MISTAKES[m]
+		    if not self.perm_error:
+		      self.perm_error = x
+		  
+		if m in ('a', 'mx', 'ptr', 'exists', 'include'):
+		  arg = self.expand(arg)
+		  if not (0 < arg.find('.') < len(arg) - 1):
+		    raise PermError('Invalid domain found (use FQDN)',
+			  arg)
+		  if m == 'include':
+		    if arg == self.d:
+		      if mech != 'include':
+			raise PermError('include has trivial recursion',mech)
+		      raise PermError('include mechanism missing domain',mech)
+		  return mech,m,arg,cidrlength,result
+		if m in ALL_MECHANISMS:
+		  return mech,m,arg,cidrlength,result
+		if m[1:] in ALL_MECHANISMS:
+		  raise PermError(
+		    'Unknown qualifier, IETF draft para 4.6.1, found in',
+		    mech)
+		raise PermError('Unknown mechanism found',mech)
+
 	def check0(self, spf,recursion):
 		"""Test this query information against SPF text.
 
@@ -461,12 +547,15 @@ class query(object):
 		# overridden with 'default=' modifier
 		#
 		default = 'neutral'
+		mechs = []
 
 		# Look for modifiers
 		#
-		for m in spf:
-		    m = RE_MODIFIER.split(m)[1:]
-		    if len(m) != 2: continue
+		for mech in spf:
+		    m = RE_MODIFIER.split(mech)[1:]
+		    if len(m) != 2:
+		      mechs.append(self.validate_mechanism(mech))
+		      continue
 
 		    if m[0] == 'exp':
                         try:
@@ -482,33 +571,12 @@ class query(object):
 
 		    # spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
 
-		# Look for mechanisms
+		# Evaluate mechanisms
 		#
-		for mech in spf:
-		    if RE_MODIFIER.match(mech): continue
-		    m, arg, cidrlength = parse_mechanism(mech, self.d)
-
-		    # map '?' '+' or '-' to 'unknown' 'pass' or 'fail'
-		    if m:
-		      result = RESULTS.get(m[0])
-		      if result:
-			    # eat '?' '+' or '-'
-			    m = m[1:]
-		      else:
-			    # default pass
-			    result = 'pass'
-
-		    if m in ('a', 'mx', 'ptr', 'exists', 'include'):
-		      self.check_lookups()
-		      arg = self.expand(arg)
-		      if not (0 < arg.find('.') < len(arg) - 1):
-			raise PermError('Invalid domain found (use FQDN)', arg)
+		for mech,m,arg,cidrlength,result in mechs:
 
 		    if m == 'include':
-		      if arg == self.d:
-		        if mech != 'include':
-			  raise PermError('include has trivial recursion',mech)
-			raise PermError('include mechanism missing domain',mech)
+		      self.check_lookups()
 		      res,code,txt = self.check1(self.dns_spf(arg),
 					arg, recursion + 1)
 		      if res == 'pass':
@@ -522,70 +590,41 @@ class query(object):
 			    break
 
 		    elif m == 'exists':
-			    if len(self.dns_a(arg)) > 0:
-				    break
+		        self.check_lookups()
+			if len(self.dns_a(arg)) > 0:
+				break
 
 		    elif m == 'a':
-			    if cidrmatch(self.i, self.dns_a(arg),
-					 cidrlength):
-				    break
+		        self.check_lookups()
+			if cidrmatch(self.i, self.dns_a(arg), cidrlength):
+			      break
 
 		    elif m == 'mx':
-			    if cidrmatch(self.i, self.dns_mx(arg),
-					 cidrlength):
-				    break
+		        self.check_lookups()
+			if cidrmatch(self.i, self.dns_mx(arg), cidrlength):
+			      break
 
-		    elif m in ('ip4', 'ipv4', 'ip') and arg != self.d:
-		        try:
-			  if m != 'ip4':
-			    raise PermError('Unknown mechanism found',mech)
-			except PermError, x:
-			  if self.strict: raise
-			  if not self.perm_error:
-			    self.perm_error = x
+		    elif m == 'ip4' and arg != self.d:
 			try:
 			    if cidrmatch(self.i, [arg], cidrlength):
 				break
 			except socket.error:
 			    raise PermError('syntax error',mech)
 			    
-		    elif m in ('ip6', 'ipv6'):
-		        try:
-			  if m != 'ip6':
-			    raise PermError('Unknown mechanism found',mech)
-			except PermError, x:
-			  if self.strict: raise
-			  if not self.perm_error:
-			    self.perm_error = x
+		    elif m == 'ip6':
 			# Until we support IPV6, we should never
 			# get an IPv6 connection.  So this mech
 			# will never match.
 			pass
 
-		    elif m in ('ptr', 'prt'):
-		        try:
-			  if m != 'ptr':
-			    raise PermError('Unknown mechanism found',mech)
-			except PermError, x:
-			  if self.strict: raise
-			  if not self.perm_error:
-			    self.perm_error = x
-			  self.check_lookups()
+		    elif m == 'ptr':
+		        self.check_lookups()
 			if domainmatch(self.validated_ptrs(self.i), arg):
 				break
 
 		    else:
-		      # unknown mechanisms cause immediate PermError
-		      # abort results
-		      # first see if it might be an bad qualifier instead
-		      # of an unknown mechanism (no change to the result, just
-		      # fine tune the error).
-		      # eat one character and try again:
-		      m = m[1:]
-		      if m in ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all'):
-                          raise PermError('Unknown qualifier, IETF draft para 4.6.1, found in',mech)
-		      else:
-                          raise PermError('Unknown mechanism found',mech)
+		      raise AssertionError(
+		        'validate_mechanism returned bad mechanism')
 		else:
 		    # no matches
 		    if redirect:
@@ -908,6 +947,9 @@ def parse_mechanism(str, d):
 
 	>>> parse_mechanism('mx:%{d}/27','foo.com')
 	('mx', '%{d}', 27)
+
+	>>> parse_mechanism('iP4:192.0.0.0/8','foo.com')
+	('ip4', '192.0.0.0', 8)
 	"""
 	a = RE_CIDR.split(str)
 	if len(a) == 3:
