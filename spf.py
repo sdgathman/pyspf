@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.25  2005/07/19 23:24:42  customdesigned
+# Validate all mechanisms before evaluating.
+#
 # Revision 1.24  2005/07/19 18:11:52  kitterma
 # Fix to change that compares type TXT and type SPF records.  Bug in the change
 # prevented records from being returned if it was published as TXT, but not SPF.
@@ -291,7 +294,7 @@ except NameError:
 	def bool(x): return not not x
 # ...pre 2.2.1
 
-# standard default SPF record
+# standard default SPF record for best_guess
 DEFAULT_SPF = 'v=spf1 a/24 mx/24 ptr'
 
 # maximum DNS lookups allowed
@@ -367,6 +370,7 @@ class query(object):
 		self.exps = dict(EXPLANATIONS)
 		self.local = local	# local policy
     		self.lookups = 0
+		# strict can be False, True, or 2 for harsh
 		self.strict = strict
 
 	def set_default_explanation(self,exp):
@@ -398,10 +402,14 @@ class query(object):
 	>>> q.check(spf='v=spf1 ?all')
 	('neutral', 250, 'access neither permitted nor denied')
 
-	>>> q.check(spf='v=spf1 ip4:192/8 ?all moo')
+	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ?all moo')
 	('unknown', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
 
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ~all')
+	('pass', 250, 'sender SPF verified')
+
+	>>> q.strict = False
+	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all moo')
 	('pass', 250, 'sender SPF verified')
 
 	>>> q.check(spf='v=spf1 ip4:192.1.0.0/16 ~all')
@@ -519,11 +527,15 @@ class query(object):
 		  return mech,m,arg,cidrlength,result
 		if m in ALL_MECHANISMS:
 		  return mech,m,arg,cidrlength,result
-		if m[1:] in ALL_MECHANISMS:
-		  raise PermError(
-		    'Unknown qualifier, IETF draft para 4.6.1, found in',
-		    mech)
-		raise PermError('Unknown mechanism found',mech)
+		try:
+		  if m[1:] in ALL_MECHANISMS:
+		    raise PermError(
+		      'Unknown qualifier, IETF draft para 4.6.1, found in',
+		      mech)
+		  raise PermError('Unknown mechanism found',mech)
+		except PermError, x:
+		  if self.strict: raise
+		  return mech,m,arg,cidrlength,x
 
 	def check0(self, spf,recursion):
 		"""Test this query information against SPF text.
@@ -623,8 +635,7 @@ class query(object):
 				break
 
 		    else:
-		      raise AssertionError(
-		        'validate_mechanism returned bad mechanism')
+		      raise result
 		else:
 		    # no matches
 		    if redirect:
@@ -758,24 +769,25 @@ class query(object):
 		"""
 		# for performance, check for most common case of TXT first
 		a = [t for t in self.dns_txt(domain) if t.startswith('v=spf1')]
-		if len(a) == 1:
-			if not self.strict:
-                            return a[0]   			
+		if len(a) == 1 and self.strict < 2:
+		    return a[0]   			
 		# check official SPF type first when it becomes more popular
 		b = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
 		if len(b) == 1:
-                        if self.strict and len(a) == 1:
-                            if a[0] != b[0]:
-                                raise PermError('v=spf1 records of both type TXT \
-                                and SPF (type 99) present, but not identical')
-                        return b[0]
-		if DELEGATE:
-		  a = [t
-		    for t in self.dns_txt(domain+'._spf.'+DELEGATE)
-		      if t.startswith('v=spf1')
-		  ]
+		    # FIXME: really must fully parse each record
+		    # and compare with appropriate parts case insensitive.
+		    if self.strict >= 2 and len(a) == 1 and a[0] != b[0]:
+		        raise PermError(
+'v=spf1 records of both type TXT and SPF (type 99) present, but not identical')
+		    return b[0]
 		if len(a) == 1:
-		    return a[0]
+		    return a[0]	# return TXT if SPF wasn't found
+		if DELEGATE:	# use local record if neither found
+		    a = [t
+		      for t in self.dns_txt(domain+'._spf.'+DELEGATE)
+			if t.startswith('v=spf1')
+		    ]
+		    if len(a) == 1: return a[0]
 		return None
 
 	def dns_txt(self, domainname):
