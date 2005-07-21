@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.29  2005/07/21 17:49:39  customdesigned
+# My best guess at what RFC intended for limiting CNAME loops.
+#
 # Revision 1.28  2005/07/21 17:37:08  customdesigned
 # Break out external DNSLookup method so that test suite can
 # duplicate CNAME loop bug.  Test zone data dictionary now
@@ -261,6 +264,16 @@ if not hasattr(DNS.Type,'SPF'):
   DNS.Type.typemap[99] = 'SPF'
   DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
 
+def DNSLookup(name,qtype):
+  try:
+    req = DNS.DnsRequest(name, qtype=qtype)
+    resp = req.req()
+    #resp.show()
+    # key k: ('wayforward.net', 'A'), value v
+    return [((a['name'], a['typename']), a['data']) for a in resp.answers]
+  except DNS.DNSError,x:
+    raise TempError,'DNS ' + str(x)
+
 # 32-bit IPv4 address mask
 MASK = 0xFFFFFFFFL
 
@@ -461,8 +474,6 @@ class query(object):
 			  self.perm_error.ext = rc
 			  raise self.perm_error
 			return rc
-		except DNS.DNSError,x:
-			return ('error', 450, 'SPF DNS Error: ' + str(x))
 		except TempError,x:
 			return ('error', 450, 'SPF Temporary Error: ' + str(x))
 		except PermError,x:
@@ -923,13 +934,6 @@ class query(object):
 		    "domain of %s does not designate %s as permitted sender" \
 			% (sender,self.i)
 		raise ValueError("invalid SPF result for header comment: "+res)
-
-def DNSLookup(name,qtype):
-	req = DNS.DnsRequest(name, qtype=qtype)
-	resp = req.req()
-	#resp.show()
-	# key k: ('wayforward.net', 'A'), value v
-	return [((a['name'], a['typename']), a['data']) for a in resp.answers]
 
 def split_email(s, h):
 	"""Given a sender email s and a HELO domain h, create a valid tuple

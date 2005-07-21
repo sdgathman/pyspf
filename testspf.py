@@ -12,6 +12,8 @@ def DNSLookup(name,qtype):
   try:
     return [((name,t),v) for t,v in zonedata[name]]
   except KeyError:
+    if name.startswith('error.'):
+      raise spf.TempError,'DNS timeout'
     return []
 
 spf.DNSLookup = DNSLookup
@@ -28,6 +30,11 @@ class SPFTestCase(unittest.TestCase):
     i, s, h = '66.150.186.79','chuckvsr@mailing.gdi.ws','master.gdi.ws'
     q = spf.query(i=i, s=s, h=h)
     self.failUnless(q.check()[0] == 'unknown')
+
+  def testDNSError(self):
+    i, s, h = ('1.2.3.4','lyndon.eaton@error.co.uk','mail.uksubnet.net')
+    q = spf.query(i=i, s=s, h=h)
+    self.failUnless(q.check()[0] == 'error')
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
