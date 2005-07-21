@@ -27,8 +27,7 @@ class SPFTestCase(unittest.TestCase):
   def testCnameLoop(self):
     i, s, h = '66.150.186.79','chuckvsr@mailing.gdi.ws','master.gdi.ws'
     q = spf.query(i=i, s=s, h=h)
-    self.failUnless(q.check()[0] == 'none')
-    self.failUnless(q.best_guess()[0] == 'neutral')
+    self.failUnless(q.check()[0] == 'unknown')
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 

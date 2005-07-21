@@ -47,6 +47,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.28  2005/07/21 17:37:08  customdesigned
+# Break out external DNSLookup method so that test suite can
+# duplicate CNAME loop bug.  Test zone data dictionary now
+# mirrors structure of real DNS.
+#
 # Revision 1.27  2005/07/21 15:26:06  customdesigned
 # First cut at updating docs.  Test suite is obsolete.
 #
@@ -873,6 +878,7 @@ class query(object):
 			    self.cache.setdefault(k, []).append(v)
 			result = self.cache.get( (name, qtype), [])
 		if not result and cname:
+		        self.check_lookups()
 			result = self.dns(cname, qtype)
 		return result
 
