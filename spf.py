@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.27  2005/07/21 15:26:06  customdesigned
+# First cut at updating docs.  Test suite is obsolete.
+#
 # Revision 1.26  2005/07/20 03:12:40  customdesigned
 # When not in strict mode, don't give PermErr for bad mechanism until
 # encountered during evaluation.
@@ -408,6 +411,9 @@ class query(object):
 
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ?all moo')
 	('unknown', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+
+	>>> q.check(spf='v=spf1 =a ?all moo')
+	('unknown', 550, 'SPF Permanent Error: Unknown qualifier, IETF draft para 4.6.1, found in: =a')
 
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ~all')
 	('pass', 250, 'sender SPF verified')
@@ -861,14 +867,9 @@ class query(object):
 		result = self.cache.get( (name, qtype) )
 		cname = None
 		if not result:
-			req = DNS.DnsRequest(name, qtype=qtype)
-			resp = req.req()
-			#resp.show()
-			for a in resp.answers:
-			    # key k: ('wayforward.net', 'A'), value v
-			    k, v = (a['name'], a['typename']), a['data']
+			for k,v in DNSLookup(name,qtype):
 			    if k == (name, 'CNAME'):
-				    cname = v
+				cname = v
 			    self.cache.setdefault(k, []).append(v)
 			result = self.cache.get( (name, qtype), [])
 		if not result and cname:
@@ -916,6 +917,13 @@ class query(object):
 		    "domain of %s does not designate %s as permitted sender" \
 			% (sender,self.i)
 		raise ValueError("invalid SPF result for header comment: "+res)
+
+def DNSLookup(name,qtype):
+	req = DNS.DnsRequest(name, qtype=qtype)
+	resp = req.req()
+	#resp.show()
+	# key k: ('wayforward.net', 'A'), value v
+	return [((a['name'], a['typename']), a['data']) for a in resp.answers]
 
 def split_email(s, h):
 	"""Given a sender email s and a HELO domain h, create a valid tuple
