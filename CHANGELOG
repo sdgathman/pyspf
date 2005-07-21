@@ -1,0 +1,39 @@
+Version 1.6 - December 18, 2003
+  * Arik Baratz pointed out endian problems using socket.inet_ntoa() and
+    socket.inet_aton().  Use struct.pack("!L", struct.unpack("!L") to fix.
+
+Version 1.5 - December 17, 2003
+  * Replace DNS.addr2bin() and DNS.bin2addr() with socket.inet_ntoa() and
+    socket.inet_aton().  New code supports n, n.n, and n.n.n formats for IPv4
+    addresses, and gets rid of annoying Python 2.4 future warnings
+
+Version 1.4 - December 16, 2003
+  * Greg Connor discovered that SPF queries to altavista.com were broken. 
+    This was testing to see if a mechanism needs to be macro expanded _before_
+    leading ? + - characters were removed.
+  * Fixed include handling to be a real mechanism: -include must work.
+
+Version 1.3.1 - December 14, 2003
+  * Forgot to include new test file in distribution.
+  * Forgot CHANGELOG in distribution.
+
+Version 1.3 - December 13, 2003
+  * Add %{o} (original sender domain) macro
+  * The ./spf.py {spf} {ipaddr} {sender} {helo} command line didn't print
+    out the results.  Oops.
+  * Support default= so Meng's test #6 'v=spf1 default=deny' works
+  * Any IP address '127.*.*.*' automatically pass, so all Meng's tests work
+  * Follow DNS CNAMES
+  * Cache DNS results, including additional info, reducing DNS query load
+  * Support Python 2.2 (doesn't have bool, True, False: those are
+    added in Python 2.2.1)
+
+Version 1.2 - December 11, 2003
+  * Added exp= (explanation) and redirect= modifiers
+  * Added macros
+
+Version 1.1 - December 9, 2003
+  * Meng Weng Wong added PTR code, THANK YOU
+
+Version 1.0 - December 9, 2003
+  * Initial Version

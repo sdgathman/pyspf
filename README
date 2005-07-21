@@ -1,0 +1,77 @@
+SPF
+Sender-Permitted-From queries in Python.
+
+Quick Start
+===========
+
+Installation
+------------
+This package requires PyDNS, available at http://pydns.sourceforge.net.
+
+After unpacking the source distribution, install this in your site-
+specific Python extension directory::
+
+	% python setup.py build
+	% su
+	# python setup.py install
+
+Testing
+-------
+After this package is installed, cd into the test directory and
+execute testspf.py::
+
+	% cd test
+	% python testspf.py
+	2... 3... 4...
+	...
+	... 129,130,131...126 tests succeeded
+
+Some tests may fail due to DNS timeouts.  If the errors persist after
+several attempts, log the results and email them to terry@wayforward.net.
+
+If you're running on Mac OS X, and it looks like DNS.DiscoverNameServers()
+is failing, you'll need to edit your /etc/resolv.conf and specify a
+domain name.  For some reason, OS X writes out resolv.conf with a single
+'domain' line, which isn't good at all.
+
+
+Description
+===========
+SPF does email sender validation.  For more information about SPF,
+please see http://spf.pobox.com.
+
+This SPF client is intended to be installed on the border MTA, checking
+if incoming SMTP clients are permitted to forward mail.  The SPF check
+should be done during the MAIL FROM:<...> command.
+
+There are two ways to use this package.  The first is from the command
+line::
+	% python spf.py {ip-addr} {mail-from} {helo}
+
+For instance, during an SMTP exchange from client 69.55.226.139::
+	S: 220 mail.example.com ESMTP Postfix
+	C: EHLO mx1.wayforward.net
+	S: 250-mail.example.com
+	S: ...
+	S: 250 8BITMIME
+	C: MAIL FROM:<terry@wayforward.net>
+
+Then the following command line would check if this is a valid sender:
+	% ./spf.py 69.55.226.139 terry@wayforward.net mx1.wayforward.net
+	('pass', 250, 'sender SPF verified')
+
+The second way is via the module's API:
+	>>> import spf
+	>>> spf.check(i='69.55.226.139',
+	...           s='terry@wayforward.net',
+	...           h='mx1.wayforward.net')
+	('pass', 250, 'sender SPF verified')
+
+The first element in the tuple is one of 'pass', 'deny', 'unknown', or
+'error'.  The second is the SMTP response status code: 550 for 'deny',
+450 for 'error' and 250 for all else.  The third is an explanation.
+
+License: Python Software Foundation License
+
+Terence Way terry@wayforward.net
+http://www.wayforward.net/spf/
