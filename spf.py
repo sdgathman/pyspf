@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.26  2005/07/20 03:12:40  customdesigned
+# When not in strict mode, don't give PermErr for bad mechanism until
+# encountered during evaluation.
+#
 # Revision 1.25  2005/07/19 23:24:42  customdesigned
 # Validate all mechanisms before evaluating.
 #
@@ -411,6 +415,9 @@ class query(object):
 	>>> q.strict = False
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all moo')
 	('pass', 250, 'sender SPF verified')
+
+	>>> q.check(spf='v=spf1 ip4:192.1.0.0/16 moo -all')
+	('unknown', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
 
 	>>> q.check(spf='v=spf1 ip4:192.1.0.0/16 ~all')
 	('softfail', 250, 'domain in transition')

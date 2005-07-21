@@ -1,5 +1,5 @@
 SPF
-Sender-Permitted-From queries in Python.
+Sender-Policy-Framework queries in Python.
 
 Quick Start
 ===========
@@ -73,5 +73,15 @@ The first element in the tuple is one of 'pass', 'deny', 'unknown', or
 
 License: Python Software Foundation License
 
+Current Maintainers
+-------------------
+Stuart Gathman stuart@bmsi.com
+Scott Kitterman scott@kitterman.com
+
+Currently part of the pymilter project: http://pymilter.sourceforge.net
+
+Original Author
+---------------
 Terence Way terry@wayforward.net
 http://www.wayforward.net/spf/
+

@@ -1,3 +1,11 @@
+Version 1.7 - July 21, 2005
+  * Strict processing limits per newly official SPF RFC
+  * Fixed several parsing bugs under RFC 
+  * Support official IANA SPF record (type99)
+  * Extended SPF processing results beyond strict RFC limits
+  * Validate spf.py against test suite, and add Received-SPF support to spf.py
+  * Support best_guess for SPF
+  * Support SPF delegation
 Version 1.6 - December 18, 2003
   * Arik Baratz pointed out endian problems using socket.inet_ntoa() and
     socket.inet_aton().  Use struct.pack("!L", struct.unpack("!L") to fix.
