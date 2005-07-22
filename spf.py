@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.31  2005/07/22 02:11:50  customdesigned
+# Use dictionary to check for CNAME loops.  Check limit independently for
+# each top level name, just like for PTR.
+#
 # Revision 1.30  2005/07/21 20:07:31  customdesigned
 # Translate DNS error in DNSLookup.  This completely isolates DNS
 # dependencies to the DNSLookup method.
@@ -337,6 +341,15 @@ COMMON_MISTAKES = { 'prt': 'ptr', 'ip': 'ip4', 'ipv4': 'ip4', 'ipv6': 'ip6' }
 
 class TempError(Exception):
 	"Temporary SPF error"
+	def __init__(self,msg,mech=None,ext=None):
+	  Exception.__init__(self,msg,mech)
+	  self.msg = msg
+	  self.mech = mech
+	  self.ext = ext
+	def __str__(self):
+	  if self.mech:
+	    return '%s: %s'%(self.msg,self.mech)
+	  return self.msg
 
 class PermError(Exception):
 	"Permanent SPF error"
@@ -480,7 +493,10 @@ class query(object):
 			  raise self.perm_error
 			return rc
 		except TempError,x:
-			return ('error', 450, 'SPF Temporary Error: ' + str(x))
+                    self.prob = x.msg
+		    if x.mech:
+		      self.mech.append(x.mech)
+		    return ('error', 450, 'SPF Temporary Error: ' + str(x))
 		except PermError,x:
 		    self.prob = x.msg
 		    if x.mech:
