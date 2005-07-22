@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.32  2005/07/22 17:45:20  kitterma
+# Converted TempError to look like PermError processing
+#
 # Revision 1.31  2005/07/22 02:11:50  customdesigned
 # Use dictionary to check for CNAME loops.  Check limit independently for
 # each top level name, just like for PTR.
@@ -302,14 +305,15 @@ RE_CIDR = re.compile(r'/([1-9]|1[0-9]*|2[0-9]*|3[0-2]*)$')
 JOINERS = {'l': '.', 's': '.'}
 
 RESULTS = {'+': 'pass', '-': 'fail', '?': 'neutral', '~': 'softfail',
-           'pass': 'pass', 'fail': 'fail', 'unknown': 'unknown',
+           'pass': 'pass', 'fail': 'fail', 'permerror': 'permerror',
 	   'error': 'error', 'neutral': 'neutral', 'softfail': 'softfail',
-	   'none': 'none', 'deny': 'fail' }
+	   'none': 'none'}
 
-EXPLANATIONS = {'pass': 'sender SPF verified', 'fail': 'access denied',
-                'unknown': 'permanent error in processing',
-                'error': 'temporary error in processing',
-		'softfail': 'domain in transition',
+EXPLANATIONS = {'pass': 'sender SPF authorized',
+                'fail': 'SPF fail - not authorized',
+                'permerror': 'permanent error in processing',
+                'temperror': 'temporary DNS error in processing',
+		'softfail': 'domain owner discourages use of this host',
 		'neutral': 'access neither permitted nor denied',
 		'none': ''
 		}
@@ -367,12 +371,12 @@ def check(i, s, h,local=None,receiver=None):
 	"""Test an incoming MAIL FROM:<s>, from a client with ip address i.
 	h is the HELO/EHLO domain name.
 
-	Returns (result, mta-status-code, explanation) where result in
-	['pass', 'unknown', 'fail', 'error', 'softfail', 'none', 'neutral' ].
+	Returns (result, explanation) where result in
+	['pass', 'permerror', 'fail', 'temperror', 'softfail', 'none', 'neutral' ].
 
 	Example:
 	>>> check(i='127.0.0.1', s='terry@wayforward.net', h='localhost')
-	('pass', 250, 'local connections always pass')
+	('pass', 'local connections always pass')
 
 	#>>> check(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
 
@@ -418,7 +422,7 @@ class query(object):
 
 	def set_default_explanation(self,exp):
 		exps = self.exps
-		for i in 'softfail','fail','unknown':
+		for i in 'softfail','fail','permerror':
 		  exps[i] = exp
 
 	def getp(self):
@@ -437,39 +441,39 @@ class query(object):
 	def check(self, spf=None):
 		"""
 	Returns (result, mta-status-code, explanation) where result
-	in ['fail', 'softfail', 'neutral' 'unknown', 'pass', 'error', 'none']
+	in ['fail', 'softfail', 'neutral' 'permerror', 'pass', 'temperror', 'none']
 
 	Examples:
 	>>> q = query(s='strong-bad@email.example.com',
 	...           h='mx.example.org', i='192.0.2.3')
 	>>> q.check(spf='v=spf1 ?all')
-	('neutral', 250, 'access neither permitted nor denied')
+	('neutral', 'access neither permitted nor denied')
 
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ?all moo')
-	('unknown', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+	('permerror', 'SPF Permanent Error: Unknown mechanism found: moo')
 
 	>>> q.check(spf='v=spf1 =a ?all moo')
-	('unknown', 550, 'SPF Permanent Error: Unknown qualifier, IETF draft para 4.6.1, found in: =a')
+	('permerror', 'SPF Permanent Error: Unknown qualifier, IETF draft para 4.6.1, found in: =a')
 
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ~all')
-	('pass', 250, 'sender SPF verified')
+	('pass', 'sender SPF authorized')
 
 	>>> q.strict = False
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all moo')
-	('pass', 250, 'sender SPF verified')
+	('pass', 'sender SPF authorized')
 
 	>>> q.check(spf='v=spf1 ip4:192.1.0.0/16 moo -all')
-	('unknown', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+	('permerror', 'SPF Permanent Error: Unknown mechanism found: moo')
 
 	>>> q.check(spf='v=spf1 ip4:192.1.0.0/16 ~all')
-	('softfail', 250, 'domain in transition')
+	('softfail', 'domain owner discourages use of this host')
 
 	>>> q.check(spf='v=spf1 -ip4:192.1.0.0/6 ~all')
-	('fail', 550, 'access denied')
+	('fail', 'SPF fail - not authorized')
 
 	# Assumes DNS available
 	>>> q.check()
-	('none', 250, '')
+	('none', '')
 		"""
 		self.mech = []		# unknown mechanisms
 		# If not strict, certain PermErrors (mispelled
@@ -478,7 +482,7 @@ class query(object):
 		# that strict processing would raise is saved here
 		self.perm_error = None
 		if self.i.startswith('127.'):
-			return ('pass', 250, 'local connections always pass')
+			return ('pass', 'local connections always pass')
 
 		try:
 			self.lookups = 0
@@ -496,14 +500,14 @@ class query(object):
                     self.prob = x.msg
 		    if x.mech:
 		      self.mech.append(x.mech)
-		    return ('error', 450, 'SPF Temporary Error: ' + str(x))
+		    return ('temperror', 'SPF Temporary Error: ' + str(x))
 		except PermError,x:
 		    self.prob = x.msg
 		    if x.mech:
 		      self.mech.append(x.mech)
 		    # Pre-Lentczner draft treats this as an unknown result
 		    # and equivalent to no SPF record.
-		    return ('unknown', 550, 'SPF Permanent Error: ' + str(x))
+		    return ('permerror', 'SPF Permanent Error: ' + str(x))
 
 	def check1(self, spf, domain, recursion):
 		# spf rfc: 3.7 Processing Limits
@@ -546,7 +550,7 @@ class query(object):
 		"""
 		# a mechanism
 		m, arg, cidrlength = parse_mechanism(mech, self.d)
-		# map '?' '+' or '-' to 'unknown' 'pass' or 'fail'
+		# map '?' '+' or '-' to 'neutral' 'pass' or 'fail'
 		if m:
 		  result = RESULTS.get(m[0])
 		  if result:
@@ -595,7 +599,7 @@ class query(object):
 		"""
 
 		if not spf:
-			return ('none', 250, EXPLANATIONS['none'])
+			return ('none', EXPLANATIONS['none'])
 
 		# split string by whitespace, drop the 'v=spf1'
 		#
@@ -639,7 +643,7 @@ class query(object):
 
 		    if m == 'include':
 		      self.check_lookups()
-		      res,code,txt = self.check1(self.dns_spf(arg),
+		      res,txt = self.check1(self.dns_spf(arg),
 					arg, recursion + 1)
 		      if res == 'pass':
 			break
@@ -695,9 +699,9 @@ class query(object):
 			result = default
 
 		if result == 'fail':
-		    return (result, 550, exps[result])
+		    return (result, exps[result])
 		else:
-		    return (result, 250, exps[result])
+		    return (result, exps[result])
 
 	def check_lookups(self):
 	    self.lookups = self.lookups + 1
@@ -928,7 +932,7 @@ class query(object):
 	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s;' % (
 	  	res,receiver,self.get_header_comment(res),self.i,
 	        self.l + '@' + self.o, self.h)
-	  if res == 'unknown':
+	  if res == 'permerror':
 	    return '%s (%s: %s)' % (' '.join([res] + self.mech),
 	      receiver,self.get_header_comment(res))
 	  return '%s (%s: %s)' % (res,receiver,self.get_header_comment(res))
@@ -953,7 +957,7 @@ class query(object):
 		    "%s is neither permitted nor denied by domain of %s" \
 		    	% (self.i,sender)
 		    #"%s does not designate permitted sender hosts" % sender
-		elif res == 'unknown': return \
+		elif res == 'permerror': return \
 		    "permanent error in processing domain of %s: %s" \
 		    	% (sender, self.prob)
 		elif res == 'error': return \
