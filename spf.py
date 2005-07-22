@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.30  2005/07/21 20:07:31  customdesigned
+# Translate DNS error in DNSLookup.  This completely isolates DNS
+# dependencies to the DNSLookup method.
+#
 # Revision 1.29  2005/07/21 17:49:39  customdesigned
 # My best guess at what RFC intended for limiting CNAME loops.
 #
@@ -326,6 +330,7 @@ DEFAULT_SPF = 'v=spf1 a/24 mx/24 ptr'
 MAX_LOOKUP = 10 #draft-schlitt-spf-classic-02 Para 10.1
 MAX_MX = 10 #draft-schlitt-spf-classic-02 Para 10.1
 MAX_PTR = 10 #draft-schlitt-spf-classic-02 Para 10.1
+MAX_CNAME = 10 # analogous interpretation to MAX_PTR
 MAX_RECURSION = 20
 ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
 COMMON_MISTAKES = { 'prt': 'ptr', 'ip': 'ip4', 'ipv4': 'ip4', 'ipv6': 'ip6' }
@@ -866,7 +871,7 @@ class query(object):
 		"""Get a list of domain names for an IP address."""
 		return self.dns(reverse_dots(i) + ".in-addr.arpa", 'PTR')
 
-	def dns(self, name, qtype):
+	def dns(self, name, qtype, cnames=None):
 		"""DNS query.
 
 		If the result is in cache, return that.  Otherwise pull the
@@ -889,8 +894,15 @@ class query(object):
 			    self.cache.setdefault(k, []).append(v)
 			result = self.cache.get( (name, qtype), [])
 		if not result and cname:
-		        self.check_lookups()
-			result = self.dns(cname, qtype)
+			if not cnames:
+			  cnames = {}
+			elif len(cnames) >= MAX_CNAME:
+			  raise PermError(
+			    'Length of CNAME chain exceeds %d' % MAX_CNAME)
+			cnames[name] = cname
+			if cname in cnames:
+			  raise PermError,'CNAME loop'
+			result = self.dns(cname, qtype, cnames=cnames)
 		return result
 
 	def get_header(self,res,receiver=None):

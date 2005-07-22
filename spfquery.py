@@ -4,7 +4,14 @@
 # Copyright 2004 Business Management Systems, Inc.
 # This code is under the GNU General Public License.  See COPYING for details.
 
+# Emulate the spfquery command line tool used by Wayne Schlitt's SPF test suite
+
 # $Log$
+# Revision 1.2  2005/07/14 04:18:01  customdesigned
+# Bring explanations and Received-SPF header into line with
+# the unknown=PermErr and error=TempErr convention.
+# Hope my case-sensitive mech fix doesn't clash with Scotts.
+#
 # Revision 1.1.1.1  2005/06/20 19:57:32  customdesigned
 # Move Python SPF to its own module.
 #

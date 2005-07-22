@@ -5,7 +5,29 @@ zonedata = {
   'premierpc.co.uk':
   [('SPF','v=spf1 mx/26 exists:%{l}.%{d}.%{i}.spf.uksubnet.net -all')],
   'mailing.gdi.ws':
-  [('CNAME','mailing.gdi.ws')]
+  [('CNAME','mailing.gdi.ws')],
+  'loop0.example.com':
+  [('CNAME','loop1.example.com')],
+  'loop1.example.com':
+  [('CNAME','loop2.example.com')],
+  'loop2.example.com':
+  [('CNAME','loop3.example.com')],
+  'loop3.example.com':
+  [('CNAME','loop4.example.com')],
+  'loop4.example.com':
+  [('CNAME','loop5.example.com')],
+  'loop5.example.com':
+  [('CNAME','loop6.example.com')],
+  'loop6.example.com':
+  [('CNAME','loop7.example.com')],
+  'loop7.example.com':
+  [('CNAME','loop8.example.com')],
+  'loop8.example.com':
+  [('CNAME','loop9.example.com')],
+  'loop9.example.com':
+  [('CNAME','loop10.example.com')],
+  'loop10.example.com':
+  [('CNAME','loop0.example.com')]
 }
 
 def DNSLookup(name,qtype):
@@ -28,6 +50,9 @@ class SPFTestCase(unittest.TestCase):
 
   def testCnameLoop(self):
     i, s, h = '66.150.186.79','chuckvsr@mailing.gdi.ws','master.gdi.ws'
+    q = spf.query(i=i, s=s, h=h)
+    self.failUnless(q.check()[0] == 'unknown')
+    i, s, h = '66.150.186.79','chuckvsr@loop0.example.com','master.gdi.ws'
     q = spf.query(i=i, s=s, h=h)
     self.failUnless(q.check()[0] == 'unknown')
 
