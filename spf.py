@@ -19,7 +19,7 @@ AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
 SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 For more information about SPF, a tool against email forgery, see
-	http://spf.pobox.com/
+	http://openspf.com/
 
 For news, bugfixes, etc. visit the home page for this implementation at
 	http://www.wayforward.net/spf/
@@ -47,6 +47,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.33  2005/07/22 18:23:28  kitterma
+# *** Breaks external API.  Only returns SPF result now.  Up to the calling
+# module to determine the MTA result codes from that.  Also, internally support
+# the newer PermError/TempError convention.
+#
 # Revision 1.32  2005/07/22 17:45:20  kitterma
 # Converted TempError to look like PermError processing
 #
@@ -83,168 +88,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Revision 1.23  2005/07/19 15:22:50  customdesigned
 # MX and PTR limits are MUST NOT check limits, and do not result in PermErr.
 # Also, check belongs in mx and ptr specific methods, not in dns() method.
-#
-# Revision 1.22  2005/07/19 05:02:29  customdesigned
-# FQDN test was broken.  Added test case.  Move FQDN test to after
-# macro expansion.
-#
-# Revision 1.21  2005/07/18 20:46:27  kitterma
-# Fixed reference problem in 1.20
-#
-# Revision 1.20  2005/07/18 20:21:47  kitterma
-# Change to dns_spf to go ahead and check for a type 99 (SPF) record even if a
-# TXT record is found and make sure if type SPF is present that they are
-# identical when using strict processing.
-#
-# Revision 1.19  2005/07/18 19:36:00  kitterma
-# Change to require at least one dot in a domain name.  Added PermError
-# description to indicate FQDN should be used.  This is a common error.
-#
-# Revision 1.18  2005/07/18 17:13:37  kitterma
-# Change macro processing to raise PermError on an unknown macro.
-# schlitt-spf-classic-02 para 8.1.  Change exp modifier processing to ignore
-# exp strings with syntax errors.  schlitt-spf-classic-02 para 6.2.
-#
-# Revision 1.17  2005/07/18 14:35:34  customdesigned
-# Remove debugging printf
-#
-# Revision 1.16  2005/07/18 14:34:14  customdesigned
-# Forgot to remove debugging print
-#
-# Revision 1.15  2005/07/15 21:17:36  customdesigned
-# Recursion limit raises AssertionError in strict mode, PermError otherwise.
-#
-# Revision 1.14  2005/07/15 20:34:11  customdesigned
-# Check whether DNS package already supports SPF before patching
-#
-# Revision 1.13  2005/07/15 20:01:22  customdesigned
-# Allow extended results for MX limit
-#
-# Revision 1.12  2005/07/15 19:12:09  customdesigned
-# Official IANA SPF record (type 99) support.
-#
-# Revision 1.11  2005/07/15 18:03:02  customdesigned
-# Fix unknown Received-SPF header broken by result changes
-#
-# Revision 1.10  2005/07/15 16:17:05  customdesigned
-# Start type99 support.
-# Make Scott's "/" support in parse_mechanism more elegant as requested.
-# Add test case for "/" support.
-#
-# Revision 1.9  2005/07/15 03:33:14  kitterma
-# Fix for bug 1238403 - Crash if non-CIDR / present.  Also added
-# validation check for valid IPv4 CIDR range.
-#
-# Revision 1.8  2005/07/14 04:18:01  customdesigned
-# Bring explanations and Received-SPF header into line with
-# the unknown=PermErr and error=TempErr convention.
-# Hope my case-sensitive mech fix doesn't clash with Scotts.
-#
-# Revision 1.7  2005/07/12 21:43:56  kitterma
-# Added processing to clarify some cases of unknown
-# qualifier errors (to distinguish between unknown qualifier and
-# unknown mechanism).
-# Also cleaned up comments from previous updates.
-#
-# Revision 1.6  2005/06/29 14:46:26  customdesigned
-# Distinguish trivial recursion from missing arg for diagnostic purposes.
-#
-# Revision 1.5  2005/06/28 17:48:56  customdesigned
-# Support extended processing results when a PermError should strictly occur.
-#
-# Revision 1.4  2005/06/22 15:54:54  customdesigned
-# Correct spelling.
-#
-# Revision 1.3  2005/06/22 00:08:24  kitterma
-# Changes from draft-mengwong overall DNS lookup and recursion
-# depth limits to draft-schlitt-spf-classic-02 DNS lookup, MX lookup, and
-# PTR lookup limits.  Recursion code is still present and functioning, but
-# it should be impossible to trip it.
-#
-# Revision 1.2  2005/06/21 16:46:09  kitterma
-# Updated definition of SPF, added reference to the sourceforge project site,
-# and deleted obsolete Microsoft Caller ID for Email XML translation routine.
-#
-# Revision 1.1.1.1  2005/06/20 19:57:32  customdesigned
-# Move Python SPF to its own module.
-#
-# Revision 1.5  2005/06/14 20:31:26  customdesigned
-# fix pychecker nits
-#
-# Revision 1.4  2005/06/02 04:18:55  customdesigned
-# Update copyright notices after reading article on /.
-#
-# Revision 1.3  2005/06/02 02:08:12  customdesigned
-# Reject on PermErr
-#
-# Revision 1.2  2005/05/31 18:57:59  customdesigned
-# Clear unknown mechanism list at proper time.
-#
-# Revision 1.24  2005/03/16 21:58:39  stuart
-# Change Milter module to package.
-#
-# Revision 1.22  2005/02/09 17:52:59  stuart
-# Report DNS errors as PermError rather than unknown.
-#
-# Revision 1.21  2004/11/20 16:37:03  stuart
-# Handle multi-segment TXT records.
-#
-# Revision 1.20  2004/11/19 06:10:30  stuart
-# Use PermError exception instead of reporting unknown.
-#
-# Revision 1.19  2004/11/09 23:00:18  stuart
-# Limit recursion and DNS lookups separately.
-#
-#
-# Revision 1.17  2004/09/10 18:08:26  stuart
-# Return unknown for null mechanism
-#
-# Revision 1.16  2004/09/04 23:27:06  stuart
-# More mechanism aliases.
-#
-# Revision 1.15  2004/08/30 21:19:05  stuart
-# Return unknown for invalid ip syntax in mechanism
-#
-# Revision 1.14  2004/08/23 02:28:24  stuart
-# Remove Perl usage message.
-#
-# Revision 1.13  2004/07/23 19:23:12  stuart
-# Always fail to match on ip6, until we support it properly.
-#
-# Revision 1.12  2004/07/23 18:48:15  stuart
-# Fold CID parsing into spf
-#
-# Revision 1.11  2004/07/21 21:32:01  stuart
-# Handle CID records (Microsoft XML format).
-#
-# Revision 1.10  2004/04/19 22:12:11  stuart
-# Release 0.6.9
-#
-# Revision 1.9  2004/04/18 03:29:35  stuart
-# Pass most tests except -local and -rcpt-to
-#
-# Revision 1.8  2004/04/17 22:17:55  stuart
-# Header comment method.
-#
-# Revision 1.7  2004/04/17 18:22:48  stuart
-# Support default explanation.
-#
-# Revision 1.6  2004/04/06 20:18:02  stuart
-# Fix bug in include
-#
-# Revision 1.5  2004/04/05 22:29:46  stuart
-# SPF best_guess,
-#
-# Revision 1.4  2004/03/25 03:27:34  stuart
-# Support delegation of SPF records.
-#
-# Revision 1.3  2004/03/13 12:23:23  stuart
-# Expanded result codes.  Tolerate common method misspellings.
-#
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "1.6: December 18, 2003"
+__version__ = "1.7: July 22, 2005"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -340,6 +187,7 @@ MAX_MX = 10 #draft-schlitt-spf-classic-02 Para 10.1
 MAX_PTR = 10 #draft-schlitt-spf-classic-02 Para 10.1
 MAX_CNAME = 10 # analogous interpretation to MAX_PTR
 MAX_RECURSION = 20
+
 ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
 COMMON_MISTAKES = { 'prt': 'ptr', 'ip': 'ip4', 'ipv4': 'ip4', 'ipv6': 'ip6' }
 
@@ -400,7 +248,7 @@ class query(object):
 	This is also, by design, the same variables used in SPF macro
 	expansion.
 
-	Also keeps cache: DNS cache.
+	Also keeps cache: DNS cache.  
 	"""
 	def __init__(self, i, s, h,local=None,receiver=None,strict=True):
 		self.i, self.s, self.h = i, s, h
@@ -413,6 +261,9 @@ class query(object):
 		self.p = None
 		if receiver:
 		  self.r = receiver
+		# Since the cache does not track Time To Live, it is created
+		# fresh for each query.  It is important for efficiently using
+		# multiple results provided in DNS answers.
 		self.cache = {}
 		self.exps = dict(EXPLANATIONS)
 		self.local = local	# local policy
@@ -917,6 +768,7 @@ class query(object):
 			if not cnames:
 			  cnames = {}
 			elif len(cnames) >= MAX_CNAME:
+			  #return result	# if too many == NX_DOMAIN
 			  raise PermError(
 			    'Length of CNAME chain exceeds %d' % MAX_CNAME)
 			cnames[name] = cname

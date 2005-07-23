@@ -46,20 +46,21 @@ class SPFTestCase(unittest.TestCase):
   def testMacro(self):
     i, s, h = ('1.2.3.4','lyndon.eaton@premierpc.co.uk','mail.uksubnet.net')
     q = spf.query(i=i, s=s, h=h)
-    self.failUnless(q.check()[0] == 'fail')
+    self.assertEqual(q.check()[0],'fail')
 
   def testCnameLoop(self):
     i, s, h = '66.150.186.79','chuckvsr@mailing.gdi.ws','master.gdi.ws'
     q = spf.query(i=i, s=s, h=h)
-    self.failUnless(q.check()[0] == 'unknown')
+    self.assertEqual(q.check()[0],'permerror')
     i, s, h = '66.150.186.79','chuckvsr@loop0.example.com','master.gdi.ws'
     q = spf.query(i=i, s=s, h=h)
-    self.failUnless(q.check()[0] == 'unknown')
+    self.assertEqual(q.check()[0],'permerror')	# if too many == PermErr
+    #self.assertEqual(q.check()[0],'none')	# if too many == NX_DOMAIN
 
   def testDNSError(self):
     i, s, h = ('1.2.3.4','lyndon.eaton@error.co.uk','mail.uksubnet.net')
     q = spf.query(i=i, s=s, h=h)
-    self.failUnless(q.check()[0] == 'error')
+    self.assertEqual(q.check()[0],'temperror')
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
