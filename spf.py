@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.36  2005/07/26 05:59:38  customdesigned
+# Validate ip4 address format.
+#
 # Revision 1.35  2005/07/26 05:23:24  customdesigned
 # Fix stupid typo in RE_CIDR
 #
@@ -152,7 +155,8 @@ RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
 
 RE_CIDR = re.compile(r'/([1-9]|1[0-9]|2[0-9]|3[0-2])$')
 
-RE_IP4 = re.compile(r'\.'.join([r'(1\d{1,2}|2[0-4]?\d|25[0-5]|[3-9]?\d)']*4)+'$')
+RE_IP4 = re.compile(r'\.'.join(
+	[r'(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])']*4)+'$')
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
