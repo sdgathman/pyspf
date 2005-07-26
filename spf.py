@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.37  2005/07/26 06:12:19  customdesigned
+# Use ABNF derived RE for IP4.  IP6 RE is way ugly...
+#
 # Revision 1.36  2005/07/26 05:59:38  customdesigned
 # Validate ip4 address format.
 #
@@ -478,7 +481,11 @@ class query(object):
 
 		# split string by whitespace, drop the 'v=spf1'
 		#
-		spf = spf.split()[1:]
+		spf = spf.split()
+		#Catch case where SPF record has no spaces
+		if spf[0] != 'v=spf1':   
+                    raise PermError('Invalid SPF record in', self.d)
+		spf = spf[1:]
 
 		# copy of explanations to be modified by exp=
 		exps = self.exps
