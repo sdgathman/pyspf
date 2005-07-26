@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.34  2005/07/23 17:58:02  customdesigned
+# Put new result codes in unit tests.
+#
 # Revision 1.33  2005/07/22 18:23:28  kitterma
 # *** Breaks external API.  Only returns SPF result now.  Up to the calling
 # module to determine the MTA result codes from that.  Also, internally support
@@ -144,7 +147,7 @@ RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
 # Regular expression to break up a macro expansion
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
 
-RE_CIDR = re.compile(r'/([1-9]|1[0-9]*|2[0-9]*|3[0-2]*)$')
+RE_CIDR = re.compile(r'/([1-9]|1[0-9]|2[0-9]|3[0-2])$')
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
@@ -261,6 +264,8 @@ class query(object):
 		self.p = None
 		if receiver:
 		  self.r = receiver
+		else:
+		  self.r = 'unknown'
 		# Since the cache does not track Time To Live, it is created
 		# fresh for each query.  It is important for efficiently using
 		# multiple results provided in DNS answers.
@@ -572,7 +577,7 @@ class query(object):
 		else:
 		  return 'explanation : Required option is missing'
 
-	def expand(self, str):
+	def expand(self, str, macros='slodipvh'):
 		"""Do SPF RFC macro expansion.
 
 		Examples:
