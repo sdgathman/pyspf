@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.35  2005/07/26 05:23:24  customdesigned
+# Fix stupid typo in RE_CIDR
+#
 # Revision 1.34  2005/07/23 17:58:02  customdesigned
 # Put new result codes in unit tests.
 #
@@ -148,6 +151,8 @@ RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
 
 RE_CIDR = re.compile(r'/([1-9]|1[0-9]|2[0-9]|3[0-2])$')
+
+RE_IP4 = re.compile(r'\.'.join([r'(1\d{1,2}|2[0-4]?\d|25[0-5]|[3-9]?\d)']*4)+'$')
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
@@ -398,6 +403,14 @@ class query(object):
 	>>> q.validate_mechanism('?mx:%{d}/27')
 	('?mx:%{d}/27', 'mx', 'email.example.com', 27, 'neutral')
 
+	>>> try: q.validate_mechanism('ip4:1.2.3.4/247')
+	... except PermError,x: print x
+	Invalid IP4 address: ip4:1.2.3.4/247
+
+	>>> try: q.validate_mechanism('ip4:1.2.3.444/24')
+	... except PermError,x: print x
+	Invalid IP4 address: ip4:1.2.3.444/24
+
 	>>> q.validate_mechanism('-mx::%%%_/.Clara.de/27')
 	('-mx::%%%_/.Clara.de/27', 'mx', ':% /.Clara.de', 27, 'fail')
 
@@ -435,6 +448,8 @@ class query(object):
 			raise PermError('include has trivial recursion',mech)
 		      raise PermError('include mechanism missing domain',mech)
 		  return mech,m,arg,cidrlength,result
+		if m == 'ip4' and not RE_IP4.match(arg):
+		  raise PermError('Invalid IP4 address',mech)
 		if m in ALL_MECHANISMS:
 		  return mech,m,arg,cidrlength,result
 		try:
