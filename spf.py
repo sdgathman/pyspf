@@ -48,6 +48,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.40  2005/07/28 04:25:45  kitterma
+# Clean up modifier RE to match current ABNF.  Added test example for this.
+# Fixed missing space in one test/example.
+#
 # Revision 1.39  2005/07/28 03:56:13  kitterma
 # Restore three part API (res, code, txt).
 # Add dictionary to support local policy checks in future updates.
@@ -124,7 +128,8 @@ JOINERS = {'l': '.', 's': '.'}
 RESULTS = {'+': 'pass', '-': 'fail', '?': 'neutral', '~': 'softfail',
            'pass': 'pass', 'fail': 'fail', 'permerror': 'permerror',
 	   'error': 'error', 'neutral': 'neutral', 'softfail': 'softfail',
-	   'none': 'none', 'local': 'local', 'trusted': 'trusted'}
+	   'none': 'none', 'local': 'local', 'trusted': 'trusted',
+           'ambiguous': 'ambiguous'}
 
 EXPLANATIONS = {'pass': 'sender SPF authorized',
                 'fail': 'SPF fail - not authorized',
@@ -132,7 +137,12 @@ EXPLANATIONS = {'pass': 'sender SPF authorized',
                 'temperror': 'temporary DNS error in processing',
 		'softfail': 'domain owner discourages use of this host',
 		'neutral': 'access neither permitted nor denied',
-		'none': ''
+		'none': '',
+                #Note: The following are not formally SPF results
+                'local': 'No SPF result due to local policy',
+                'trusted': 'No SPF check - trusted-forwarder.org',
+                #Ambiguous only used in harsh mode for SPF validation
+                'ambiguous': 'No error, but results may vary'
 		}
 
 #Default receiver policies - can be overridden.
@@ -194,6 +204,21 @@ MAX_RECURSION = 20
 
 ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
 COMMON_MISTAKES = { 'prt': 'ptr', 'ip': 'ip4', 'ipv4': 'ip4', 'ipv6': 'ip6' }
+
+
+#If harsh processing, for the validator, is invoked, warn if results
+#likely deviate from the publishers intention.
+class AmbiguityWarning(Exception):
+	"SPF Warning - ambiguous results"
+	def __init__(self,msg,mech=None,ext=None):
+	  Exception.__init__(self,msg,mech)
+	  self.msg = msg
+	  self.mech = mech
+	  self.ext = ext
+	def __str__(self):
+	  if self.mech:
+	    return '%s: %s'%(self.msg,self.mech)
+	  return self.msg
 
 class TempError(Exception):
 	"Temporary SPF error"
@@ -389,7 +414,14 @@ class query(object):
 		try:
 			tmp, self.d = self.d, domain
 			return self.check0(spf,recursion)
-		finally:
+		except AmbiguityWarning,x:
+		    self.prob = x.msg
+		    if x.mech:
+		      self.mech.append(x.mech)
+		      return ('ambiguous', 000, 'SPF Ambiguity Warning: ' + str(x))
+		    try:
+                        self.d = tmp
+                    finally:
 			self.d = tmp
 
 	def validate_mechanism(self,mech):
@@ -705,8 +737,6 @@ class query(object):
 		# check official SPF type first when it becomes more popular
 		b = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
 		if len(b) == 1:
-		    # FIXME: really must fully parse each record
-		    # and compare with appropriate parts case insensitive.
 		    if self.strict >= 2 and len(a) == 1 and a[0] != b[0]:
 		        raise PermError(
 'v=spf1 records of both type TXT and SPF (type 99) present, but not identical')
@@ -740,6 +770,17 @@ class query(object):
 # To prevent DoS attacks, more than 10 MX names MUST NOT be looked up
 		if self.strict:
 		  max = MAX_MX
+		  if self.strict == '2':
+                      #Break out the number of MX records returned for testing
+                      mxnames = self.dns(domainname, 'MX')
+                      mxip = [a for mx in mxnames[:max] for a in self.dns_a(mx[1])]
+                      if len(mxnames) > max:
+                          warning = 'More than ' + str(max) + ' MX records returned'
+                          raise AmbiguityWarning(warning, domainname)
+                      else:
+                          if len(mxnames) == 0:
+                              raise AmbiguityWarning('No MX records found for mx mechanism', domainname)
+                          return mxip
 		else:
 		  max = MAX_MX * 4
 		return [a for mx in self.dns(domainname, 'MX')[:max] \
@@ -760,6 +801,17 @@ class query(object):
 # To prevent DoS attacks, more than 10 PTR names MUST NOT be looked up
 		if self.strict:
 		  max = MAX_PTR
+		  if self.strict == '2':
+                      #Break out the number of PTR records returned for testing
+                      ptrnames = self.dns_ptr(i)
+                      ptrip = [p for p in ptrnames if i in self.dns_a(p)]
+                      if len(ptrnames) > max:
+                          warning = 'More than ' + str(max) + ' PTR records returned'
+                          raise AmbiguityWarning(warning, domainname)
+                      else:
+                          if len(ptrnames) == 0:
+                              raise AmbiguityWarning('No PTR records found for ptr mechanism', domainname)
+                          return ptrip
 		else:
 		  max = MAX_PTR * 4
 		return [p for p in self.dns_ptr(i)[:max] if i in self.dns_a(p)]
