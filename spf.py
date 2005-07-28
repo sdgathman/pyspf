@@ -48,6 +48,12 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.41  2005/07/28 18:26:14  kitterma
+# Added AmbiguityWarning error class for harsh processing (validator).
+# Added ambiguous result tests for more than 10 MX or PTR returned.
+# Added AmbiguityWarning for mx mechanisms that return no MX records.
+# Created new result called ambiguous for use with harsh processing.
+#
 # Revision 1.40  2005/07/28 04:25:45  kitterma
 # Clean up modifier RE to match current ABNF.  Added test example for this.
 # Fixed missing space in one test/example.
@@ -788,6 +794,12 @@ class query(object):
 
 	def dns_a(self, domainname):
 		"""Get a list of IP addresses for a domainname."""
+		if self.strict == '2':
+                    alist = self.dns(domainname, 'A')
+                    if len(alist) == 0:
+                        raise AmbiguityWarning('No A records found for', domainname)
+                    else:
+                        return alist
 		return self.dns(domainname, 'A')
 
 	def dns_aaaa(self, domainname):
