@@ -48,6 +48,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.39  2005/07/28 03:56:13  kitterma
+# Restore three part API (res, code, txt).
+# Add dictionary to support local policy checks in future updates.
+# Add record for trusted-forwarder.org - support future TFWL checks.
+#
 # Revision 1.38  2005/07/26 14:11:12  kitterma
 # Added check to PermError if SPF record has no spaces
 
@@ -98,7 +103,7 @@ def DNSLookup(name,qtype):
 MASK = 0xFFFFFFFFL
 
 # Regular expression to look for modifiers
-RE_MODIFIER = re.compile(r'^([a-zA-Z]+)=')
+RE_MODIFIER = re.compile(r'^([a-zA-Z0-9_\-\.]+)=')
 
 # Regular expression to find macro expansions
 RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
@@ -223,7 +228,7 @@ def check(i, s, h,local=None,receiver=None):
 
 	Example:
 	>>> check(i='127.0.0.1', s='terry@wayforward.net', h='localhost')
-	('pass', 250,'local connections always pass')
+	('pass', 250, 'local connections always pass')
 
 	#>>> check(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
 
@@ -310,6 +315,12 @@ class query(object):
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ~all')
 	('pass', 250, 'sender SPF authorized')
 
+	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all moo=')
+	('pass', 250, 'sender SPF authorized')
+
+	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all match.sub-domains_9=yes')
+	('pass', 250, 'sender SPF authorized')
+	
 	>>> q.strict = False
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all moo')
 	('pass', 250, 'sender SPF authorized')
