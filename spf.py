@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.42  2005/07/28 21:03:24  kitterma
+# Added ambiguity check for no A records returned for a mechanism when harsh.
+#
 # Revision 1.41  2005/07/28 18:26:14  kitterma
 # Added AmbiguityWarning error class for harsh processing (validator).
 # Added ambiguous result tests for more than 10 MX or PTR returned.
@@ -815,15 +818,18 @@ class query(object):
 		  max = MAX_PTR
 		  if self.strict == '2':
                       #Break out the number of PTR records returned for testing
-                      ptrnames = self.dns_ptr(i)
-                      ptrip = [p for p in ptrnames if i in self.dns_a(p)]
-                      if len(ptrnames) > max:
-                          warning = 'More than ' + str(max) + ' PTR records returned'
-                          raise AmbiguityWarning(warning, domainname)
-                      else:
-                          if len(ptrnames) == 0:
-                              raise AmbiguityWarning('No PTR records found for ptr mechanism', domainname)
-                          return ptrip
+                      try:
+                          ptrnames = self.dns_ptr(i)
+                          ptrip = [p for p in ptrnames if i in self.dns_a(p)]
+                          if len(ptrnames) > max:
+                              warning = 'More than ' + str(max) + ' PTR records returned'
+                              raise AmbiguityWarning(warning, domainname)
+                          else:
+                              if len(ptrnames) == 0:
+                                  raise AmbiguityWarning('No PTR records found for ptr mechanism', ptrnames)
+                              return ptrip
+                      except:
+                          raise AmbiguityWarning('No PTR records found for ptr mechanism', ptrnames)
 		else:
 		  max = MAX_PTR * 4
 		return [p for p in self.dns_ptr(i)[:max] if i in self.dns_a(p)]
