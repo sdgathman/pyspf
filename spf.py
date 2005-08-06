@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.43  2005/08/02 12:57:02  kitterma
+# Removed extraneous debugging print statement.
+#
 # Revision 1.42  2005/07/28 21:03:24  kitterma
 # Added ambiguity check for no A records returned for a mechanism when harsh.
 #
@@ -450,9 +453,13 @@ class query(object):
 	... except PermError,x: print x
 	Invalid IP4 address: ip4:1.2.3.4/247
 
-	>>> try: q.validate_mechanism('ip4:1.2.3.444/24')
+	>>> try: q.validate_mechanism('ip4:1.2.3.4/247')
 	... except PermError,x: print x
-	Invalid IP4 address: ip4:1.2.3.444/24
+	Invalid IP4 address: ip4:1.2.3.4/247
+
+	>>> try: q.validate_mechanism('a:1.2.3.44/24')
+	... except PermError,x: print x
+	Top Level Domain may not be all numbers: 1.2.3.44
 
 	>>> q.validate_mechanism('-mx::%%%_/.Clara.de/27')
 	('-mx::%%%_/.Clara.de/27', 'mx', ':% /.Clara.de', 27, 'fail')
@@ -485,6 +492,15 @@ class query(object):
 		  if not (0 < arg.find('.') < len(arg) - 1):
 		    raise PermError('Invalid domain found (use FQDN)',
 			  arg)
+		  splitarg = arg.split('.')
+		  splitarg.reverse()
+		  if splitarg[0].isdigit():
+                      raise PermError('Top Level Domain may not be all numbers',
+			  arg)
+                          #Test for all numeric TLD as recommended by RFC 3696
+                          #Note this TLD test may pass non-existant TLDs.  3696
+                          #recommends using DNS lookups to test beyond this
+                          #initial test.
 		  if m == 'include':
 		    if arg == self.d:
 		      if mech != 'include':
