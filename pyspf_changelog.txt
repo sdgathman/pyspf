@@ -1,3 +1,27 @@
+# Revision 1.44  2005/08/06 06:31:21  kitterma
+# Added RFC 3696 test for all numeric TLD, new PermError.
+#
+# Revision 1.43  2005/08/02 12:57:02  kitterma
+# Removed extraneous debugging print statement.
+#
+# Revision 1.42  2005/07/28 21:03:24  kitterma
+# Added ambiguity check for no A records returned for a mechanism when harsh.
+#
+# Revision 1.41  2005/07/28 18:26:14  kitterma
+# Added AmbiguityWarning error class for harsh processing (validator).
+# Added ambiguous result tests for more than 10 MX or PTR returned.
+# Added AmbiguityWarning for mx mechanisms that return no MX records.
+# Created new result called ambiguous for use with harsh processing.
+#
+# Revision 1.40  2005/07/28 04:25:45  kitterma
+# Clean up modifier RE to match current ABNF.  Added test example for this.
+# Fixed missing space in one test/example.
+#
+# Revision 1.39  2005/07/28 03:56:13  kitterma
+# Restore three part API (res, code, txt).
+# Add dictionary to support local policy checks in future updates.
+# Add record for trusted-forwarder.org - support future TFWL checks.
+#
 # Revision 1.38  2005/07/26 14:11:12  kitterma
 # Added check to PermError if SPF record has no spaces
 #

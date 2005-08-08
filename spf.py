@@ -48,29 +48,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
-# Revision 1.43  2005/08/02 12:57:02  kitterma
-# Removed extraneous debugging print statement.
+# Revision 1.45  2005/08/08 03:04:44  kitterma
+# Added PermError for multiple SPF records per para 4.5 of schlitt-02
 #
-# Revision 1.42  2005/07/28 21:03:24  kitterma
-# Added ambiguity check for no A records returned for a mechanism when harsh.
-#
-# Revision 1.41  2005/07/28 18:26:14  kitterma
-# Added AmbiguityWarning error class for harsh processing (validator).
-# Added ambiguous result tests for more than 10 MX or PTR returned.
-# Added AmbiguityWarning for mx mechanisms that return no MX records.
-# Created new result called ambiguous for use with harsh processing.
-#
-# Revision 1.40  2005/07/28 04:25:45  kitterma
-# Clean up modifier RE to match current ABNF.  Added test example for this.
-# Fixed missing space in one test/example.
-#
-# Revision 1.39  2005/07/28 03:56:13  kitterma
-# Restore three part API (res, code, txt).
-# Add dictionary to support local policy checks in future updates.
-# Add record for trusted-forwarder.org - support future TFWL checks.
-#
-# Revision 1.38  2005/07/26 14:11:12  kitterma
-# Added check to PermError if SPF record has no spaces
+# See spf_changelog.txt for earlier changes.
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
@@ -654,8 +635,13 @@ class query(object):
 		else:
 		    # no matches
 		    if redirect:
-			return self.check1(self.dns_spf(redirect),
-					       redirect, recursion + 1)
+                        #Catch redirect to a non-existant SPF record.
+                        redirect_record = self.dns_spf(redirect)
+                        if not redirect_record:
+                            raise PermError('redirect domain has no SPF record',
+                                            redirect)
+			return self.check1(redirect_record, redirect,
+                                           recursion + 1)
 		    else:
 			result = default
 
