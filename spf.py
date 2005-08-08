@@ -374,6 +374,11 @@ class query(object):
 	# Assumes DNS available
 	>>> q.check()
 	('none', 250, '')
+
+        >>> q.local='ip4:192.0.2.3'
+        >>> q.check(spf='v=spf1 ip4:192.1.0.0/6 -all')
+	('pass', 250, 'sender SPF authorized')
+
 		"""
 		self.mech = []		# unknown mechanisms
 		# If not strict, certain PermErrors (mispelled
@@ -389,7 +394,42 @@ class query(object):
 			if not spf:
 			    spf = self.dns_spf(self.d)
 			if self.local and spf:
-			    spf += ' ' + self.local
+                            #look to find the all (if any) and then put local
+                            #just before the all.
+                            spf = spf.split()
+                            #Catch case where SPF record has no spaces
+                            if spf[0] != 'v=spf1':   
+                                raise PermError('Invalid SPF record in', self.d)
+                            spf = spf[1:]
+                            if spf[0]:
+                                if spf[0] == '-all':
+                                    self.local = None
+                                    #Don't use local policy over-ride on domains
+                                    #that don't ever send mail - 'v=spf1 -all'
+                                    #Consistent with Mail::SPF::Query and libspf2.
+                                for mech in spf:
+                                    m, arg, cidrlength = parse_mechanism(mech,
+                                                                         self.d)
+                                    # map '?' '+' or '-' to 'neutral' 'pass'
+                                    # or 'fail'
+                                    if m:
+                                        result = RESULTS.get(m[0])
+                                        if result:
+                                        # eat '?' '+' or '-'
+                                            m = m[1:]
+                                            if m == 'all':
+                                                index = spf.index(mech)
+                                if index:
+                                    local = self.local.split()
+                                    for x in xrange(len(local)-1):
+                                        spf.insert(local[x],(index + x))
+                                    for mech in spf:
+                                        mech += " "
+                                    spf = repr(spf) ###FIX ME!!!
+                                    spf.join(' ')
+                                    print spf
+                                else:
+                                    spf = self.local
 			rc = self.check1(spf, self.d, 0)
 			if self.perm_error:
 			  # extended processing succeeded, but strict failed
@@ -453,13 +493,9 @@ class query(object):
 	... except PermError,x: print x
 	Invalid IP4 address: ip4:1.2.3.4/247
 
-	>>> try: q.validate_mechanism('ip4:1.2.3.4/247')
+	>>> try: q.validate_mechanism('ip4:1.2.3.444/24')
 	... except PermError,x: print x
-	Invalid IP4 address: ip4:1.2.3.4/247
-
-	>>> try: q.validate_mechanism('a:1.2.3.44/24')
-	... except PermError,x: print x
-	Top Level Domain may not be all numbers: 1.2.3.44
+	Invalid IP4 address: ip4:1.2.3.444/24
 
 	>>> q.validate_mechanism('-mx::%%%_/.Clara.de/27')
 	('-mx::%%%_/.Clara.de/27', 'mx', ':% /.Clara.de', 27, 'fail')
@@ -492,15 +528,6 @@ class query(object):
 		  if not (0 < arg.find('.') < len(arg) - 1):
 		    raise PermError('Invalid domain found (use FQDN)',
 			  arg)
-		  splitarg = arg.split('.')
-		  splitarg.reverse()
-		  if splitarg[0].isdigit():
-                      raise PermError('Top Level Domain may not be all numbers',
-			  arg)
-                          #Test for all numeric TLD as recommended by RFC 3696
-                          #Note this TLD test may pass non-existant TLDs.  3696
-                          #recommends using DNS lookups to test beyond this
-                          #initial test.
 		  if m == 'include':
 		    if arg == self.d:
 		      if mech != 'include':
@@ -757,10 +784,14 @@ class query(object):
 		"""
 		# for performance, check for most common case of TXT first
 		a = [t for t in self.dns_txt(domain) if t.startswith('v=spf1')]
+		if len(a) > 1:
+                    raise PermError('Two or more type TXT spf records found.')
 		if len(a) == 1 and self.strict < 2:
 		    return a[0]   			
 		# check official SPF type first when it becomes more popular
 		b = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
+		if len(b) > 1:
+                    raise PermError('Two or more type SPF spf records found.')
 		if len(b) == 1:
 		    if self.strict >= 2 and len(a) == 1 and a[0] != b[0]:
 		        raise PermError(
