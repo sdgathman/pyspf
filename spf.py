@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.46  2005/08/08 15:03:28  kitterma
+# Added PermError for redirect= to a domain without an SPF record.
+#
 # Revision 1.45  2005/08/08 03:04:44  kitterma
 # Added PermError for multiple SPF records per para 4.5 of schlitt-02
 #
@@ -356,8 +359,8 @@ class query(object):
 	>>> q.check()
 	('none', 250, '')
 
-        >>> q.local='ip4:192.0.2.3'
-        >>> q.check(spf='v=spf1 ip4:192.1.0.0/6 -all')
+        >>> q.local='ip4:192.0.2.3 a:example.org'
+        >>> q.check(spf='v=spf1 ip4:192.1.0.0/6 a:example.com -a:example.net -all')
 	('pass', 250, 'sender SPF authorized')
 
 		"""
@@ -367,6 +370,7 @@ class query(object):
 		# will continue processing.  However, the exception
 		# that strict processing would raise is saved here
 		self.perm_error = None
+		where = None
 		if self.i.startswith('127.'):
 			return ('pass', 250, 'local connections always pass')
 
@@ -374,20 +378,19 @@ class query(object):
 			self.lookups = 0
 			if not spf:
 			    spf = self.dns_spf(self.d)
-			if self.local and spf:
+			if self.local and spf: #Does not currently work.
                             #look to find the all (if any) and then put local
-                            #just before the all.
+                            #just before last non-fail mechanism.
                             spf = spf.split()
+                            local = self.local.split() #local policy is SPF mechanisms/
+                                                  #modifiers with no 'v=spf1' at
+                                                  #the start
                             #Catch case where SPF record has no spaces
                             if spf[0] != 'v=spf1':   
                                 raise PermError('Invalid SPF record in', self.d)
                             spf = spf[1:]
-                            if spf[0]:
-                                if spf[0] == '-all':
-                                    self.local = None
-                                    #Don't use local policy over-ride on domains
-                                    #that don't ever send mail - 'v=spf1 -all'
-                                    #Consistent with Mail::SPF::Query and libspf2.
+                            if spf:
+                                spf.reverse() #find the last non-fail mechanism
                                 for mech in spf:
                                     m, arg, cidrlength = parse_mechanism(mech,
                                                                          self.d)
@@ -396,22 +399,26 @@ class query(object):
                                     if m:
                                         result = RESULTS.get(m[0])
                                         if result:
-                                        # eat '?' '+' or '-'
-                                            m = m[1:]
-                                            if m == 'all':
-                                                index = spf.index(mech)
-                                if index:
-                                    local = self.local.split()
-                                    for x in xrange(len(local)-1):
-                                        spf.insert(local[x],(index + x))
-                                    for mech in spf:
-                                        mech += " "
-                                    spf = repr(spf) ###FIX ME!!!
-                                    spf.join(' ')
-                                    print spf
+                                        # keep looking until not fail
+                                            if m[1:] != '-':
+                                                pass
+                                        else:
+                                            where = spf.index(mech)
+                                            spf.reverse()
+                                            break
+                                    else:
+                                        pass
+                                if where:
+                                    where = len(spf) - where
+                                    spf = spf[:where] + local + spf[where:]
+                                    MAXLOOKUPS = 100 #Processing limits not
+                                                     #applied to local policy
                                 else:
-                                    spf = self.local
-			rc = self.check1(spf, self.d, 0)
+                                    pass #No local policy adds for v=spf1 -all
+                            else:
+                                #for 'v=spf1' record, just do local policy
+                                spf = local
+                        rc = self.check1(spf, self.d, 0)
 			if self.perm_error:
 			  # extended processing succeeded, but strict failed
 			  self.perm_error.ext = rc
@@ -450,8 +457,8 @@ class query(object):
 		except AmbiguityWarning,x:
 		    self.prob = x.msg
 		    if x.mech:
-		      self.mech.append(x.mech)
-		      return ('ambiguous', 000, 'SPF Ambiguity Warning: ' + str(x))
+                        self.mech.append(x.mech)
+                        return ('ambiguous', 000, 'SPF Ambiguity Warning: ' + str(x))
 		    try:
                         self.d = tmp
                     finally:
@@ -541,11 +548,12 @@ class query(object):
 
 		# split string by whitespace, drop the 'v=spf1'
 		#
-		spf = spf.split()
-		#Catch case where SPF record has no spaces
-		if spf[0] != 'v=spf1':   
-                    raise PermError('Invalid SPF record in', self.d)
-		spf = spf[1:]
+		if not self.local:
+                    spf = spf.split()
+                    #Catch case where SPF record has no spaces
+                    if spf[0] != 'v=spf1':   
+                        raise PermError('Invalid SPF record in', self.d)
+                    spf = spf[1:]
 
 		# copy of explanations to be modified by exp=
 		exps = self.exps
@@ -598,10 +606,15 @@ class query(object):
 			    break
 
 		    elif m == 'exists':
-		        self.check_lookups()
-			if len(self.dns_a(arg)) > 0:
+                        self.check_lookups()
+                        try:
+                            if len(self.dns_a(arg)) > 0:
 				break
-
+		        except AmbiguityWarning:
+                            # Exists wants no response sometimes so don't raise
+                            # the warning.
+                            pass
+                        
 		    elif m == 'a':
 		        self.check_lookups()
 			if cidrmatch(self.i, self.dns_a(arg), cidrlength):
@@ -833,7 +846,8 @@ class query(object):
 		if self.strict == '2':
                     alist = self.dns(domainname, 'A')
                     if len(alist) == 0:
-                        raise AmbiguityWarning('No A records found for', domainname)
+                        raise AmbiguityWarning('No A records found for',
+                                               domainname)
                     else:
                         return alist
 		return self.dns(domainname, 'A')
@@ -1136,7 +1150,7 @@ def bin2addr(addr):
 	return socket.inet_ntoa(struct.pack("!L", addr))
 
 def expand_one(expansion, str, joiner):
-	if not str:
+    	if not str:
 		return expansion
 	ln, reverse, delimiters = RE_ARGS.split(str)[1:4]
 	if not delimiters:
