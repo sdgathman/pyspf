@@ -48,6 +48,16 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.47  2005/08/10 13:31:34  kitterma
+# Completed first part of local policy implementation.  Local policy will now be
+# added before the last non-fail mechanism as in Libspf2 and Mail::SPF::Query.
+# Still ToDo for local policy is: don't do local policy until after redirect=,
+# modify explanation to indicate result is based on local policy, and an option
+# for RFE [ 1224459 ] local policy API to execute local policy before public
+# policy.  Will do the RFE after basic compatibility with the reference
+# implementations.  Restored Unix line endings.  Changed Harsh mode check for
+# ambiguity to exclude exists: mechanisms.
+#
 # Revision 1.46  2005/08/08 15:03:28  kitterma
 # Added PermError for redirect= to a domain without an SPF record.
 #
@@ -378,7 +388,7 @@ class query(object):
 			self.lookups = 0
 			if not spf:
 			    spf = self.dns_spf(self.d)
-			if self.local and spf: #Does not currently work.
+			if self.local and spf: 
                             #look to find the all (if any) and then put local
                             #just before last non-fail mechanism.
                             spf = spf.split()
@@ -516,6 +526,15 @@ class query(object):
 		  if not (0 < arg.find('.') < len(arg) - 1):
 		    raise PermError('Invalid domain found (use FQDN)',
 			  arg)
+                  splitarg = arg.split('.') 	 
+                  splitarg.reverse() 	 
+                  if splitarg[0].isdigit(): 	 
+                    raise PermError('Top Level Domain may not be all numbers',
+                                    arg) 	 
+                    #Test for all numeric TLD as recommended by RFC 3696 	 
+                    #Note this TLD test may pass non-existant TLDs.  3696 	 
+                    #recommends using DNS lookups to test beyond this 	 
+                    #initial test.
 		  if m == 'include':
 		    if arg == self.d:
 		      if mech != 'include':
