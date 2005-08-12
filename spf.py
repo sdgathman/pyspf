@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.48  2005/08/11 14:30:44  kitterma
+# Restore all numeric TLD test from 1.44 that was inadvertently deleted.  Ugh.
+#
 # Revision 1.47  2005/08/10 13:31:34  kitterma
 # Completed first part of local policy implementation.  Local policy will now be
 # added before the last non-fail mechanism as in Libspf2 and Mail::SPF::Query.
@@ -305,7 +308,7 @@ class query(object):
 		self.exps = dict(EXPLANATIONS)
 		self.local = local	# local policy
     		self.lookups = 0
-		# strict can be False, True, or 2 for harsh
+		# strict can be False, True, or 2 (numeric) for harsh
 		self.strict = strict
 
 	def set_default_explanation(self,exp):
@@ -844,7 +847,7 @@ class query(object):
 # To prevent DoS attacks, more than 10 MX names MUST NOT be looked up
 		if self.strict:
 		  max = MAX_MX
-		  if self.strict == '2':
+		  if self.strict == 2:
                       #Break out the number of MX records returned for testing
                       mxnames = self.dns(domainname, 'MX')
                       mxip = [a for mx in mxnames[:max] for a in self.dns_a(mx[1])]
@@ -862,7 +865,7 @@ class query(object):
 
 	def dns_a(self, domainname):
 		"""Get a list of IP addresses for a domainname."""
-		if self.strict == '2':
+		if self.strict == 2:
                     alist = self.dns(domainname, 'A')
                     if len(alist) == 0:
                         raise AmbiguityWarning('No A records found for',
@@ -882,7 +885,7 @@ class query(object):
 # To prevent DoS attacks, more than 10 PTR names MUST NOT be looked up
 		if self.strict:
 		  max = MAX_PTR
-		  if self.strict == '2':
+		  if self.strict == 2:
                       #Break out the number of PTR records returned for testing
                       try:
                           ptrnames = self.dns_ptr(i)
