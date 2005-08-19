@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.49  2005/08/12 18:54:34  kitterma
+# Consistently treat strict as a numeric for hard processing.
+#
 # Revision 1.48  2005/08/11 14:30:44  kitterma
 # Restore all numeric TLD test from 1.44 that was inadvertently deleted.  Ugh.
 #
@@ -847,7 +850,7 @@ class query(object):
 # To prevent DoS attacks, more than 10 MX names MUST NOT be looked up
 		if self.strict:
 		  max = MAX_MX
-		  if self.strict == 2:
+		  if self.strict > 1:
                       #Break out the number of MX records returned for testing
                       mxnames = self.dns(domainname, 'MX')
                       mxip = [a for mx in mxnames[:max] for a in self.dns_a(mx[1])]
@@ -865,7 +868,7 @@ class query(object):
 
 	def dns_a(self, domainname):
 		"""Get a list of IP addresses for a domainname."""
-		if self.strict == 2:
+		if self.strict > 1:
                     alist = self.dns(domainname, 'A')
                     if len(alist) == 0:
                         raise AmbiguityWarning('No A records found for',
@@ -885,7 +888,7 @@ class query(object):
 # To prevent DoS attacks, more than 10 PTR names MUST NOT be looked up
 		if self.strict:
 		  max = MAX_PTR
-		  if self.strict == 2:
+		  if self.strict > 1:
                       #Break out the number of PTR records returned for testing
                       try:
                           ptrnames = self.dns_ptr(i)
