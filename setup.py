@@ -13,4 +13,21 @@ setup(name='pyspf',
       maintainer_email="stuart@bmsi.com",
       url='http://pymilter.sourceforge.net/',
       license='Python Software Foundation License',
-      py_modules=['spf'])
+      py_modules=['spf'],
+      keywords = ['spf','email','forgery'],
+      install_dir = '/usr/lib/pyspf',
+      scripts = ['type99.py','spfquery.py'],
+      classifiers = [
+	'Development Status :: 5 - Production/Stable',
+	'Environment :: No Input/Output (Daemon)',
+	'Intended Audience :: Developers',
+	'License :: OSI Approved :: Python Software Foundation License',
+	'Natural Language :: English',
+	'Operating System :: OS Independent',
+	'Programming Language :: Python',
+	'Topic :: Communications :: Email :: Mail Transport Agents',
+	'Topic :: Communications :: Email :: Filters',
+	'Topic :: Internet :: Name Service (DNS)',
+	'Topic :: Software Development :: Libraries :: Python Modules'
+      ]
+)

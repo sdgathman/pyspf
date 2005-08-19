@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.50  2005/08/19 18:13:31  customdesigned
+# Still want to do strict tests in even stricter modes.
+#
 # Revision 1.49  2005/08/12 18:54:34  kitterma
 # Consistently treat strict as a numeric for hard processing.
 #
@@ -434,12 +437,7 @@ class query(object):
                             else:
                                 #for 'v=spf1' record, just do local policy
                                 spf = local
-                        rc = self.check1(spf, self.d, 0)
-			if self.perm_error:
-			  # extended processing succeeded, but strict failed
-			  self.perm_error.ext = rc
-			  raise self.perm_error
-			return rc
+                        return self.check1(spf, self.d, 0)
 		except TempError,x:
                     self.prob = x.msg
 		    if x.mech:
@@ -480,6 +478,17 @@ class query(object):
                     finally:
 			self.d = tmp
 
+	def note_error(self,*msg):
+	    if self.strict:
+	      raise PermError(*msg)
+	    # if lax mode, note error and continue
+	    if not self.perm_error:
+	      try:
+		raise PermError(*msg)
+	      except PermError, x:
+		self.perm_error = x
+	    return self.perm_error
+
 	def validate_mechanism(self,mech):
 		"""Parse and validate a mechanism.
 	Returns mech,m,arg,cidrlength,result
@@ -519,13 +528,8 @@ class query(object):
 			# default pass
 			result = 'pass'
 		if m in COMMON_MISTAKES:
-		  try:
-		    raise PermError('Unknown mechanism found',mech)
-		  except PermError, x:
-		    if self.strict: raise
-		    m = COMMON_MISTAKES[m]
-		    if not self.perm_error:
-		      self.perm_error = x
+		  self.note_error('Unknown mechanism found',mech)
+		  m = COMMON_MISTAKES[m]
 		  
 		if m in ('a', 'mx', 'ptr', 'exists', 'include'):
 		  arg = self.expand(arg)
@@ -551,15 +555,12 @@ class query(object):
 		  raise PermError('Invalid IP4 address',mech)
 		if m in ALL_MECHANISMS:
 		  return mech,m,arg,cidrlength,result
-		try:
-		  if m[1:] in ALL_MECHANISMS:
-		    raise PermError(
-		      'Unknown qualifier, IETF draft para 4.6.1, found in',
-		      mech)
-		  raise PermError('Unknown mechanism found',mech)
-		except PermError, x:
-		  if self.strict: raise
-		  return mech,m,arg,cidrlength,x
+		if m[1:] in ALL_MECHANISMS:
+		  x = self.note_error(
+		    'Unknown qualifier, IETF draft para 4.6.1, found in',mech)
+		else:
+		  x = self.note_error('Unknown mechanism found',mech)
+		return mech,m,arg,cidrlength,x
 
 	def check0(self, spf,recursion):
 		"""Test this query information against SPF text.
@@ -690,14 +691,10 @@ class query(object):
 
 	def check_lookups(self):
 	    self.lookups = self.lookups + 1
+	    if self.lookups > MAX_LOOKUP*4:
+	      raise PermError('More than %d DNS lookups'%MAX_LOOKUP*4)
 	    if self.lookups > MAX_LOOKUP:
-	      try:
-		if self.strict or not self.perm_error:
-		  raise PermError('Too many DNS lookups')
-	      except PermError,x:
-		if self.strict or self.lookups > MAX_LOOKUP*4:
-		  raise x
-		self.perm_error = x
+	      self.note_error('Too many DNS lookups')
 
 	def get_explanation(self, spec):
 		"""Expand an explanation."""
@@ -813,11 +810,15 @@ class query(object):
 		if len(a) == 1 and self.strict < 2:
 		    return a[0]   			
 		# check official SPF type first when it becomes more popular
-		b = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
+		try:
+		  b = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
+		except TempError,x:
+		  # some braindead DNS servers hang on type 99 query
+		  if self.strict < 2: b = []
 		if len(b) > 1:
                     raise PermError('Two or more type SPF spf records found.')
 		if len(b) == 1:
-		    if self.strict >= 2 and len(a) == 1 and a[0] != b[0]:
+		    if self.strict > 1 and len(a) == 1 and a[0] != b[0]:
 		        raise PermError(
 'v=spf1 records of both type TXT and SPF (type 99) present, but not identical')
 		    return b[0]

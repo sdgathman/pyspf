@@ -8,6 +8,9 @@
 # filtering through this script will refresh the TYPE99 RRs.
 # 
 # $Log$
+# Revision 1.2  2005/07/17 02:46:03  customdesigned
+# Use of expand not needed.
+#
 # Revision 1.1  2005/07/17 02:39:42  customdesigned
 # Utility to maintain TYPE99 copies of SPF TXT RRs.
 #
@@ -23,18 +26,17 @@ def dnstxt(txt):
     s,txt = txt[:255],txt[255:]
     r.append(chr(len(s))+s)
   return ''.join(r)
-
     
+USAGE="""Usage:\t%s phrase
+	%s - <zoneinfo
+"""
 
 if len(sys.argv) < 2:
-    sys.stderr.write(
-"""Usage:\t%s phrase
-	%s - <zoneinfo
-""" % (sys.argv[0],sys.argv[0]))
+    sys.stderr.write(USAGE % (sys.argv[0],sys.argv[0]))
     sys.exit(1)
 
 if sys.argv[1] == '-' or len(srs.argv) > 2:
-  RE_TXT = re.compile(r'^(?P<rr>.*\sIN\s)TXT\s"(?P<str>v=spf1.*)"')
+  RE_TXT = re.compile(r'^(?P<rr>.*\s)TXT\s"(?P<str>v=spf1.*)"')
   RE_TYPE99 = re.compile(r'\sTYPE99\s')
   for line in fileinput.input():
     if not RE_TYPE99.search(line):

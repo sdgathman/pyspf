@@ -27,7 +27,11 @@ zonedata = {
   'loop9.example.com':
   [('CNAME','loop10.example.com')],
   'loop10.example.com':
-  [('CNAME','loop0.example.com')]
+  [('CNAME','loop0.example.com')],
+  'a.com':
+  [('SPF','v=spf1 a mx include:b.com')],
+  'b.com':
+  [('SPF','v=spf1 a mx include:a.com')],
 }
 
 def DNSLookup(name,qtype):
@@ -56,6 +60,11 @@ class SPFTestCase(unittest.TestCase):
     q = spf.query(i=i, s=s, h=h)
     self.assertEqual(q.check()[0],'permerror')	# if too many == PermErr
     #self.assertEqual(q.check()[0],'none')	# if too many == NX_DOMAIN
+
+  def testIncludeLoop(self):
+    i, s, h = '66.150.186.79','chuckvsr@a.com','mail.a.com'
+    q = spf.query(i=i, s=s, h=h)
+    self.assertEqual(q.check()[0],'permerror')
 
   def testDNSError(self):
     i, s, h = ('1.2.3.4','lyndon.eaton@error.co.uk','mail.uksubnet.net')
