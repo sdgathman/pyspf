@@ -48,6 +48,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.51  2005/08/19 19:06:49  customdesigned
+# use note_error method for consistent extended processing.
+# Return extended result, strict result in self.perm_error
+#
 # Revision 1.50  2005/08/19 18:13:31  customdesigned
 # Still want to do strict tests in even stricter modes.
 #
@@ -312,7 +316,7 @@ class query(object):
 		# multiple results provided in DNS answers.
 		self.cache = {}
 		self.exps = dict(EXPLANATIONS)
-		self.local = local	# local policy
+		self.libspf_local = local	# local policy
     		self.lookups = 0
 		# strict can be False, True, or 2 (numeric) for harsh
 		self.strict = strict
@@ -334,6 +338,7 @@ class query(object):
 	def best_guess(self,spf=DEFAULT_SPF):
 		"""Return a best guess based on a default SPF record"""
 		return self.check(spf)
+
 
 	def check(self, spf=None):
 		"""
@@ -360,7 +365,7 @@ class query(object):
 
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all match.sub-domains_9=yes')
 	('pass', 250, 'sender SPF authorized')
-	
+
 	>>> q.strict = False
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all moo')
 	('pass', 250, 'sender SPF authorized')
@@ -378,10 +383,11 @@ class query(object):
 	>>> q.check()
 	('none', 250, '')
 
-        >>> q.local='ip4:192.0.2.3 a:example.org'
-        >>> q.check(spf='v=spf1 ip4:192.1.0.0/6 a:example.com -a:example.net -all')
+	>>> q.check(spf='v=spf1 ip4:1.2.3.4 -a:example.net -all')
+	('fail', 550, 'SPF fail - not authorized')
+	>>> q.libspf_local='ip4:192.0.2.3 a:example.org'
+	>>> q.check(spf='v=spf1 ip4:1.2.3.4 -a:example.net -all')
 	('pass', 250, 'sender SPF authorized')
-
 		"""
 		self.mech = []		# unknown mechanisms
 		# If not strict, certain PermErrors (mispelled
@@ -389,7 +395,6 @@ class query(object):
 		# will continue processing.  However, the exception
 		# that strict processing would raise is saved here
 		self.perm_error = None
-		where = None
 		if self.i.startswith('127.'):
 			return ('pass', 250, 'local connections always pass')
 
@@ -397,46 +402,9 @@ class query(object):
 			self.lookups = 0
 			if not spf:
 			    spf = self.dns_spf(self.d)
-			if self.local and spf: 
-                            #look to find the all (if any) and then put local
-                            #just before last non-fail mechanism.
-                            spf = spf.split()
-                            local = self.local.split() #local policy is SPF mechanisms/
-                                                  #modifiers with no 'v=spf1' at
-                                                  #the start
-                            #Catch case where SPF record has no spaces
-                            if spf[0] != 'v=spf1':   
-                                raise PermError('Invalid SPF record in', self.d)
-                            spf = spf[1:]
-                            if spf:
-                                spf.reverse() #find the last non-fail mechanism
-                                for mech in spf:
-                                    m, arg, cidrlength = parse_mechanism(mech,
-                                                                         self.d)
-                                    # map '?' '+' or '-' to 'neutral' 'pass'
-                                    # or 'fail'
-                                    if m:
-                                        result = RESULTS.get(m[0])
-                                        if result:
-                                        # keep looking until not fail
-                                            if m[1:] != '-':
-                                                pass
-                                        else:
-                                            where = spf.index(mech)
-                                            spf.reverse()
-                                            break
-                                    else:
-                                        pass
-                                if where:
-                                    where = len(spf) - where
-                                    spf = spf[:where] + local + spf[where:]
-                                    MAXLOOKUPS = 100 #Processing limits not
-                                                     #applied to local policy
-                                else:
-                                    pass #No local policy adds for v=spf1 -all
-                            else:
-                                #for 'v=spf1' record, just do local policy
-                                spf = local
+			if self.libspf_local and spf: 
+			    spf = insert_libspf_local_policy(
+			    	spf,self.libspf_local)
                         return self.check1(spf, self.d, 0)
 		except TempError,x:
                     self.prob = x.msg
@@ -466,17 +434,16 @@ class query(object):
 			# a PermError.
 			raise PermError('Too many levels of recursion')
 		try:
-			tmp, self.d = self.d, domain
-			return self.check0(spf,recursion)
+		  try:
+		      tmp, self.d = self.d, domain
+		      return self.check0(spf,recursion)
+		  finally:
+		      self.d = tmp
 		except AmbiguityWarning,x:
-		    self.prob = x.msg
-		    if x.mech:
-                        self.mech.append(x.mech)
-                        return ('ambiguous', 000, 'SPF Ambiguity Warning: ' + str(x))
-		    try:
-                        self.d = tmp
-                    finally:
-			self.d = tmp
+		  self.prob = x.msg
+		  if x.mech:
+		    self.mech.append(x.mech)
+		    return ('ambiguous', 000, 'SPF Ambiguity Warning: %s' % x)
 
 	def note_error(self,*msg):
 	    if self.strict:
@@ -573,13 +540,11 @@ class query(object):
 			return ('none', 250, EXPLANATIONS['none'])
 
 		# split string by whitespace, drop the 'v=spf1'
-		#
-		if not self.local:
-                    spf = spf.split()
-                    #Catch case where SPF record has no spaces
-                    if spf[0] != 'v=spf1':   
-                        raise PermError('Invalid SPF record in', self.d)
-                    spf = spf[1:]
+		spf = spf.split()
+		#Catch case where SPF record has no spaces
+		if spf[0] != 'v=spf1':   
+		    raise PermError('Invalid SPF record in', self.d)
+		spf = spf[1:]
 
 		# copy of explanations to be modified by exp=
 		exps = self.exps
@@ -703,7 +668,7 @@ class query(object):
 		else:
 		  return 'explanation : Required option is missing'
 
-	def expand(self, str, macros='slodipvh'):
+	def expand(self, str): # macros='slodipvh'
 		"""Do SPF RFC macro expansion.
 
 		Examples:
@@ -814,7 +779,9 @@ class query(object):
 		  b = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
 		except TempError,x:
 		  # some braindead DNS servers hang on type 99 query
-		  if self.strict < 2: b = []
+		  if self.strict > 1: raise x
+		  b = []
+
 		if len(b) > 1:
                     raise PermError('Two or more type SPF spf records found.')
 		if len(b) == 1:
@@ -896,7 +863,7 @@ class query(object):
                           ptrip = [p for p in ptrnames if i in self.dns_a(p)]
                           if len(ptrnames) > max:
                               warning = 'More than ' + str(max) + ' PTR records returned'
-                              raise AmbiguityWarning(warning, domainname)
+                              raise AmbiguityWarning(warning, i)
                           else:
                               if len(ptrnames) == 0:
                                   raise AmbiguityWarning('No PTR records found for ptr mechanism', ptrnames)
@@ -1214,6 +1181,55 @@ def split(str, delimiters, joiner=None):
 			element += c
 	result.append(element)
 	return result
+
+def insert_libspf_local_policy(spftxt,local=None):
+	"""Returns spftxt with local inserted just before last non-fail
+	mechanism.  This is how the libspf{2} libraries handle "local-policy".
+	
+	Examples:
+	>>> insert_libspf_local_policy('v=spf1 -all')
+	'v=spf1 -all'
+	>>> insert_libspf_local_policy('v=spf1 -all','mx')
+	'v=spf1 -all'
+	>>> insert_libspf_local_policy('v=spf1','a mx ptr')
+	'v=spf1 a mx ptr'
+	>>> insert_libspf_local_policy('v=spf1 mx -all','a ptr')
+	'v=spf1 mx a ptr -all'
+	>>> insert_libspf_local_policy('v=spf1 mx -include:foo.co +all','a ptr')
+	'v=spf1 mx a ptr -include:foo.co +all'
+	>>> spf='v=spf1 ip4:1.2.3.4 -a:example.net -all'
+	>>> local='ip4:192.0.2.3 a:example.org'
+	>>> insert_libspf_local_policy(spf,local)
+	'v=spf1 ip4:1.2.3.4 ip4:192.0.2.3 a:example.org -a:example.net -all'
+	"""
+	# look to find the all (if any) and then put local
+	# just after last non-fail mechanism.  This is how
+	# libspf2 handles "local policy", and some people
+	# apparently find it useful (don't ask me why).
+	if not local: return spftxt
+	spf = spftxt.split()[1:]
+	if spf:
+	    # local policy is SPF mechanisms/modifiers with no
+	    # 'v=spf1' at the start
+	    spf.reverse() #find the last non-fail mechanism
+	    for mech in spf:
+		m, arg, cidrlength = parse_mechanism(mech,'dummy.tld')
+		# map '?' '+' or '-' to 'neutral' 'pass'
+		# or 'fail'
+		if m:
+		    result = RESULTS.get(m[0])
+		    if not result:
+			where = spf.index(mech)
+			spf[where:where] = [local]
+			spf.reverse()
+			local = ' '.join(spf)
+			break
+	    else:
+		return spftxt # No local policy adds for v=spf1 -all
+	# Processing limits not applied to local policy.  Suggest
+	# inserting 'local' mechanism to handle this properly
+	#MAX_LOOKUP = 100 
+	return 'v=spf1 '+local
 
 def _test():
 	import doctest, spf
