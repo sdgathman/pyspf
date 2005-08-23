@@ -48,6 +48,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.52  2005/08/23 20:23:31  customdesigned
+# Clean up libspf_local and add inline test cases.
+# Repair try..finally in check1() broken when Ambiguity warning added.
+#
 # Revision 1.51  2005/08/19 19:06:49  customdesigned
 # use note_error method for consistent extended processing.
 # Return extended result, strict result in self.perm_error
@@ -1197,6 +1201,9 @@ def insert_libspf_local_policy(spftxt,local=None):
 	'v=spf1 mx a ptr -all'
 	>>> insert_libspf_local_policy('v=spf1 mx -include:foo.co +all','a ptr')
 	'v=spf1 mx a ptr -include:foo.co +all'
+	# FIXME: is this right?  If so, "last non-fail" is a bogus description.
+	>>> insert_libspf_local_policy('v=spf1 mx ?include:foo.co +all','a ptr')
+	'v=spf1 mx a ptr ?include:foo.co +all'
 	>>> spf='v=spf1 ip4:1.2.3.4 -a:example.net -all'
 	>>> local='ip4:192.0.2.3 a:example.org'
 	>>> insert_libspf_local_policy(spf,local)
@@ -1213,17 +1220,14 @@ def insert_libspf_local_policy(spftxt,local=None):
 	    # 'v=spf1' at the start
 	    spf.reverse() #find the last non-fail mechanism
 	    for mech in spf:
-		m, arg, cidrlength = parse_mechanism(mech,'dummy.tld')
 		# map '?' '+' or '-' to 'neutral' 'pass'
 		# or 'fail'
-		if m:
-		    result = RESULTS.get(m[0])
-		    if not result:
-			where = spf.index(mech)
-			spf[where:where] = [local]
-			spf.reverse()
-			local = ' '.join(spf)
-			break
+		if not RESULTS.get(mech[0]):
+		    where = spf.index(mech)
+		    spf[where:where] = [local]
+		    spf.reverse()
+		    local = ' '.join(spf)
+		    break
 	    else:
 		return spftxt # No local policy adds for v=spf1 -all
 	# Processing limits not applied to local policy.  Suggest
