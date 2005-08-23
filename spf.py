@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.53  2005/08/23 20:37:19  customdesigned
+# Simplify libspf_local further.  FIXME for possible specification error.
+#
 # Revision 1.52  2005/08/23 20:23:31  customdesigned
 # Clean up libspf_local and add inline test cases.
 # Repair try..finally in check1() broken when Ambiguity warning added.
@@ -1201,6 +1204,7 @@ def insert_libspf_local_policy(spftxt,local=None):
 	'v=spf1 mx a ptr -all'
 	>>> insert_libspf_local_policy('v=spf1 mx -include:foo.co +all','a ptr')
 	'v=spf1 mx a ptr -include:foo.co +all'
+
 	# FIXME: is this right?  If so, "last non-fail" is a bogus description.
 	>>> insert_libspf_local_policy('v=spf1 mx ?include:foo.co +all','a ptr')
 	'v=spf1 mx a ptr ?include:foo.co +all'
@@ -1223,6 +1227,7 @@ def insert_libspf_local_policy(spftxt,local=None):
 		# map '?' '+' or '-' to 'neutral' 'pass'
 		# or 'fail'
 		if not RESULTS.get(mech[0]):
+		    # actually finds last mech with default result
 		    where = spf.index(mech)
 		    spf[where:where] = [local]
 		    spf.reverse()
