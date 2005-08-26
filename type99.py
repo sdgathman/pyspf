@@ -8,6 +8,10 @@
 # filtering through this script will refresh the TYPE99 RRs.
 # 
 # $Log$
+# Revision 1.3  2005/08/19 19:06:49  customdesigned
+# use note_error method for consistent extended processing.
+# Return extended result, strict result in self.perm_error
+#
 # Revision 1.2  2005/07/17 02:46:03  customdesigned
 # Use of expand not needed.
 #
@@ -35,7 +39,7 @@ if len(sys.argv) < 2:
     sys.stderr.write(USAGE % (sys.argv[0],sys.argv[0]))
     sys.exit(1)
 
-if sys.argv[1] == '-' or len(srs.argv) > 2:
+if sys.argv[1] == '-' or len(sys.argv) > 2:
   RE_TXT = re.compile(r'^(?P<rr>.*\s)TXT\s"(?P<str>v=spf1.*)"')
   RE_TYPE99 = re.compile(r'\sTYPE99\s')
   for line in fileinput.input():
