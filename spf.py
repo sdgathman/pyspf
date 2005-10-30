@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.54  2005/08/23 21:50:10  customdesigned
+# Missing separator line in insert_libspf_local_policy self test.
+#
 # Revision 1.53  2005/08/23 20:37:19  customdesigned
 # Simplify libspf_local further.  FIXME for possible specification error.
 #
@@ -128,6 +131,10 @@ def DNSLookup(name,qtype):
     return [((a['name'], a['typename']), a['data']) for a in resp.answers]
   except DNS.DNSError,x:
     raise TempError,'DNS ' + str(x)
+
+def isSPF(txt):
+  "Return True if txt has SPF record signature."
+  return txt.startswith('v=spf1 ') or txt == 'v=spf1'
 
 # 32-bit IPv4 address mask
 MASK = 0xFFFFFFFFL
@@ -548,8 +555,11 @@ class query(object):
 
 		# split string by whitespace, drop the 'v=spf1'
 		spf = spf.split()
-		#Catch case where SPF record has no spaces
-		if spf[0] != 'v=spf1':   
+		# Catch case where SPF record has no spaces.
+		# Can never happen with correct dns_spf(), however
+		# in the future we might want to give permerror
+		# for common mistakes like IN TXT "v=spf1" "mx" "-all"
+		if spf[0] != 'v=spf1':
 		    raise PermError('Invalid SPF record in', self.d)
 		spf = spf[1:]
 
@@ -776,14 +786,14 @@ class query(object):
 		is found.
 		"""
 		# for performance, check for most common case of TXT first
-		a = [t for t in self.dns_txt(domain) if t.startswith('v=spf1')]
+		a = [t for t in self.dns_txt(domain) if isSPF(t)]
 		if len(a) > 1:
                     raise PermError('Two or more type TXT spf records found.')
 		if len(a) == 1 and self.strict < 2:
 		    return a[0]   			
 		# check official SPF type first when it becomes more popular
 		try:
-		  b = [t for t in self.dns_99(domain) if t.startswith('v=spf1')]
+		  b = [t for t in self.dns_99(domain) if isSPF(t)]
 		except TempError,x:
 		  # some braindead DNS servers hang on type 99 query
 		  if self.strict > 1: raise x
@@ -801,7 +811,7 @@ class query(object):
 		if DELEGATE:	# use local record if neither found
 		    a = [t
 		      for t in self.dns_txt(domain+'._spf.'+DELEGATE)
-			if t.startswith('v=spf1')
+			if isSPF(t)
 		    ]
 		    if len(a) == 1: return a[0]
 		return None

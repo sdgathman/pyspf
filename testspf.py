@@ -2,6 +2,11 @@ import unittest
 import spf
 
 zonedata = {
+  'mail.example1.com': [('A','1.2.3.4')],
+  'example1.com': [('SPF','v=spf1')],
+  'example2.com': [('SPF','v=spf1mx')],
+  'example3.com': [('SPF','v=spf1mx'),('SPF','v=spf1 mx'),
+  	('MX',(0,'mail.example1.com'))],
   'premierpc.co.uk':
   [('SPF','v=spf1 mx/26 exists:%{l}.%{d}.%{i}.spf.uksubnet.net -all')],
   'mailing.gdi.ws':
@@ -70,6 +75,19 @@ class SPFTestCase(unittest.TestCase):
     i, s, h = ('1.2.3.4','lyndon.eaton@error.co.uk','mail.uksubnet.net')
     q = spf.query(i=i, s=s, h=h)
     self.assertEqual(q.check()[0],'temperror')
+
+  def testEmpty(self):
+    i, s, h = ('1.2.3.4','foo@example1.com','mail.example1.com')
+    q = spf.query(i=i, s=s, h=h)
+    self.assertEqual(q.check()[0],'neutral')
+
+  def testNospace(self):
+    i, s, h = ('1.2.3.4','foo@example2.com','mail.example1.com')
+    q = spf.query(i=i, s=s, h=h)
+    self.assertEqual(q.check()[0],'none')
+    i, s, h = ('1.2.3.4','foo@example3.com','mail.example1.com')
+    q = spf.query(i=i, s=s, h=h)
+    self.assertEqual(q.check()[0],'pass')
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
