@@ -3,6 +3,7 @@ import spf
 
 zonedata = {
   'mail.example1.com': [('A','1.2.3.4')],
+  'mail.globalinkllc.com': [('MX',(0,''))],
   'example1.com': [('SPF','v=spf1')],
   'example2.com': [('SPF','v=spf1mx')],
   'example3.com': [('SPF','v=spf1mx'),('SPF','v=spf1 mx'),
@@ -88,6 +89,11 @@ class SPFTestCase(unittest.TestCase):
     i, s, h = ('1.2.3.4','foo@example3.com','mail.example1.com')
     q = spf.query(i=i, s=s, h=h)
     self.assertEqual(q.check()[0],'pass')
+
+  def testEmptyMX(self):
+    i, s, h = ('1.2.3.4','','mail.globalinkllc.com')
+    q = spf.query(i=i, s=s, h=h)
+    self.assertEqual(q.check('v=spf1 mx')[0],'neutral')
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 

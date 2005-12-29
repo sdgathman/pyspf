@@ -20,7 +20,7 @@ AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
 SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 For more information about SPF, a tool against email forgery, see
-	http://openspf.com/
+	http://www.openspf.org/
 
 For news, bugfixes, etc. visit the home page for this implementation at
 	http://www.wayforward.net/spf/
@@ -48,6 +48,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.55  2005/10/30 00:41:48  customdesigned
+# Ignore SPF records missing space after version as required by RFC.
+# FIXME: in "relaxed" mode, give permerror when there is exactly one
+# such malformed record.
+#
 # Revision 1.54  2005/08/23 21:50:10  customdesigned
 # Missing separator line in insert_libspf_local_policy self test.
 #
@@ -514,18 +519,18 @@ class query(object):
 		  
 		if m in ('a', 'mx', 'ptr', 'exists', 'include'):
 		  arg = self.expand(arg)
-		  if not (0 < arg.find('.') < len(arg) - 1):
+		  # FQDN must contain at least one '.'
+		  pos = arg.rfind('.')
+		  if not (0 < pos < len(arg) - 1):
 		    raise PermError('Invalid domain found (use FQDN)',
 			  arg)
-                  splitarg = arg.split('.') 	 
-                  splitarg.reverse() 	 
-                  if splitarg[0].isdigit(): 	 
+		  #Test for all numeric TLD as recommended by RFC 3696
+		  #Note this TLD test may pass non-existant TLDs.  3696
+		  #recommends using DNS lookups to test beyond this
+		  #initial test.
+                  if arg[pos+1:].isdigit(): 	 
                     raise PermError('Top Level Domain may not be all numbers',
-                                    arg) 	 
-                    #Test for all numeric TLD as recommended by RFC 3696 	 
-                    #Note this TLD test may pass non-existant TLDs.  3696 	 
-                    #recommends using DNS lookups to test beyond this 	 
-                    #initial test.
+			  arg) 	 
 		  if m == 'include':
 		    if arg == self.d:
 		      if mech != 'include':
@@ -556,9 +561,10 @@ class query(object):
 		# split string by whitespace, drop the 'v=spf1'
 		spf = spf.split()
 		# Catch case where SPF record has no spaces.
-		# Can never happen with correct dns_spf(), however
+		# Can never happen with conforming dns_spf(), however
 		# in the future we might want to give permerror
 		# for common mistakes like IN TXT "v=spf1" "mx" "-all"
+		# in relaxed mode.
 		if spf[0] != 'v=spf1':
 		    raise PermError('Invalid SPF record in', self.d)
 		spf = spf[1:]
@@ -853,6 +859,7 @@ class query(object):
 
 	def dns_a(self, domainname):
 		"""Get a list of IP addresses for a domainname."""
+		if not domainname: return []
 		if self.strict > 1:
                     alist = self.dns(domainname, 'A')
                     if len(alist) == 0:
