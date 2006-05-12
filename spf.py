@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.56  2005/12/29 19:14:11  customdesigned
+# Handle NULL MX and other A lookups of DNS root.
+#
 # Revision 1.55  2005/10/30 00:41:48  customdesigned
 # Ignore SPF records missing space after version as required by RFC.
 # FIXME: in "relaxed" mode, give permerror when there is exactly one
@@ -156,7 +159,7 @@ RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
 RE_CIDR = re.compile(r'/([1-9]|1[0-9]|2[0-9]|3[0-2])$')
 
 RE_IP4 = re.compile(r'\.'.join(
-	[r'(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])']*4)+'$')
+	[r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
@@ -431,6 +434,8 @@ class query(object):
 		      self.mech.append(x.mech)
 		    return ('temperror',451, 'SPF Temporary Error: ' + str(x))
 		except PermError,x:
+		    if not self.perm_error:
+		      self.perm_error = x
 		    self.prob = x.msg
 		    if x.mech:
 		      self.mech.append(x.mech)
@@ -472,6 +477,8 @@ class query(object):
 	      try:
 		raise PermError(*msg)
 	      except PermError, x:
+	        # FIXME: keep a list of errors for even friendlier
+		# diagnostics.
 		self.perm_error = x
 	    return self.perm_error
 
@@ -516,6 +523,11 @@ class query(object):
 		if m in COMMON_MISTAKES:
 		  self.note_error('Unknown mechanism found',mech)
 		  m = COMMON_MISTAKES[m]
+
+		if m == 'a' and RE_IP4.match(arg):
+		  x = self.note_error(
+		    'Use the ip4 mechanism for ip4 addresses',mech)
+		  m = 'ip4'
 		  
 		if m in ('a', 'mx', 'ptr', 'exists', 'include'):
 		  arg = self.expand(arg)
@@ -612,9 +624,10 @@ class query(object):
 		      if res == 'pass':
 			break
 		      if res == 'none':
-			raise PermError(
+		        self.note_error(
 			  'No valid SPF record for included domain: %s'%arg,
 			  mech)
+			res = 'neutral'
 		      continue
 		    elif m == 'all':
 			    break
@@ -1280,6 +1293,7 @@ if __name__ == '__main__':
 		q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
 			strict=False)
 		print q.check(sys.argv[1])
-		if q.perm_error: print q.perm_error.ext
+		if q.perm_error and q.perm_error.ext:
+			print q.perm_error.ext
 	else:
 		print USAGE
