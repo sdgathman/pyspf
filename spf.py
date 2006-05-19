@@ -48,6 +48,13 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.58  2006/05/19 02:04:58  kitterma
+# Corrected validation bug where 'all' mechanism was not correctly checked,
+# updated for RFC 4408 Auth 48 changes - trailing dot now allowed in domain
+# name and Type TXT and Type SPF DNS records not identical raises a warning
+# instead of a permanent error, and changed internet draft references to refer
+# to RFC 4408.
+#
 # Revision 1.57  2006/05/12 16:38:12  customdesigned
 # a:1.2.3.4 -> ip4:1.2.3.4 heuristic.
 #
@@ -507,6 +514,10 @@ class query(object):
 	... except PermError,x: print x
 	Invalid IP4 address: ip4:1.2.3.4/247
 
+	>>> try: q.validate_mechanism('a:example.com:8080')
+	... except PermError,x: print x
+	Too many :. Not allowed in domain name.: a:example.com:8080
+	
 	>>> try: q.validate_mechanism('ip4:1.2.3.444/24')
 	... except PermError,x: print x
 	Invalid IP4 address: ip4:1.2.3.444/24
@@ -515,8 +526,8 @@ class query(object):
 	... except PermError,x: print x
 	Invalid all mechanism format - only qualifier allowed with all: -all:3030
 
-	>>> q.validate_mechanism('-mx::%%%_/.Clara.de/27')
-	('-mx::%%%_/.Clara.de/27', 'mx', ':% /.Clara.de', 27, 'fail')
+	>>> q.validate_mechanism('-mx:%%%_/.Clara.de/27')
+	('-mx:%%%_/.Clara.de/27', 'mx', '% /.Clara.de', 27, 'fail')
 
 	>>> q.validate_mechanism('~exists:%{i}.%{s1}.100/86400.rate.%{d}')
 	('~exists:%{i}.%{s1}.100/86400.rate.%{d}', 'exists', '192.0.2.3.com.100/86400.rate.email.example.com', 32, 'softfail')
@@ -540,7 +551,9 @@ class query(object):
 		  x = self.note_error(
 		    'Use the ip4 mechanism for ip4 addresses',mech)
 		  m = 'ip4'
-		  
+		#Check for : within the arguement
+		if arg.count(':') > 0:
+		  raise PermError('Too many :. Not allowed in domain name.',mech)
 		if m in ('a', 'mx', 'ptr', 'exists', 'include'):
 		  arg = self.expand(arg)
 		  # FQDN must contain at least one '.'
@@ -1057,8 +1070,8 @@ def parse_mechanism(str, d):
 	>>> parse_mechanism('-exists:%{i}.%{s1}.100/86400.rate.%{d}','foo.com')
 	('-exists', '%{i}.%{s1}.100/86400.rate.%{d}', 32)
 
-	>>> parse_mechanism('mx::%%%_/.Claranet.de/27','foo.com')
-	('mx', ':%%%_/.Claranet.de', 27)
+	>>> parse_mechanism('mx:%%%_/.Claranet.de/27','foo.com')
+	('mx', '%%%_/.Claranet.de', 27)
 
 	>>> parse_mechanism('mx:%{d}/27','foo.com')
 	('mx', '%{d}', 27)
