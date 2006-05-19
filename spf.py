@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.57  2006/05/12 16:38:12  customdesigned
+# a:1.2.3.4 -> ip4:1.2.3.4 heuristic.
+#
 # Revision 1.56  2005/12/29 19:14:11  customdesigned
 # Handle NULL MX and other A lookups of DNS root.
 #
@@ -237,9 +240,9 @@ DEFAULT_SPF = 'v=spf1 a/24 mx/24 ptr'
 TRUSTED_FORWARDERS = 'v=spf1 ?include:spf.trusted-forwarder.org -all'
 
 # maximum DNS lookups allowed
-MAX_LOOKUP = 10 #draft-schlitt-spf-classic-02 Para 10.1
-MAX_MX = 10 #draft-schlitt-spf-classic-02 Para 10.1
-MAX_PTR = 10 #draft-schlitt-spf-classic-02 Para 10.1
+MAX_LOOKUP = 10 #RFC 4408 Para 10.1
+MAX_MX = 10 #RFC 4408 Para 10.1
+MAX_PTR = 10 #RFC 4408 Para 10.1
 MAX_CNAME = 10 # analogous interpretation to MAX_PTR
 MAX_RECURSION = 20
 
@@ -377,7 +380,7 @@ class query(object):
 	('permerror', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
 
 	>>> q.check(spf='v=spf1 =a ?all moo')
-	('permerror', 550, 'SPF Permanent Error: Unknown qualifier, IETF draft para 4.6.1, found in: =a')
+	('permerror', 550, 'SPF Permanent Error: Unknown qualifier, RFC 4408 para 4.6.1, found in: =a')
 
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ~all')
 	('pass', 250, 'sender SPF authorized')
@@ -487,8 +490,13 @@ class query(object):
 	Returns mech,m,arg,cidrlength,result
 
 	Examples:
-	>>> q = query(s='strong-bad@email.example.com',
+	>>> q = query(s='strong-bad@email.example.com.',
 	...           h='mx.example.org', i='192.0.2.3')
+	>>> q.validate_mechanism('A')
+	('A', 'a', 'email.example.com.', 32, 'pass')
+	
+	>>> q = query(s='strong-bad@email.example.com',
+	...           h='mx.example.org', i='192.0.2.3')	
 	>>> q.validate_mechanism('A')
 	('A', 'a', 'email.example.com', 32, 'pass')
 
@@ -502,6 +510,10 @@ class query(object):
 	>>> try: q.validate_mechanism('ip4:1.2.3.444/24')
 	... except PermError,x: print x
 	Invalid IP4 address: ip4:1.2.3.444/24
+	
+	>>> try: q.validate_mechanism('-all:3030')
+	... except PermError,x: print x
+	Invalid all mechanism format - only qualifier allowed with all: -all:3030
 
 	>>> q.validate_mechanism('-mx::%%%_/.Clara.de/27')
 	('-mx::%%%_/.Clara.de/27', 'mx', ':% /.Clara.de', 27, 'fail')
@@ -532,8 +544,10 @@ class query(object):
 		if m in ('a', 'mx', 'ptr', 'exists', 'include'):
 		  arg = self.expand(arg)
 		  # FQDN must contain at least one '.'
+		  pos = False
 		  pos = arg.rfind('.')
-		  if not (0 < pos < len(arg) - 1):
+		  #Changed to allow a trailing dot per RFC 4408 (Auth 48 change)		  
+		  if not arg.count('.') or (arg.count('.') == 1 and arg.find('.') == len(arg)):
 		    raise PermError('Invalid domain found (use FQDN)',
 			  arg)
 		  #Test for all numeric TLD as recommended by RFC 3696
@@ -551,11 +565,17 @@ class query(object):
 		  return mech,m,arg,cidrlength,result
 		if m == 'ip4' and not RE_IP4.match(arg):
 		  raise PermError('Invalid IP4 address',mech)
+		#validate 'all' mechanism per RFC 4408 ABNF
+		if m == 'all' and (arg != self.d  or mech.count(':') or mech.count('/')):
+#		  print '|'+ arg + '|', mech, self.d,
+		  raise PermError(
+		    'Invalid all mechanism format - only qualifier allowed with all'
+		    ,mech)
 		if m in ALL_MECHANISMS:
 		  return mech,m,arg,cidrlength,result
 		if m[1:] in ALL_MECHANISMS:
 		  x = self.note_error(
-		    'Unknown qualifier, IETF draft para 4.6.1, found in',mech)
+		    'Unknown qualifier, RFC 4408 para 4.6.1, found in',mech)
 		else:
 		  x = self.note_error('Unknown mechanism found',mech)
 		return mech,m,arg,cidrlength,x
@@ -822,7 +842,8 @@ class query(object):
                     raise PermError('Two or more type SPF spf records found.')
 		if len(b) == 1:
 		    if self.strict > 1 and len(a) == 1 and a[0] != b[0]:
-		        raise PermError(
+		    #Changed from permerror to warning based on RFC 4408 Auth 48 change
+		        raise AmbiguityWarning(
 'v=spf1 records of both type TXT and SPF (type 99) present, but not identical')
 		    return b[0]
 		if len(a) == 1:
@@ -850,7 +871,7 @@ class query(object):
 		"""Get a list of IP addresses for all MX exchanges for a
 		domain name.
 		"""
-# draft-schlitt-spf-classic-02 section 5.4 "mx"
+# RFC 4408 section 5.4 "mx"
 # To prevent DoS attacks, more than 10 MX names MUST NOT be looked up
 		if self.strict:
 		  max = MAX_MX
