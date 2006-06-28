@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.59  2006/05/19 13:18:23  kitterma
+# Fix to disallow ':' except between the mechanism and domain-spec.
+#
 # Revision 1.58  2006/05/19 02:04:58  kitterma
 # Corrected validation bug where 'all' mechanism was not correctly checked,
 # updated for RFC 4408 Auth 48 changes - trailing dot now allowed in domain
@@ -147,6 +150,8 @@ def DNSLookup(name,qtype):
     #resp.show()
     # key k: ('wayforward.net', 'A'), value v
     return [((a['name'], a['typename']), a['data']) for a in resp.answers]
+  except IOError,x:
+    raise TempError,'DNS ' + str(x)
   except DNS.DNSError,x:
     raise TempError,'DNS ' + str(x)
 
