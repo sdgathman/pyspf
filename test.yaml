@@ -1,0 +1,119 @@
+---
+comment: |
+  check basic exists with macros
+tests:
+  exists-pass:
+    helo: mail.example.net
+    host: 1.2.3.5
+    mailfrom: lyme.eater@example.co.uk
+    result: pass
+  exists-fail:
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: lyme.eater@example.co.uk
+    result: fail
+zonedata:
+  lyme.eater.example.co.uk.1.2.3.5.spf.example.net:
+  - A: 127.0.0.1
+  example.co.uk:
+  - SPF: v=spf1 mx/26 exists:%{l}.%{d}.%{i}.spf.example.net -all
+
+---
+comment: |
+  include loop
+tests:
+  incloop:
+    helo: mail.examplea.com
+    host: 66.150.186.79
+    mailfrom: chuckvsr@examplea.com
+    result: permerror
+zonedata:
+  examplea.com:
+  - SPF: v=spf1 a mx include:b.com
+  exampleb.com:
+  - SPF: v=spf1 a mx include:a.com
+
+---
+tests:
+  nospace1:
+    comment: |
+      test no space
+      test multi-line comment
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example2.com
+    result: none
+  empty:
+    comment: |
+      test empty
+    helo: mail1.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example1.com
+    result: neutral
+  nospace2:
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example3.com
+    result: pass
+zonedata:
+  example3.com:
+  - SPF: v=spf1mx
+  - SPF: v=spf1 mx
+  - MX: [0, mail.example1.com]
+  example1.com:
+  - SPF: v=spf1
+  example2.com:
+  - SPF: v=spf1mx
+  mail.example1.com:
+  - A: 1.2.3.4
+
+---
+comment: |
+  check trailing dot with redirect and exp
+tests:
+  traildot1:
+    comment: Check that trailing dot is ignored for domains
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.40
+    mailfrom: test@example.com
+    result: pass
+  traildot2:
+    comment: Check that trailing dot is not removed from explanation
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.40
+    mailfrom: test@exp.example.com
+    result: fail
+    explanation: This is a test.
+zonedata:
+  example.com.d.spf.example.com:
+  - SPF: v=spf1 redirect=a.spf.example.com
+  a.spf.example.com:
+  - SPF: v=spf1 mx:example.com include:o.spf.example.com -exists:%{s}.S.bl.spf.example.com
+      exists:%{s}.S.%{i}.AI.spf.example.com ~all
+  o.spf.example.com:
+  - SPF: v=spf1 ip4:192.168.144.41 ip4:192.168.218.40 ip4:192.168.218.41
+  msgbas1x.cos.example.com:
+  - A: 192.168.240.36
+  example.com:
+  - A: 192.168.90.76
+  - SPF: v=spf1 redirect=%{d}.d.spf.example.com.
+  - MX: [10, msgbas1x.cos.example.com]
+  exp.example.com:
+  - SPF: v=spf1 exp=msg.example.com. -all
+  msg.example.com:
+  - TXT: This is a test.
+
+---
+comment: |
+  test empty MX
+tests:
+  emptyMX:
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: ''
+    result: neutral
+zonedata:
+  mail.example.com:
+  - MX: [0, '']
+  - SPF: v=spf1 mx
+

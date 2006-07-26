@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.60  2006/06/28 04:25:38  customdesigned
+# Catch unexpected IO errors from pydns.
+#
 # Revision 1.59  2006/05/19 13:18:23  kitterma
 # Fix to disallow ':' except between the mechanism and domain-spec.
 #
@@ -505,7 +508,7 @@ class query(object):
 	>>> q = query(s='strong-bad@email.example.com.',
 	...           h='mx.example.org', i='192.0.2.3')
 	>>> q.validate_mechanism('A')
-	('A', 'a', 'email.example.com.', 32, 'pass')
+	('A', 'a', 'email.example.com', 32, 'pass')
 	
 	>>> q = query(s='strong-bad@email.example.com',
 	...           h='mx.example.org', i='192.0.2.3')	
@@ -536,6 +539,9 @@ class query(object):
 
 	>>> q.validate_mechanism('~exists:%{i}.%{s1}.100/86400.rate.%{d}')
 	('~exists:%{i}.%{s1}.100/86400.rate.%{d}', 'exists', '192.0.2.3.com.100/86400.rate.email.example.com', 32, 'softfail')
+
+	>>> q.validate_mechanism('a:mail.example.com.')
+	('a:mail.example.com.', 'a', 'mail.example.com', 32, 'pass')
 		"""
 		# a mechanism
 		m, arg, cidrlength = parse_mechanism(mech, self.d)
@@ -738,11 +744,12 @@ class query(object):
 	def get_explanation(self, spec):
 		"""Expand an explanation."""
 		if spec:
-		  return self.expand(''.join(self.dns_txt(self.expand(spec))))
+		  txt = ''.join(self.dns_txt(self.expand(spec)))
+		  return self.expand(txt,stripdot=False)
 		else:
 		  return 'explanation : Required option is missing'
 
-	def expand(self, str): # macros='slodipvh'
+	def expand(self, str, stripdot=True): # macros='slodipvh'
 		"""Do SPF RFC macro expansion.
 
 		Examples:
@@ -807,7 +814,7 @@ class query(object):
 		>>> q.expand('%{p2}.trusted-domains.example.net')
 		'example.org.trusted-domains.example.net'
 
-		>>> q.expand('%{p2}.trusted-domains.example.net')
+		>>> q.expand('%{p2}.trusted-domains.example.net.')
 		'example.org.trusted-domains.example.net'
 
 		"""
@@ -835,7 +842,10 @@ class query(object):
 					        JOINERS.get(letter))
 
 			end = i.end()
-		return result + str[end:]
+		result += str[end:]
+		if stripdot and result.endswith('.'):
+		  return result[:-1]
+		return result
 
 	def dns_spf(self, domain):
 		"""Get the SPF record recorded in DNS for a specific domain

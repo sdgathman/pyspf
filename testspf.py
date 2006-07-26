@@ -1,47 +1,16 @@
 import unittest
 import spf
+import csv
+import re
+import yaml
 
-zonedata = {
-  'mail.example1.com': [('A','1.2.3.4')],
-  'mail.globalinkllc.com': [('MX',(0,''))],
-  'example1.com': [('SPF','v=spf1')],
-  'example2.com': [('SPF','v=spf1mx')],
-  'example3.com': [('SPF','v=spf1mx'),('SPF','v=spf1 mx'),
-  	('MX',(0,'mail.example1.com'))],
-  'premierpc.co.uk':
-  [('SPF','v=spf1 mx/26 exists:%{l}.%{d}.%{i}.spf.uksubnet.net -all')],
-  'mailing.gdi.ws':
-  [('CNAME','mailing.gdi.ws')],
-  'loop0.example.com':
-  [('CNAME','loop1.example.com')],
-  'loop1.example.com':
-  [('CNAME','loop2.example.com')],
-  'loop2.example.com':
-  [('CNAME','loop3.example.com')],
-  'loop3.example.com':
-  [('CNAME','loop4.example.com')],
-  'loop4.example.com':
-  [('CNAME','loop5.example.com')],
-  'loop5.example.com':
-  [('CNAME','loop6.example.com')],
-  'loop6.example.com':
-  [('CNAME','loop7.example.com')],
-  'loop7.example.com':
-  [('CNAME','loop8.example.com')],
-  'loop8.example.com':
-  [('CNAME','loop9.example.com')],
-  'loop9.example.com':
-  [('CNAME','loop10.example.com')],
-  'loop10.example.com':
-  [('CNAME','loop0.example.com')],
-  'a.com':
-  [('SPF','v=spf1 a mx include:b.com')],
-  'b.com':
-  [('SPF','v=spf1 a mx include:a.com')],
-}
+zonedata = {}
+RE_IP4 = re.compile(r'\.'.join(
+	[r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
 
 def DNSLookup(name,qtype):
   try:
+    #print name
     return [((name,t),v) for t,v in zonedata[name]]
   except KeyError:
     if name.startswith('error.'):
@@ -50,50 +19,137 @@ def DNSLookup(name,qtype):
 
 spf.DNSLookup = DNSLookup
 
+class SPFTest(object):
+  def __init__(self,testid,scenario,data={}):
+    self.id = testid
+    self.scenario = scenario
+    self.explanation = None
+    self.comment = []
+    for k,v in data.items():
+      setattr(self,k,v)
+    if type(self.comment) is str:
+      self.comment = self.comment.splitlines()
+
+class SPFScenario(object):
+  def __init__(self,filename=None,data={}):
+    self.id = None
+    self.filename = filename
+    self.comment = []
+    self.zonedata = {}
+    self.tests = {}
+    if data:
+      self.zonedata= dict([
+        (d, [m.items()[0] for m in r]) for d,r in data['zonedata'].items()
+      ])
+      for t,v in data['tests'].items():
+        self.tests[t] = SPFTest(t,self,v)
+      if 'id' in data:
+	self.id = data['id']
+      if 'comment' in data:
+        self.comment = data['comment'].splitlines()
+
+  def addDNS(self,name,val):
+    self.zonedata.setdefault(name,[]).append(val)
+
+  def addTest(self,test):
+    self.tests[test.id] = test
+
+def loadYAML(fname):
+  "Load testcases in YAML format.  Return list of SPFTest"
+  fp = open(fname,'rb')
+  tests = {}
+  for s in yaml.safe_load_all(fp):
+    scenario = SPFScenario(fname,data=s)
+    for k,v in scenario.tests.items():
+      tests[k] = v
+  return tests.values()
+
+def loadBind(fname):
+  "Load testcases in BIND format.  Return list of SPFTest"
+  tests = {}
+  scenario = SPFScenario(fname)
+  comments = []
+  lastdomain = None
+  fp = open(fname,'rb')
+  for a in csv.reader(fp,delimiter=' ',skipinitialspace=True):
+    if not a:
+      scenario = SPFScenario(fname)
+      continue
+    name = a[0].strip()
+    if name.startswith('#') or name.startswith(';'):
+      cmt = ' '.join(a)[1:].strip()
+      comments.append(cmt)
+      continue
+    cmd = a[1].upper()
+    if cmd == 'IN':
+#example.com IN SPF "v=spf1 mx/26 exists:%{l}.%{d}.%{i}.spf.example.net -all"
+      t = a[2].upper()
+      if not name:
+        name = lastdomain
+      elif name.endswith('.'):
+	name = name[:-1]
+      lastdomain = name
+      if t == 'MX':
+	v = t,(int(a[3]),a[4].rstrip('.'))
+      else:
+	v = t,a[3]
+      scenario.addDNS(name,v)
+      if comments:
+	scenario.comment += comments
+	comments = []
+    elif cmd == 'TEST':
+      if not name:
+        name = lastdomain
+      else:
+	lastdomain = name
+      if name not in tests:
+	tests[name] = test = SPFTest(name,scenario)
+      else:
+	test = tests[name]
+      scenario.addTest(test)
+      if comments:
+	test.comment += comments
+	comments = []
+      t = a[2].lower()
+      if RE_IP4.match(t):
+        # fail TEST 1.2.3.4 lyme.eater@example.co.uk mail.example.net
+	test.host,test.mailfrom,test.helo,test.result = a[2:6]
+      elif t == 'mail-from':
+        test.mailfrom = a[3]
+      else:
+        setattr(test,t,a[3])
+  fp.close()
+  return tests.values()
+
 class SPFTestCase(unittest.TestCase):
 
-  # test mime parameter parsing
-  def testMacro(self):
-    i, s, h = ('1.2.3.4','lyndon.eaton@premierpc.co.uk','mail.uksubnet.net')
-    q = spf.query(i=i, s=s, h=h)
-    self.assertEqual(q.check()[0],'fail')
+  def runTests(self,tests):
+    global zonedata
+    passed,failed = 0,0
+    for t in tests:
+      zonedata = t.scenario.zonedata
+      q = spf.query(i=t.host, s=t.mailfrom, h=t.helo)
+      res,code,exp = q.check()
+      ok = res == t.result
+      if t.explanation is not None and t.explanation != exp:
+        print t.explanation,'!=',exp
+        ok = False
+      if ok:
+	passed += 1
+      else:
+	failed += 1
+	print "test %s in %s failed" % (t.id,t.scenario.filename)
+    if failed:
+      print "%d passed" % passed,"%d failed" % failed
 
-  def testCnameLoop(self):
-    i, s, h = '66.150.186.79','chuckvsr@mailing.gdi.ws','master.gdi.ws'
-    q = spf.query(i=i, s=s, h=h)
-    self.assertEqual(q.check()[0],'permerror')
-    i, s, h = '66.150.186.79','chuckvsr@loop0.example.com','master.gdi.ws'
-    q = spf.query(i=i, s=s, h=h)
-    self.assertEqual(q.check()[0],'permerror')	# if too many == PermErr
-    #self.assertEqual(q.check()[0],'none')	# if too many == NX_DOMAIN
+  #def testMacro(self):
+  #  self.runTests(loadBind('test/macro.dat'))
 
-  def testIncludeLoop(self):
-    i, s, h = '66.150.186.79','chuckvsr@a.com','mail.a.com'
-    q = spf.query(i=i, s=s, h=h)
-    self.assertEqual(q.check()[0],'permerror')
+  #def testMailzone(self):
+  #  self.runTests(loadBind('otest.dat'))
 
-  def testDNSError(self):
-    i, s, h = ('1.2.3.4','lyndon.eaton@error.co.uk','mail.uksubnet.net')
-    q = spf.query(i=i, s=s, h=h)
-    self.assertEqual(q.check()[0],'temperror')
-
-  def testEmpty(self):
-    i, s, h = ('1.2.3.4','foo@example1.com','mail.example1.com')
-    q = spf.query(i=i, s=s, h=h)
-    self.assertEqual(q.check()[0],'neutral')
-
-  def testNospace(self):
-    i, s, h = ('1.2.3.4','foo@example2.com','mail.example1.com')
-    q = spf.query(i=i, s=s, h=h)
-    self.assertEqual(q.check()[0],'none')
-    i, s, h = ('1.2.3.4','foo@example3.com','mail.example1.com')
-    q = spf.query(i=i, s=s, h=h)
-    self.assertEqual(q.check()[0],'pass')
-
-  def testEmptyMX(self):
-    i, s, h = ('1.2.3.4','','mail.globalinkllc.com')
-    q = spf.query(i=i, s=s, h=h)
-    self.assertEqual(q.check('v=spf1 mx')[0],'neutral')
+  def testYAML(self):
+    self.runTests(loadYAML('test.yaml'))
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
