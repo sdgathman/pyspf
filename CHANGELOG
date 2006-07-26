@@ -1,3 +1,6 @@
+Version 1.8 - July 26, 2006
+  * YAML test suite syntax
+  * trailing dot support (RFC4408 8.1)
 Version 1.7 - July 21, 2005
   * Strict processing limits per newly official SPF RFC
   * Fixed several parsing bugs under RFC 

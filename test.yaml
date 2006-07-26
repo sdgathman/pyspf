@@ -72,12 +72,14 @@ comment: |
   check trailing dot with redirect and exp
 tests:
   traildot1:
-    comment: Check that trailing dot is ignored for domains
+    spec: 8.1
+    comment: Check that trailing dot is accepted for domains
     helo: msgbas2x.cos.example.com
     host: 192.168.218.40
     mailfrom: test@example.com
     result: pass
   traildot2:
+    spec: 8.1
     comment: Check that trailing dot is not removed from explanation
     helo: msgbas2x.cos.example.com
     host: 192.168.218.40
