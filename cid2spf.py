@@ -1,6 +1,7 @@
 #!/usr/bin/python2.3
 
 # Convert a MS Caller-ID entry (XML) to a SPF entry
+# This should be obsolete now.  It is included for historical interest.
 #
 # (c) 2004 by Ernesto Baschny
 # (c) 2004 Python version by Stuart Gathman

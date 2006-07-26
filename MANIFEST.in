@@ -1,0 +1,10 @@
+include README
+include NOTES
+include CHANGELOG
+include spf.py
+include spfquery.py
+include testspf.py
+include type99.py
+include setup.py
+include setup.cfg
+include *.yaml
