@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.61  2006/07/26 21:40:19  customdesigned
+# YAML test format.  Accept trailing dot on domains.
+#
 # Revision 1.60  2006/06/28 04:25:38  customdesigned
 # Catch unexpected IO errors from pydns.
 #
@@ -570,8 +573,8 @@ class query(object):
 		  # FQDN must contain at least one '.'
 		  pos = False
 		  pos = arg.rfind('.')
-		  #Changed to allow a trailing dot per RFC 4408 (Auth 48 change)		  
-		  if not arg.count('.') or (arg.count('.') == 1 and arg.find('.') == len(arg)):
+		  # any trailing dot was removed by expand()
+		  if not (0 < pos < len(arg) - 1):
 		    raise PermError('Invalid domain found (use FQDN)',
 			  arg)
 		  #Test for all numeric TLD as recommended by RFC 3696
