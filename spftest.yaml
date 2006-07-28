@@ -1,0 +1,193 @@
+# This is the test suite based on RFC4408.
+---
+comment: |
+  Initial processing
+tests:
+  longlabel:
+    spec: 4.3/1
+    helo: mail.example.net
+    host: 1.2.3.5
+    mailfrom: lyme.eater@A12345678901234567890123456789012345678901234567890123.example.com
+    result: none
+  nolocalpart:
+    spec: 4.3/2
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: '@example.net'
+    result: fail
+    explanation: postmaster
+zonedata:
+  example.com:
+  - TIMEOUT
+  example.net:
+  - SPF: v=spf1 -all exp=exp.example.net
+  exp.example.net:
+  - TXT: '%{l}'
+
+---
+comment: |
+  Record lookup
+tests:
+  both:
+    spec: 4.4/1
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: foo@both.example.net
+    result: fail
+  txtonly:
+    spec: 4.4/1
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: foo@txtonly.example.net
+    result: fail
+  spfonly:
+    spec: 4.4/1
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: foo@spfonly.example.net
+    result: fail
+  spftimeout:
+    comment: |
+      TXT record present, but SPF lookup times out
+      This actually happens for braindead DNS servers
+    spec: 4.4/1
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: foo@spftimeout.example.net
+    result: fail
+  txttimeout:
+    comment: |
+      SPF record present, but TXT lookup times out
+      This is included for completeness
+    spec: 4.4/1
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: foo@txttimeout.example.net
+    result: fail
+  alltimeout:
+    comment: |
+      Both TXT and SPF queries time out
+    spec: 4.4/2
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: foo@txttimeout.example.net
+    result: temperror
+zonedata:
+  both.example.net:
+  - TXT: v=spf1 -all
+  - SPF: v=spf1 -all
+  txtonly.example.net:
+  - TXT: v=spf1 -all
+  spfonly.example.net:
+  - SPF: v=spf1 -all
+  spftimeout.example.net:
+  - TXT: v=spf1 -all
+  - TIMEOUT
+  txttimeout.example.net:
+  - SPF: v=spf1 -all
+  - TIMEOUT
+  alltimeout.example.net:
+  - TIMEOUT
+
+---
+comment: |
+  Selecting Records
+tests:
+  nospace1:
+    comment: |
+      version must be terminated by space or end of record
+    spec: 4.5/4
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example2.com
+    result: none
+  empty:
+    comment: |
+      test empty SPF record
+    spec: 4.5/4
+    helo: mail1.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example1.com
+    result: neutral
+  nospace2:
+    spec: 4.5/4
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example3.com
+    result: pass
+  spfoverride:
+    comment: |
+      SPF records override TXT records
+    spec: 4.5/5
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example4.com
+    result: pass
+  multitxt1:
+    comment: |
+      Older implementations will give permerror/unknown because of
+      the conflicting TXT records.  However, RFC 4408 says the SPF
+      records overrides them.
+    spec: 4.5/5
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example5.com
+    result: pass
+  multitxt2:
+    spec: 4.5/6
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example6.com
+    result: permerror
+  multispf1:
+    comment: |
+      multiple records is a permerror, even when they are identical
+    spec: 4.5/6
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example7.com
+    result: permerror
+  multispf2:
+    comment: |
+      Older implementations will give pass because there is a single
+      TXT record.  But RFC 4408 requires permerror because the SPF
+      records override and there are more than one.
+    spec: 4.5/6
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example8.com
+    result: permerror
+  nospf:
+    spec: 4.5/7
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@mail.example1.com
+    result: none
+zonedata:
+  example3.com:
+  - SPF: v=spf10
+  - SPF: v=spf1 mx
+  - MX: [0, mail.example1.com]
+  example1.com:
+  - SPF: v=spf1
+  example2.com:
+  - SPF: v=spf1mx
+  mail.example1.com:
+  - A: 1.2.3.4
+  example4.com:
+  - SPF: v=spf1 +all
+  - TXT: v=spf1 -all
+  example5.com:
+  - SPF: v=spf1 +all
+  - TXT: v=spf1 -all
+  - TXT: v=spf1 +all
+  example6.com:
+  - TXT: v=spf1 -all
+  - TXT: v=spf1 +all
+  example7.com:
+  - SPF: v=spf1 -all
+  - SPF: v=spf1 -all
+  example8.com:
+  - SPF: v=spf1 -all
+  - SPF: v=spf1 -all
+  - TXT: v=spf1 +all
