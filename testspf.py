@@ -11,11 +11,19 @@ RE_IP4 = re.compile(r'\.'.join(
 def DNSLookup(name,qtype):
   try:
     #print name
-    return [((name,t),v) for t,v in zonedata[name]]
+    timeout = True
+    for i in zonedata[name]:
+      if i == 'TIMEOUT':
+        if timeout:
+	  raise spf.TempError,'DNS timeout'
+	return
+      t,v = i
+      if t == qtype:
+        timeout = False
+      yield ((name,t),v)
   except KeyError:
     if name.startswith('error.'):
       raise spf.TempError,'DNS timeout'
-    return []
 
 spf.DNSLookup = DNSLookup
 
@@ -30,6 +38,15 @@ class SPFTest(object):
     if type(self.comment) is str:
       self.comment = self.comment.splitlines()
 
+def getrdata(r):
+  "Unpack rdata given as list of maps to list of tuples."
+  for m in r:
+    try:
+      for t in m.items():
+        yield t
+    except:
+      yield m
+
 class SPFScenario(object):
   def __init__(self,filename=None,data={}):
     self.id = None
@@ -39,7 +56,7 @@ class SPFScenario(object):
     self.tests = {}
     if data:
       self.zonedata= dict([
-        (d, [m.items()[0] for m in r]) for d,r in data['zonedata'].items()
+        (d, list(getrdata(r))) for d,r in data['zonedata'].items()
       ])
       for t,v in data['tests'].items():
         self.tests[t] = SPFTest(t,self,v)
@@ -155,6 +172,9 @@ class SPFTestCase(unittest.TestCase):
 
   def testYAML(self):
     self.runTests(loadYAML('test.yaml'))
+
+  def testRFC(self):
+    self.runTests(loadYAML('spftest.yaml'))
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 

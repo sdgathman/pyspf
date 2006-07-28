@@ -1,3 +1,9 @@
+# This is the test suite used during development of the pyspf library.
+# It is a collection of ad hoc tests based on bug reports.  It is the
+# goal of the SPF test project to have an elegant and minimal test suite
+# that reflects RFC 4408.  However, this should help get things started
+# by serving as a example of what tests look like.  Also, any implementation
+# that flunks this, should flunk the minimal elegant suite as well.
 ---
 comment: |
   check basic exists with macros
@@ -95,7 +101,7 @@ comment: |
   check trailing dot with redirect and exp
 tests:
   traildot1:
-    spec: 8.1
+    spec: 8.1/16
     comment: Check that trailing dot is accepted for domains
     helo: msgbas2x.cos.example.com
     host: 192.168.218.40
@@ -113,7 +119,8 @@ zonedata:
   example.com.d.spf.example.com:
   - SPF: v=spf1 redirect=a.spf.example.com
   a.spf.example.com:
-  - SPF: v=spf1 mx:example.com include:o.spf.example.com -exists:%{s}.S.bl.spf.example.com
+  - SPF: v=spf1 mx:example.com include:o.spf.example.com
+      -exists:%{s}.S.bl.spf.example.com
       exists:%{s}.S.%{i}.AI.spf.example.com ~all
   o.spf.example.com:
   - SPF: v=spf1 ip4:192.168.144.41 ip4:192.168.218.40 ip4:192.168.218.41
