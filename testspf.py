@@ -121,6 +121,8 @@ def loadBind(fname):
   fp.close()
   return tests.values()
 
+oldresults = { 'unknown': 'permerror', 'error': 'temperror' }
+
 class SPFTestCase(unittest.TestCase):
 
   def runTests(self,tests):
@@ -130,6 +132,8 @@ class SPFTestCase(unittest.TestCase):
       zonedata = t.scenario.zonedata
       q = spf.query(i=t.host, s=t.mailfrom, h=t.helo)
       res,code,exp = q.check()
+      if res in oldresults:
+        res = oldresults[res]
       ok = res == t.result
       if t.explanation is not None and t.explanation != exp:
         print t.explanation,'!=',exp
@@ -137,6 +141,7 @@ class SPFTestCase(unittest.TestCase):
       if ok:
 	passed += 1
       else:
+        print t.result,'!=',res
 	failed += 1
 	print "test %s in %s failed" % (t.id,t.scenario.filename)
     if failed:

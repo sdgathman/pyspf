@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.62  2006/07/27 03:56:45  customdesigned
+# Removed redundant trailing dot check.
+#
 # Revision 1.61  2006/07/26 21:40:19  customdesigned
 # YAML test format.  Accept trailing dot on domains.
 #
@@ -314,9 +317,6 @@ def check(i, s, h,local=None,receiver=None):
 	['pass', 'permerror', 'fail', 'temperror', 'softfail', 'none', 'neutral' ].
 
 	Example:
-	>>> check(i='127.0.0.1', s='terry@wayforward.net', h='localhost')
-	('pass', 250, 'local connections always pass')
-
 	#>>> check(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
 
 	"""
@@ -438,8 +438,6 @@ class query(object):
 		# will continue processing.  However, the exception
 		# that strict processing would raise is saved here
 		self.perm_error = None
-		if self.i.startswith('127.'):
-			return ('pass', 250, 'local connections always pass')
 
 		try:
 			self.lookups = 0
@@ -565,13 +563,12 @@ class query(object):
 		  x = self.note_error(
 		    'Use the ip4 mechanism for ip4 addresses',mech)
 		  m = 'ip4'
-		#Check for : within the arguement
+		# Check for : within the arguement
 		if arg.count(':') > 0:
 		  raise PermError('Too many :. Not allowed in domain name.',mech)
 		if m in ('a', 'mx', 'ptr', 'exists', 'include'):
 		  arg = self.expand(arg)
 		  # FQDN must contain at least one '.'
-		  pos = False
 		  pos = arg.rfind('.')
 		  # any trailing dot was removed by expand()
 		  if not (0 < pos < len(arg) - 1):
@@ -593,10 +590,11 @@ class query(object):
 		if m == 'ip4' and not RE_IP4.match(arg):
 		  raise PermError('Invalid IP4 address',mech)
 		#validate 'all' mechanism per RFC 4408 ABNF
-		if m == 'all' and (arg != self.d  or mech.count(':') or mech.count('/')):
+		if m == 'all' and \
+		    (arg != self.d  or mech.count(':') or mech.count('/')):
 #		  print '|'+ arg + '|', mech, self.d,
-		  raise PermError(
-		    'Invalid all mechanism format - only qualifier allowed with all'
+		  self.note_error(
+	      'Invalid all mechanism format - only qualifier allowed with all'
 		    ,mech)
 		if m in ALL_MECHANISMS:
 		  return mech,m,arg,cidrlength,result
@@ -1019,9 +1017,7 @@ class query(object):
 		"""
 		sender = self.o
 		if res == 'pass':
-		  if self.i.startswith('127.'):
-		    return "localhost is always allowed."
-		  else: return \
+		  return \
 		    "domain of %s designates %s as permitted sender" \
 			% (sender,self.i)
 		elif res == 'softfail': return \

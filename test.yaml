@@ -20,18 +20,41 @@ zonedata:
 
 ---
 comment: |
-  include loop
+  permerror detection
 tests:
   incloop:
-    helo: mail.examplea.com
+    comment: |
+      include loop
+    helo: mail.example.com
     host: 66.150.186.79
     mailfrom: chuckvsr@examplea.com
+    result: permerror
+  badall:
+    helo: mail.example.com
+    host: 66.150.186.79
+    mailfrom: chuckvsr@examplec.com
+    result: permerror
+  baddomain:
+    helo: mail.example.com
+    host: 66.150.186.79
+    mailfrom: chuckvsr@exampled.com
+    result: permerror
+  badip:
+    helo: mail.example.com
+    host: 66.150.186.79
+    mailfrom: chuckvsr@examplee.com
     result: permerror
 zonedata:
   examplea.com:
   - SPF: v=spf1 a mx include:b.com
   exampleb.com:
   - SPF: v=spf1 a mx include:a.com
+  examplec.com:
+  - SPF: v=spf1 -all:foobar
+  exampled.com:
+  - SPF: v=spf1 a:examplea.com:8080
+  examplee.com:
+  - SPF: v=spf1 ip4:1.2.3.4:8080
 
 ---
 tests:
@@ -107,15 +130,23 @@ zonedata:
 
 ---
 comment: |
-  test empty MX
+  corner cases
 tests:
   emptyMX:
+    comment: |
+      test empty MX
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: ''
     result: neutral
+  localhost:
+    helo: mail.example.com
+    host: 127.0.0.1
+    mailfrom: root@example.com
+    result: fail
 zonedata:
   mail.example.com:
   - MX: [0, '']
   - SPF: v=spf1 mx
-
+  example.com:
+  - SPF: v=spf1 -all
