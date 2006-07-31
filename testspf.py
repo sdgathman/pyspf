@@ -20,6 +20,10 @@ def DNSLookup(name,qtype):
       t,v = i
       if t == qtype:
         timeout = False
+      if v == 'TIMEOUT':
+        if t == qtype:
+	  raise spf.TempError,'DNS timeout'
+	continue
       yield ((name,t),v)
   except KeyError:
     if name.startswith('error.'):
@@ -40,12 +44,23 @@ class SPFTest(object):
 
 def getrdata(r):
   "Unpack rdata given as list of maps to list of tuples."
+  txt = []	# generated TXT records
+  gen = True
   for m in r:
     try:
-      for t in m.items():
-        yield t
+      for i in m.items():
+        t,v = i
+        if t == 'TXT':
+	  gen = False # no generated TXT records
+	elif t == 'SPF' and gen:
+	  txt.append(('TXT',v))
+	if v != 'NONE':
+	  yield i
     except:
       yield m
+  if gen:
+    for i in txt:
+      yield i
 
 class SPFScenario(object):
   def __init__(self,filename=None,data={}):
@@ -151,16 +166,19 @@ class SPFTestCase(unittest.TestCase):
       res,code,exp = q.check()
       if res in oldresults:
         res = oldresults[res]
-      ok = res == t.result
+      ok = True
+      if res != t.result and res not in t.result:
+        print t.result,'!=',res
+	ok = False
       if t.explanation is not None and t.explanation != exp:
         print t.explanation,'!=',exp
         ok = False
       if ok:
 	passed += 1
       else:
-        print t.result,'!=',res
 	failed += 1
-	print "test %s in %s failed" % (t.id,t.scenario.filename)
+	print "%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec)
+	print t.scenario.zonedata
     if failed:
       print "%d passed" % passed,"%d failed" % failed
 
@@ -174,7 +192,7 @@ class SPFTestCase(unittest.TestCase):
     self.runTests(loadYAML('test.yaml'))
 
   def testRFC(self):
-    self.runTests(loadYAML('spftest.yaml'))
+    self.runTests(loadYAML('rfc4408-tests.yml'))
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
