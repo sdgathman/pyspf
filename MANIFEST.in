@@ -5,6 +5,7 @@ include spf.py
 include spfquery.py
 include testspf.py
 include type99.py
+include cid2spf.py
 include setup.py
 include setup.cfg
 include *.yml
