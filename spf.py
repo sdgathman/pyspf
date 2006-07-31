@@ -2,8 +2,8 @@
 """SPF (Sender Policy Framework) implementation.
 
 Copyright (c) 2003, Terence Way
-Portions Copyright (c) 2004,2005 Stuart Gathman <stuart@bmsi.com>
-Portions Copyright (c) 2005 Scott Kitterman <scott@kitterman.com>
+Portions Copyright (c) 2004,2005,2006 Stuart Gathman <stuart@bmsi.com>
+Portions Copyright (c) 2005,2006 Scott Kitterman <scott@kitterman.com>
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
 and disclaimer are retained in their original form.
@@ -27,101 +27,17 @@ For news, bugfixes, etc. visit the home page for this implementation at
 	http://sourceforge.net/projects/pymilter/
 """
 
-# Changes:
-#    9-dec-2003, v1.1, Meng Weng Wong added PTR code, THANK YOU
-#   11-dec-2003, v1.2, ttw added macro expansion, exp=, and redirect=
-#   13-dec-2003, v1.3, ttw added %{o} original domain macro,
-#                      print spf result on command line, support default=,
-#                      support localhost, follow DNS CNAMEs, cache DNS results
-#                      during query, support Python 2.2 for Mac OS X
-#   16-dec-2003, v1.4, ttw fixed include handling (include is a mechanism,
-#                      complete with status results, so -include: should work.
-#                      Expand macros AFTER looking for status characters ?-+
-#                      so altavista.com SPF records work.
-#   17-dec-2003, v1.5, ttw use socket.inet_aton() instead of DNS.addr2bin, so
-#                      n, n.n, and n.n.n forms for IPv4 addresses work, and to
-#                      ditch the annoying Python 2.4 FutureWarning
-#   18-dec-2003, v1.6, Failures on Intel hardware: endianness.  Use ! on
-#                      struct.pack(), struct.unpack().
-#
 # Development taken over by Stuart Gathman <stuart@bmsi.com> since
 # Terrence is not responding to email.
 #
 # $Log$
-# Revision 1.62  2006/07/27 03:56:45  customdesigned
-# Removed redundant trailing dot check.
+# Revision 1.25  2006/07/31 15:25:39  customdesigned
+# Permerror for multiple TXT SPF records.
 #
-# Revision 1.61  2006/07/26 21:40:19  customdesigned
-# YAML test format.  Accept trailing dot on domains.
-#
-# Revision 1.60  2006/06/28 04:25:38  customdesigned
-# Catch unexpected IO errors from pydns.
-#
-# Revision 1.59  2006/05/19 13:18:23  kitterma
-# Fix to disallow ':' except between the mechanism and domain-spec.
-#
-# Revision 1.58  2006/05/19 02:04:58  kitterma
-# Corrected validation bug where 'all' mechanism was not correctly checked,
-# updated for RFC 4408 Auth 48 changes - trailing dot now allowed in domain
-# name and Type TXT and Type SPF DNS records not identical raises a warning
-# instead of a permanent error, and changed internet draft references to refer
-# to RFC 4408.
-#
-# Revision 1.57  2006/05/12 16:38:12  customdesigned
-# a:1.2.3.4 -> ip4:1.2.3.4 heuristic.
-#
-# Revision 1.56  2005/12/29 19:14:11  customdesigned
-# Handle NULL MX and other A lookups of DNS root.
-#
-# Revision 1.55  2005/10/30 00:41:48  customdesigned
-# Ignore SPF records missing space after version as required by RFC.
-# FIXME: in "relaxed" mode, give permerror when there is exactly one
-# such malformed record.
-#
-# Revision 1.54  2005/08/23 21:50:10  customdesigned
-# Missing separator line in insert_libspf_local_policy self test.
-#
-# Revision 1.53  2005/08/23 20:37:19  customdesigned
-# Simplify libspf_local further.  FIXME for possible specification error.
-#
-# Revision 1.52  2005/08/23 20:23:31  customdesigned
-# Clean up libspf_local and add inline test cases.
-# Repair try..finally in check1() broken when Ambiguity warning added.
-#
-# Revision 1.51  2005/08/19 19:06:49  customdesigned
-# use note_error method for consistent extended processing.
-# Return extended result, strict result in self.perm_error
-#
-# Revision 1.50  2005/08/19 18:13:31  customdesigned
-# Still want to do strict tests in even stricter modes.
-#
-# Revision 1.49  2005/08/12 18:54:34  kitterma
-# Consistently treat strict as a numeric for hard processing.
-#
-# Revision 1.48  2005/08/11 14:30:44  kitterma
-# Restore all numeric TLD test from 1.44 that was inadvertently deleted.  Ugh.
-#
-# Revision 1.47  2005/08/10 13:31:34  kitterma
-# Completed first part of local policy implementation.  Local policy will now be
-# added before the last non-fail mechanism as in Libspf2 and Mail::SPF::Query.
-# Still ToDo for local policy is: don't do local policy until after redirect=,
-# modify explanation to indicate result is based on local policy, and an option
-# for RFE [ 1224459 ] local policy API to execute local policy before public
-# policy.  Will do the RFE after basic compatibility with the reference
-# implementations.  Restored Unix line endings.  Changed Harsh mode check for
-# ambiguity to exclude exists: mechanisms.
-#
-# Revision 1.46  2005/08/08 15:03:28  kitterma
-# Added PermError for redirect= to a domain without an SPF record.
-#
-# Revision 1.45  2005/08/08 03:04:44  kitterma
-# Added PermError for multiple SPF records per para 4.5 of schlitt-02
-#
-# See spf_changelog.txt for earlier changes.
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "1.7: July 22, 2005"
+__version__ = "1.7: July 31, 2006"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -183,7 +99,7 @@ RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
 RE_CIDR = re.compile(r'/([1-9]|1[0-9]|2[0-9]|3[0-2])$')
 
 RE_IP4 = re.compile(r'\.'.join(
-	[r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
+        [r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
@@ -191,55 +107,18 @@ RE_IP4 = re.compile(r'\.'.join(
 JOINERS = {'l': '.', 's': '.'}
 
 RESULTS = {'+': 'pass', '-': 'fail', '?': 'neutral', '~': 'softfail',
-           'pass': 'pass', 'fail': 'fail', 'permerror': 'permerror',
+           'pass': 'pass', 'fail': 'fail', 'unknown': 'unknown',
 	   'error': 'error', 'neutral': 'neutral', 'softfail': 'softfail',
-	   'none': 'none', 'local': 'local', 'trusted': 'trusted',
-           'ambiguous': 'ambiguous'}
+	   'none': 'none', 'deny': 'fail' }
 
-EXPLANATIONS = {'pass': 'sender SPF authorized',
-                'fail': 'SPF fail - not authorized',
-                'permerror': 'permanent error in processing',
-                'temperror': 'temporary DNS error in processing',
-		'softfail': 'domain owner discourages use of this host',
+EXPLANATIONS = {'pass': 'sender SPF verified', 'fail': 'access denied',
+                'unknown': 'permanent error in processing',
+                'error': 'temporary error in processing',
+		'softfail': 'domain in transition',
 		'neutral': 'access neither permitted nor denied',
-		'none': '',
-                #Note: The following are not formally SPF results
-                'local': 'No SPF result due to local policy',
-                'trusted': 'No SPF check - trusted-forwarder.org',
-                #Ambiguous only used in harsh mode for SPF validation
-                'ambiguous': 'No error, but results may vary'
+		'none': ''
 		}
 
-#Default receiver policies - can be overridden.
-POLICY = {'tfwl': False, #Check trusted-forwarder.org
-          'skip_localhost': True, #Don't check SPF on local connections
-          'always_helo': False, #Only works if helo_first is also True.
-          'spf_helo_mustpass': True, #Treat HELO test returning softfail or
-          #neutral as Fail - HELO should be a single IP per name.  No reason to
-          #accept SPF relaxed provisions for HELO.  No affect if None.
-          'reject_helo_fail': False, 
-          'spf_reject_fail': True,
-          'spf_reject_neutral': False,
-          'spf_accept_softfail': True,
-          'spf_best_guess': True,
-          'spf_strict': True,
-		}
-# Recommended SMTP codes for certain SPF results.  For results not in
-# this table the recommendation is to accept the message as authorized.
-# An SPF result is never enough to recommend that a message be accepted for
-# delivery.  Additional checks are generally required.
-# The softfail result requires special processing.
-
-SMTP_CODES = {
-  'fail': [550,'5.7.1'],
-  'temperror': [451,'4.4.3'],
-  'permerror': [550,'5.5.2'],
-  'softfail': [451,'4.3.0']
-		}
-if not POLICY['spf_accept_softfail']:
-    SMTP_CODES['softfail'] = (550,'5.7.1')
-if POLICY['spf_reject_neutral']:
-    SMTP_CODES['neutral'] = (550,'5.7.1')
 # if set to a domain name, search _spf.domain namespace if no SPF record
 # found in source domain.
 
@@ -256,46 +135,17 @@ except NameError:
 # standard default SPF record for best_guess
 DEFAULT_SPF = 'v=spf1 a/24 mx/24 ptr'
 
-#Whitelisted forwarders here.  Additional locally trusted forwarders can be
-#added to this record.
-TRUSTED_FORWARDERS = 'v=spf1 ?include:spf.trusted-forwarder.org -all'
-
 # maximum DNS lookups allowed
 MAX_LOOKUP = 10 #RFC 4408 Para 10.1
 MAX_MX = 10 #RFC 4408 Para 10.1
 MAX_PTR = 10 #RFC 4408 Para 10.1
 MAX_CNAME = 10 # analogous interpretation to MAX_PTR
 MAX_RECURSION = 20
-
 ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
 COMMON_MISTAKES = { 'prt': 'ptr', 'ip': 'ip4', 'ipv4': 'ip4', 'ipv6': 'ip6' }
 
-
-#If harsh processing, for the validator, is invoked, warn if results
-#likely deviate from the publishers intention.
-class AmbiguityWarning(Exception):
-	"SPF Warning - ambiguous results"
-	def __init__(self,msg,mech=None,ext=None):
-	  Exception.__init__(self,msg,mech)
-	  self.msg = msg
-	  self.mech = mech
-	  self.ext = ext
-	def __str__(self):
-	  if self.mech:
-	    return '%s: %s'%(self.msg,self.mech)
-	  return self.msg
-
 class TempError(Exception):
 	"Temporary SPF error"
-	def __init__(self,msg,mech=None,ext=None):
-	  Exception.__init__(self,msg,mech)
-	  self.msg = msg
-	  self.mech = mech
-	  self.ext = ext
-	def __str__(self):
-	  if self.mech:
-	    return '%s: %s'%(self.msg,self.mech)
-	  return self.msg
 
 class PermError(Exception):
 	"Permanent SPF error"
@@ -313,10 +163,13 @@ def check(i, s, h,local=None,receiver=None):
 	"""Test an incoming MAIL FROM:<s>, from a client with ip address i.
 	h is the HELO/EHLO domain name.
 
-	Returns (result,  code, explanation) where result in
-	['pass', 'permerror', 'fail', 'temperror', 'softfail', 'none', 'neutral' ].
+	Returns (result, mta-status-code, explanation) where result in
+	['pass', 'unknown', 'fail', 'error', 'softfail', 'none', 'neutral' ].
 
 	Example:
+	>>> check(i='127.0.0.1', s='terry@wayforward.net', h='localhost')
+	('pass', 250, 'local connections always pass')
+
 	#>>> check(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
 
 	"""
@@ -339,7 +192,7 @@ class query(object):
 	This is also, by design, the same variables used in SPF macro
 	expansion.
 
-	Also keeps cache: DNS cache.  
+	Also keeps cache: DNS cache.
 	"""
 	def __init__(self, i, s, h,local=None,receiver=None,strict=True):
 		self.i, self.s, self.h = i, s, h
@@ -352,21 +205,17 @@ class query(object):
 		self.p = None
 		if receiver:
 		  self.r = receiver
-		else:
-		  self.r = 'unknown'
-		# Since the cache does not track Time To Live, it is created
-		# fresh for each query.  It is important for efficiently using
-		# multiple results provided in DNS answers.
 		self.cache = {}
 		self.exps = dict(EXPLANATIONS)
-		self.libspf_local = local	# local policy
+		self.local = local	# local policy
     		self.lookups = 0
-		# strict can be False, True, or 2 (numeric) for harsh
+		# strict can be False, True, or 2 for harsh
 		self.strict = strict
+		self.perm_error = None
 
 	def set_default_explanation(self,exp):
 		exps = self.exps
-		for i in 'softfail','fail','permerror':
+		for i in 'softfail','fail','unknown':
 		  exps[i] = exp
 
 	def getp(self):
@@ -382,11 +231,10 @@ class query(object):
 		"""Return a best guess based on a default SPF record"""
 		return self.check(spf)
 
-
 	def check(self, spf=None):
 		"""
 	Returns (result, mta-status-code, explanation) where result
-	in ['fail', 'softfail', 'neutral' 'permerror', 'pass', 'temperror', 'none']
+	in ['fail', 'softfail', 'neutral' 'unknown', 'pass', 'error', 'none']
 
 	Examples:
 	>>> q = query(s='strong-bad@email.example.com',
@@ -395,42 +243,34 @@ class query(object):
 	('neutral', 250, 'access neither permitted nor denied')
 
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ?all moo')
-	('permerror', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+	('unknown', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
 
 	>>> q.check(spf='v=spf1 =a ?all moo')
-	('permerror', 550, 'SPF Permanent Error: Unknown qualifier, RFC 4408 para 4.6.1, found in: =a')
+	('unknown', 550, 'SPF Permanent Error: Unknown qualifier, RFC 4408 para 4.6.1, found in: =a')
 
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ~all')
-	('pass', 250, 'sender SPF authorized')
-
-	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all moo=')
-	('pass', 250, 'sender SPF authorized')
-
-	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all match.sub-domains_9=yes')
-	('pass', 250, 'sender SPF authorized')
+	('pass', 250, 'sender SPF verified')
 
 	>>> q.strict = False
 	>>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all moo')
-	('pass', 250, 'sender SPF authorized')
+	('unknown', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+	>>> q.perm_error.ext
+	('pass', 250, 'sender SPF verified')
 
 	>>> q.check(spf='v=spf1 ip4:192.1.0.0/16 moo -all')
-	('permerror', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+	('unknown', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+	>>> str(q.perm_error.ext)
+	'None'
 
 	>>> q.check(spf='v=spf1 ip4:192.1.0.0/16 ~all')
-	('softfail', 250, 'domain owner discourages use of this host')
+	('softfail', 250, 'domain in transition')
 
 	>>> q.check(spf='v=spf1 -ip4:192.1.0.0/6 ~all')
-	('fail', 550, 'SPF fail - not authorized')
+	('fail', 550, 'access denied')
 
 	# Assumes DNS available
 	>>> q.check()
 	('none', 250, '')
-
-	>>> q.check(spf='v=spf1 ip4:1.2.3.4 -a:example.net -all')
-	('fail', 550, 'SPF fail - not authorized')
-	>>> q.libspf_local='ip4:192.0.2.3 a:example.org'
-	>>> q.check(spf='v=spf1 ip4:1.2.3.4 -a:example.net -all')
-	('pass', 250, 'sender SPF authorized')
 		"""
 		self.mech = []		# unknown mechanisms
 		# If not strict, certain PermErrors (mispelled
@@ -438,20 +278,23 @@ class query(object):
 		# will continue processing.  However, the exception
 		# that strict processing would raise is saved here
 		self.perm_error = None
+		if self.i.startswith('127.'):
+			return ('pass', 250, 'local connections always pass')
 
 		try:
 			self.lookups = 0
 			if not spf:
 			    spf = self.dns_spf(self.d)
-			if self.libspf_local and spf: 
-			    spf = insert_libspf_local_policy(
-			    	spf,self.libspf_local)
-                        return self.check1(spf, self.d, 0)
+			if self.local and spf:
+			    spf += ' ' + self.local
+			rc = self.check1(spf, self.d, 0)
+			if self.perm_error:
+			  # extended processing succeeded, but strict failed
+			  self.perm_error.ext = rc
+			  raise self.perm_error
+			return rc
 		except TempError,x:
-                    self.prob = x.msg
-		    if x.mech:
-		      self.mech.append(x.mech)
-		    return ('temperror',451, 'SPF Temporary Error: ' + str(x))
+			return ('error', 450, 'SPF Temporary Error: ' + str(x))
 		except PermError,x:
 		    if not self.perm_error:
 		      self.perm_error = x
@@ -460,7 +303,7 @@ class query(object):
 		      self.mech.append(x.mech)
 		    # Pre-Lentczner draft treats this as an unknown result
 		    # and equivalent to no SPF record.
-		    return ('permerror', 550, 'SPF Permanent Error: ' + str(x))
+		    return ('unknown', 550, 'SPF Permanent Error: ' + str(x))
 
 	def check1(self, spf, domain, recursion):
 		# spf rfc: 3.7 Processing Limits
@@ -477,16 +320,10 @@ class query(object):
 			# a PermError.
 			raise PermError('Too many levels of recursion')
 		try:
-		  try:
-		      tmp, self.d = self.d, domain
-		      return self.check0(spf,recursion)
-		  finally:
-		      self.d = tmp
-		except AmbiguityWarning,x:
-		  self.prob = x.msg
-		  if x.mech:
-		    self.mech.append(x.mech)
-		    return ('ambiguous', 000, 'SPF Ambiguity Warning: %s' % x)
+			tmp, self.d = self.d, domain
+			return self.check0(spf,recursion)
+		finally:
+			self.d = tmp
 
 	def note_error(self,*msg):
 	    if self.strict:
@@ -496,8 +333,6 @@ class query(object):
 	      try:
 		raise PermError(*msg)
 	      except PermError, x:
-	        # FIXME: keep a list of errors for even friendlier
-		# diagnostics.
 		self.perm_error = x
 	    return self.perm_error
 
@@ -510,9 +345,9 @@ class query(object):
 	...           h='mx.example.org', i='192.0.2.3')
 	>>> q.validate_mechanism('A')
 	('A', 'a', 'email.example.com', 32, 'pass')
-	
+
 	>>> q = query(s='strong-bad@email.example.com',
-	...           h='mx.example.org', i='192.0.2.3')	
+	...           h='mx.example.org', i='192.0.2.3')
 	>>> q.validate_mechanism('A')
 	('A', 'a', 'email.example.com', 32, 'pass')
 
@@ -540,13 +375,10 @@ class query(object):
 
 	>>> q.validate_mechanism('~exists:%{i}.%{s1}.100/86400.rate.%{d}')
 	('~exists:%{i}.%{s1}.100/86400.rate.%{d}', 'exists', '192.0.2.3.com.100/86400.rate.email.example.com', 32, 'softfail')
-
-	>>> q.validate_mechanism('a:mail.example.com.')
-	('a:mail.example.com.', 'a', 'mail.example.com', 32, 'pass')
 		"""
 		# a mechanism
 		m, arg, cidrlength = parse_mechanism(mech, self.d)
-		# map '?' '+' or '-' to 'neutral' 'pass' or 'fail'
+		# map '?' '+' or '-' to 'unknown' 'pass' or 'fail'
 		if m:
 		  result = RESULTS.get(m[0])
 		  if result:
@@ -570,7 +402,6 @@ class query(object):
 		  arg = self.expand(arg)
 		  # FQDN must contain at least one '.'
 		  pos = arg.rfind('.')
-		  # any trailing dot was removed by expand()
 		  if not (0 < pos < len(arg) - 1):
 		    raise PermError('Invalid domain found (use FQDN)',
 			  arg)
@@ -592,7 +423,7 @@ class query(object):
 		#validate 'all' mechanism per RFC 4408 ABNF
 		if m == 'all' and \
 		    (arg != self.d  or mech.count(':') or mech.count('/')):
-#		  print '|'+ arg + '|', mech, self.d,
+# 		  print '|'+ arg + '|', mech, self.d,
 		  self.note_error(
 	      'Invalid all mechanism format - only qualifier allowed with all'
 		    ,mech)
@@ -600,7 +431,7 @@ class query(object):
 		  return mech,m,arg,cidrlength,result
 		if m[1:] in ALL_MECHANISMS:
 		  x = self.note_error(
-		    'Unknown qualifier, RFC 4408 para 4.6.1, found in',mech)
+		    'Unknown qualifier, RFC 4408 para 4.6.1, found in', mech)
 		else:
 		  x = self.note_error('Unknown mechanism found',mech)
 		return mech,m,arg,cidrlength,x
@@ -617,12 +448,12 @@ class query(object):
 
 		# split string by whitespace, drop the 'v=spf1'
 		spf = spf.split()
-		# Catch case where SPF record has no spaces.
+		# Catch case where SPF record has no spaces
 		# Can never happen with conforming dns_spf(), however
 		# in the future we might want to give permerror
 		# for common mistakes like IN TXT "v=spf1" "mx" "-all"
 		# in relaxed mode.
-		if spf[0] != 'v=spf1':
+		if spf[0] != 'v=spf1':   
 		    raise PermError('Invalid SPF record in', self.d)
 		spf = spf[1:]
 
@@ -678,15 +509,10 @@ class query(object):
 			    break
 
 		    elif m == 'exists':
-                        self.check_lookups()
-                        try:
-                            if len(self.dns_a(arg)) > 0:
+		        self.check_lookups()
+			if len(self.dns_a(arg)) > 0:
 				break
-		        except AmbiguityWarning:
-                            # Exists wants no response sometimes so don't raise
-                            # the warning.
-                            pass
-                        
+
 		    elif m == 'a':
 		        self.check_lookups()
 			if cidrmatch(self.i, self.dns_a(arg), cidrlength):
@@ -720,13 +546,8 @@ class query(object):
 		else:
 		    # no matches
 		    if redirect:
-                        #Catch redirect to a non-existant SPF record.
-                        redirect_record = self.dns_spf(redirect)
-                        if not redirect_record:
-                            raise PermError('redirect domain has no SPF record',
-                                            redirect)
-			return self.check1(redirect_record, redirect,
-                                           recursion + 1)
+			return self.check1(self.dns_spf(redirect),
+					       redirect, recursion + 1)
 		    else:
 			result = default
 
@@ -815,6 +636,9 @@ class query(object):
 		>>> q.expand('%{p2}.trusted-domains.example.net')
 		'example.org.trusted-domains.example.net'
 
+		>>> q.expand('%{p2}.trusted-domains.example.net')
+		'example.org.trusted-domains.example.net'
+
 		>>> q.expand('%{p2}.trusted-domains.example.net.')
 		'example.org.trusted-domains.example.net'
 
@@ -860,19 +684,12 @@ class query(object):
 		if len(a) == 1 and self.strict < 2:
 		    return a[0]   			
 		# check official SPF type first when it becomes more popular
-		try:
-		  b = [t for t in self.dns_99(domain) if isSPF(t)]
-		except TempError,x:
-		  # some braindead DNS servers hang on type 99 query
-		  if self.strict > 1: raise x
-		  b = []
-
-		if len(b) > 1:
-                    raise PermError('Two or more type SPF spf records found.')
+		b = [t for t in self.dns_99(domain) if isSPF(t)]
 		if len(b) == 1:
-		    if self.strict > 1 and len(a) == 1 and a[0] != b[0]:
-		    #Changed from permerror to warning based on RFC 4408 Auth 48 change
-		        raise AmbiguityWarning(
+		    # FIXME: really must fully parse each record
+		    # and compare with appropriate parts case insensitive.
+		    if self.strict >= 2 and len(a) == 1 and a[0] != b[0]:
+		        raise PermError(
 'v=spf1 records of both type TXT and SPF (type 99) present, but not identical')
 		    return b[0]
 		if len(a) == 1:
@@ -893,7 +710,14 @@ class query(object):
 	def dns_99(self, domainname):
 		"Get a list of type SPF=99 records for a domain name."
 		if domainname:
-		  return [''.join(a) for a in self.dns(domainname, 'SPF')]
+		  try:
+		    return [''.join(a) for a in self.dns(domainname, 'SPF')]
+		  except TempError,x:
+		    if self.strict: raise x
+		    self.note_error(
+		      'DNS responds, but times out on type99 (SPF) query: %s'%
+		      domainname
+		    )
 		return []
 
 	def dns_mx(self, domainname):
@@ -904,17 +728,6 @@ class query(object):
 # To prevent DoS attacks, more than 10 MX names MUST NOT be looked up
 		if self.strict:
 		  max = MAX_MX
-		  if self.strict > 1:
-                      #Break out the number of MX records returned for testing
-                      mxnames = self.dns(domainname, 'MX')
-                      mxip = [a for mx in mxnames[:max] for a in self.dns_a(mx[1])]
-                      if len(mxnames) > max:
-                          warning = 'More than ' + str(max) + ' MX records returned'
-                          raise AmbiguityWarning(warning, domainname)
-                      else:
-                          if len(mxnames) == 0:
-                              raise AmbiguityWarning('No MX records found for mx mechanism', domainname)
-                          return mxip
 		else:
 		  max = MAX_MX * 4
 		return [a for mx in self.dns(domainname, 'MX')[:max] \
@@ -922,15 +735,9 @@ class query(object):
 
 	def dns_a(self, domainname):
 		"""Get a list of IP addresses for a domainname."""
-		if not domainname: return []
-		if self.strict > 1:
-                    alist = self.dns(domainname, 'A')
-                    if len(alist) == 0:
-                        raise AmbiguityWarning('No A records found for',
-                                               domainname)
-                    else:
-                        return alist
-		return self.dns(domainname, 'A')
+		if domainname:
+		  return self.dns(domainname, 'A')
+		return []
 
 	def dns_aaaa(self, domainname):
 		"""Get a list of IPv6 addresses for a domainname."""
@@ -943,20 +750,6 @@ class query(object):
 # To prevent DoS attacks, more than 10 PTR names MUST NOT be looked up
 		if self.strict:
 		  max = MAX_PTR
-		  if self.strict > 1:
-                      #Break out the number of PTR records returned for testing
-                      try:
-                          ptrnames = self.dns_ptr(i)
-                          ptrip = [p for p in ptrnames if i in self.dns_a(p)]
-                          if len(ptrnames) > max:
-                              warning = 'More than ' + str(max) + ' PTR records returned'
-                              raise AmbiguityWarning(warning, i)
-                          else:
-                              if len(ptrnames) == 0:
-                                  raise AmbiguityWarning('No PTR records found for ptr mechanism', ptrnames)
-                              return ptrip
-                      except:
-                          raise AmbiguityWarning('No PTR records found for ptr mechanism', ptrnames)
 		else:
 		  max = MAX_PTR * 4
 		return [p for p in self.dns_ptr(i)[:max] if i in self.dns_a(p)]
@@ -991,7 +784,6 @@ class query(object):
 			if not cnames:
 			  cnames = {}
 			elif len(cnames) >= MAX_CNAME:
-			  #return result	# if too many == NX_DOMAIN
 			  raise PermError(
 			    'Length of CNAME chain exceeds %d' % MAX_CNAME)
 			cnames[name] = cname
@@ -1003,21 +795,22 @@ class query(object):
 	def get_header(self,res,receiver=None):
 	  if not receiver:
 	    receiver = self.r
-	  if res in ('pass','fail','softfail'):
-	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s;' % (
-	  	res,receiver,self.get_header_comment(res),self.i,
+	  if res in ('unknown','permerror'):
+	    txt = ' '.join([res] + self.mech)
+	  else:
+	    txt = res
+	  return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s;' % (
+	  	txt,receiver,self.get_header_comment(res),self.i,
 	        self.l + '@' + self.o, self.h)
-	  if res == 'permerror':
-	    return '%s (%s: %s)' % (' '.join([res] + self.mech),
-	      receiver,self.get_header_comment(res))
-	  return '%s (%s: %s)' % (res,receiver,self.get_header_comment(res))
 
 	def get_header_comment(self,res):
 		"""Return comment for Received-SPF header.
 		"""
 		sender = self.o
 		if res == 'pass':
-		  return \
+		  if self.i.startswith('127.'):
+		    return "localhost is always allowed."
+		  else: return \
 		    "domain of %s designates %s as permitted sender" \
 			% (sender,self.i)
 		elif res == 'softfail': return \
@@ -1030,10 +823,10 @@ class query(object):
 		    "%s is neither permitted nor denied by domain of %s" \
 		    	% (self.i,sender)
 		    #"%s does not designate permitted sender hosts" % sender
-		elif res == 'permerror': return \
+		elif res in ('unknown','permerror'): return \
 		    "permanent error in processing domain of %s: %s" \
 		    	% (sender, self.prob)
-		elif res == 'error': return \
+		elif res in ('error','temperror'): return \
 		    "temporary error in processing during lookup of %s" % sender
 		elif res == 'fail': return \
 		    "domain of %s does not designate %s as permitted sender" \
@@ -1228,7 +1021,7 @@ def bin2addr(addr):
 	return socket.inet_ntoa(struct.pack("!L", addr))
 
 def expand_one(expansion, str, joiner):
-    	if not str:
+	if not str:
 		return expansion
 	ln, reverse, delimiters = RE_ARGS.split(str)[1:4]
 	if not delimiters:
@@ -1267,57 +1060,6 @@ def split(str, delimiters, joiner=None):
 	result.append(element)
 	return result
 
-def insert_libspf_local_policy(spftxt,local=None):
-	"""Returns spftxt with local inserted just before last non-fail
-	mechanism.  This is how the libspf{2} libraries handle "local-policy".
-	
-	Examples:
-	>>> insert_libspf_local_policy('v=spf1 -all')
-	'v=spf1 -all'
-	>>> insert_libspf_local_policy('v=spf1 -all','mx')
-	'v=spf1 -all'
-	>>> insert_libspf_local_policy('v=spf1','a mx ptr')
-	'v=spf1 a mx ptr'
-	>>> insert_libspf_local_policy('v=spf1 mx -all','a ptr')
-	'v=spf1 mx a ptr -all'
-	>>> insert_libspf_local_policy('v=spf1 mx -include:foo.co +all','a ptr')
-	'v=spf1 mx a ptr -include:foo.co +all'
-
-	# FIXME: is this right?  If so, "last non-fail" is a bogus description.
-	>>> insert_libspf_local_policy('v=spf1 mx ?include:foo.co +all','a ptr')
-	'v=spf1 mx a ptr ?include:foo.co +all'
-	>>> spf='v=spf1 ip4:1.2.3.4 -a:example.net -all'
-	>>> local='ip4:192.0.2.3 a:example.org'
-	>>> insert_libspf_local_policy(spf,local)
-	'v=spf1 ip4:1.2.3.4 ip4:192.0.2.3 a:example.org -a:example.net -all'
-	"""
-	# look to find the all (if any) and then put local
-	# just after last non-fail mechanism.  This is how
-	# libspf2 handles "local policy", and some people
-	# apparently find it useful (don't ask me why).
-	if not local: return spftxt
-	spf = spftxt.split()[1:]
-	if spf:
-	    # local policy is SPF mechanisms/modifiers with no
-	    # 'v=spf1' at the start
-	    spf.reverse() #find the last non-fail mechanism
-	    for mech in spf:
-		# map '?' '+' or '-' to 'neutral' 'pass'
-		# or 'fail'
-		if not RESULTS.get(mech[0]):
-		    # actually finds last mech with default result
-		    where = spf.index(mech)
-		    spf[where:where] = [local]
-		    spf.reverse()
-		    local = ' '.join(spf)
-		    break
-	    else:
-		return spftxt # No local policy adds for v=spf1 -all
-	# Processing limits not applied to local policy.  Suggest
-	# inserting 'local' mechanism to handle this properly
-	#MAX_LOOKUP = 100 
-	return 'v=spf1 '+local
-
 def _test():
 	import doctest, spf
 	return doctest.testmod(spf)
@@ -1341,7 +1083,6 @@ if __name__ == '__main__':
 		q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
 			strict=False)
 		print q.check(sys.argv[1])
-		if q.perm_error and q.perm_error.ext:
-			print q.perm_error.ext
+		if q.perm_error: print q.perm_error.ext
 	else:
 		print USAGE
