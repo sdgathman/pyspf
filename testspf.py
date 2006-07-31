@@ -189,7 +189,7 @@ class SPFTestCase(unittest.TestCase):
   #  self.runTests(loadBind('otest.dat'))
 
   def testYAML(self):
-    self.runTests(loadYAML('test.yaml'))
+    self.runTests(loadYAML('test.yml'))
 
   def testRFC(self):
     self.runTests(loadYAML('rfc4408-tests.yml'))
