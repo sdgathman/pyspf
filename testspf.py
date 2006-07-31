@@ -36,6 +36,7 @@ class SPFTest(object):
     self.id = testid
     self.scenario = scenario
     self.explanation = None
+    self.spec = None
     self.comment = []
     for k,v in data.items():
       setattr(self,k,v)
@@ -178,7 +179,7 @@ class SPFTestCase(unittest.TestCase):
       else:
 	failed += 1
 	print "%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec)
-	print t.scenario.zonedata
+	#print t.scenario.zonedata
     if failed:
       print "%d passed" % passed,"%d failed" % failed
 
