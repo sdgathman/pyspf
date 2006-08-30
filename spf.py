@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.63  2006/07/28 01:53:03  customdesigned
+# Localhost shouldn't get automatic pass
+#
 # Revision 1.62  2006/07/27 03:56:45  customdesigned
 # Removed redundant trailing dot check.
 #
@@ -180,7 +183,7 @@ RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
 # Regular expression to break up a macro expansion
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
 
-RE_CIDR = re.compile(r'/([1-9]|1[0-9]|2[0-9]|3[0-2])$')
+RE_CIDR = re.compile(r'/([0-9]|[1-9][0-9]|10[0-9]|11[0-9]|12[0-8])$')
 
 RE_IP4 = re.compile(r'\.'.join(
 	[r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
@@ -358,6 +361,7 @@ class query(object):
 		# fresh for each query.  It is important for efficiently using
 		# multiple results provided in DNS answers.
 		self.cache = {}
+		self.defexps = dict(EXPLANATIONS)
 		self.exps = dict(EXPLANATIONS)
 		self.libspf_local = local	# local policy
     		self.lookups = 0
@@ -698,6 +702,8 @@ class query(object):
 			      break
 
 		    elif m == 'ip4' and arg != self.d:
+		        if cidrlength > 32:
+			  raise PermError('invalid IP4 CIDR',mech)
 			try:
 			    if cidrmatch(self.i, [arg], cidrlength):
 				break
@@ -1093,6 +1099,7 @@ def parse_mechanism(str, d):
 	>>> parse_mechanism('iP4:192.0.0.0/8','foo.com')
 	('ip4', '192.0.0.0', 8)
 	"""
+
 	a = RE_CIDR.split(str)
 	if len(a) == 3:
 		a, port = a[0], int(a[1])
