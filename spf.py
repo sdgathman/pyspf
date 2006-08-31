@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.64  2006/08/30 17:54:23  customdesigned
+# Fix dual-cidr.
+#
 # Revision 1.63  2006/07/28 01:53:03  customdesigned
 # Localhost shouldn't get automatic pass
 #
@@ -183,10 +186,20 @@ RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
 # Regular expression to break up a macro expansion
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
 
-RE_CIDR = re.compile(r'/([0-9]|[1-9][0-9]|10[0-9]|11[0-9]|12[0-8])$')
+RE_CIDR4 = re.compile(r'/(\d|1\d|2\d|3[0-2])$')
+RE_CIDR6 = re.compile(r'//(\d|[1-9]\d|10\d|11\d|12[0-8])$')
 
-RE_IP4 = re.compile(r'\.'.join(
-	[r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
+PAT_IP4 = r'\.'.join([r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$'
+RE_IP4 = re.compile(PAT_IP4)
+
+# IP6-address =         hexpart [ ":" IP4-address ]
+# hexpart =             hexseq / hexseq "::" [ hexseq ] /
+#                           "::" [ hexseq ]
+# hexseq  =             hex4 *( ":" hex4)
+# hex4    =             1*4HEXDIG
+
+HEXSEQ = r'(?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4})*)'
+RE_IP6 = re.compile(r'%s?(?:::)?%s?(?::%s)?'%(HEXSEQ,HEXSEQ,PAT_IP4))
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
@@ -702,8 +715,6 @@ class query(object):
 			      break
 
 		    elif m == 'ip4' and arg != self.d:
-		        if cidrlength > 32:
-			  raise PermError('invalid IP4 CIDR',mech)
 			try:
 			    if cidrmatch(self.i, [arg], cidrlength):
 				break
@@ -1100,17 +1111,22 @@ def parse_mechanism(str, d):
 	('ip4', '192.0.0.0', 8)
 	"""
 
-	a = RE_CIDR.split(str)
+	a = RE_CIDR6.split(str)
 	if len(a) == 3:
-		a, port = a[0], int(a[1])
+		str, cidr6 = a[0], int(a[1])
 	else:
-		a, port = str, 32
+		str, cidr6 = str, 128
+	a = RE_CIDR4.split(str)
+	if len(a) == 3:
+		a, cidr4 = a[0], int(a[1])
+	else:
+		a, cidr4 = str, 32
 
 	b = a.split(':',1)
 	if len(b) == 2:
-		return b[0].lower(), b[1], port
+		return b[0].lower(), b[1], cidr4
 	else:
-		return a.lower(), d, port
+		return a.lower(), d, cidr4
 
 def reverse_dots(name):
 	"""Reverse dotted IP addresses or domain names.
@@ -1163,6 +1179,8 @@ def cidrmatch(i, ipaddrs, cidr_length = 32):
 	>>> cidrmatch('192.168.0.43', ['192.168.0.44', '192.168.0.45'], 24)
 	1
 	"""
+	if not RE_IP4.match(i):
+	  return False
 	c = cidr(i, cidr_length)
 	for ip in ipaddrs:
 		if cidr(ip, cidr_length) == c:

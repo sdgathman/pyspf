@@ -1,4 +1,5 @@
 import unittest
+import sys
 import spf
 import csv
 import re
@@ -156,30 +157,35 @@ def loadBind(fname):
 
 oldresults = { 'unknown': 'permerror', 'error': 'temperror' }
 
+verbose = False
+
 class SPFTestCase(unittest.TestCase):
 
   def runTests(self,tests):
     global zonedata
     passed,failed = 0,0
     for t in tests:
+      if not spf.RE_IP4.match(t.host):
+        continue	# we don't implement IP6 yet
       zonedata = t.scenario.zonedata
       q = spf.query(i=t.host, s=t.mailfrom, h=t.helo)
+      q.set_default_explanation('DEFAULT')
       res,code,exp = q.check()
       if res in oldresults:
         res = oldresults[res]
       ok = True
       if res != t.result and res not in t.result:
-        print t.result,'!=',res
+        if verbose: print t.result,'!=',res
 	ok = False
       if t.explanation is not None and t.explanation != exp:
-        print t.explanation,'!=',exp
+        if verbose: print t.explanation,'!=',exp
         ok = False
       if ok:
 	passed += 1
       else:
 	failed += 1
 	print "%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec)
-	#print t.scenario.zonedata
+	if verbose: print t.scenario.zonedata
     if failed:
       print "%d passed" % passed,"%d failed" % failed
 
@@ -198,4 +204,6 @@ class SPFTestCase(unittest.TestCase):
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
 if __name__ == '__main__':
+  if '-v' in sys.argv:
+    verbose = True
   unittest.main()
