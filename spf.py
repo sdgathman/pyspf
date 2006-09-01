@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.65  2006/08/31 18:00:18  customdesigned
+# Fix dual-cidr-length parsing.
+#
 # Revision 1.64  2006/08/30 17:54:23  customdesigned
 # Fix dual-cidr.
 #
@@ -178,7 +181,7 @@ def isSPF(txt):
 MASK = 0xFFFFFFFFL
 
 # Regular expression to look for modifiers
-RE_MODIFIER = re.compile(r'^([a-zA-Z0-9_\-\.]+)=')
+RE_MODIFIER = re.compile(r'^([a-z][a-z0-9_\-\.]*)=',re.IGNORECASE)
 
 # Regular expression to find macro expansions
 RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
@@ -186,20 +189,34 @@ RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
 # Regular expression to break up a macro expansion
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
 
-RE_CIDR4 = re.compile(r'/(\d|1\d|2\d|3[0-2])$')
-RE_CIDR6 = re.compile(r'//(\d|[1-9]\d|10\d|11\d|12[0-8])$')
+RE_DUAL_CIDR = re.compile(r'//(0|[1-9]\d*)$')
+RE_CIDR = re.compile(r'/(0|[1-9]\d*)$')
 
-PAT_IP4 = r'\.'.join([r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$'
-RE_IP4 = re.compile(PAT_IP4)
+PAT_IP4 = r'\.'.join([r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)
+RE_IP4 = re.compile(PAT_IP4+'$')
 
-# IP6-address =         hexpart [ ":" IP4-address ]
-# hexpart =             hexseq / hexseq "::" [ hexseq ] /
-#                           "::" [ hexseq ]
-# hexseq  =             hex4 *( ":" hex4)
-# hex4    =             1*4HEXDIG
+RE_TOPLAB = re.compile(
+    r'\.[0-9a-z]*[a-z][0-9a-z]*|[0-9a-z]+-[0-9a-z-]*[0-9a-z]$',re.IGNORECASE)
 
-HEXSEQ = r'(?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4})*)'
-RE_IP6 = re.compile(r'%s?(?:::)?%s?(?::%s)?'%(HEXSEQ,HEXSEQ,PAT_IP4))
+RE_IP6 = re.compile('|'.join([
+    '(?:%(hex4)s:){6}%(ip4)s',
+    '::(%(hex4)s:){0,6}%(ip4)s',
+    '(?:%(hex4)s:):(?:%(hex4)s:){0,5}%(ip4)s',
+    '(?:%(hex4)s:){2}:(?:%(hex4)s:){0,4}%(ip4)s',
+    '(?:%(hex4)s:){3}:(?:%(hex4)s:){0,3}%(ip4)s',
+    '(?:%(hex4)s:){4}:(?:%(hex4)s:){0,2}%(ip4)s',
+    '(?:%(hex4)s:){5}:(?:%(hex4)s:){0,1}%(ip4)s',
+    '(?:%(hex4)s:){7}%(hex4)s',
+    '(?:%(hex4)s:){1,8}:',
+    '(?:%(hex4)s:){7}(?::%(hex4)s)',
+    '(?:%(hex4)s:){6}(?::%(hex4)s){1,2}',
+    '(?:%(hex4)s:){5}(?::%(hex4)s){1,3}',
+    '(?:%(hex4)s:){4}(?::%(hex4)s){1,4}',
+    '(?:%(hex4)s:){3}(?::%(hex4)s){1,5}',
+    '(?:%(hex4)s:){2}(?::%(hex4)s){1,6}',
+    '(?:%(hex4)s:)(?::%(hex4)s){1,7}',
+    ':(?::%(hex4)s){1,8}', '::'
+  ]) % {'ip4': PAT_IP4, 'hex4': r'(?:[0-9a-f]{1,4})'} + '$', re.IGNORECASE)
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
@@ -538,11 +555,11 @@ class query(object):
 
 	>>> try: q.validate_mechanism('ip4:1.2.3.4/247')
 	... except PermError,x: print x
-	Invalid IP4 address: ip4:1.2.3.4/247
+	Invalid IP4 CIDR length: ip4:1.2.3.4/247
 
 	>>> try: q.validate_mechanism('a:example.com:8080')
 	... except PermError,x: print x
-	Too many :. Not allowed in domain name.: a:example.com:8080
+	Invalid domain found (use FQDN): example.com:8080
 	
 	>>> try: q.validate_mechanism('ip4:1.2.3.444/24')
 	... except PermError,x: print x
@@ -562,7 +579,7 @@ class query(object):
 	('a:mail.example.com.', 'a', 'mail.example.com', 32, 'pass')
 		"""
 		# a mechanism
-		m, arg, cidrlength = parse_mechanism(mech, self.d)
+		m, arg, cidrlength, cidr6length = parse_mechanism(mech, self.d)
 		# map '?' '+' or '-' to 'neutral' 'pass' or 'fail'
 		if m:
 		  result = RESULTS.get(m[0])
@@ -580,35 +597,56 @@ class query(object):
 		  x = self.note_error(
 		    'Use the ip4 mechanism for ip4 addresses',mech)
 		  m = 'ip4'
-		# Check for : within the arguement
-		if arg.count(':') > 0:
-		  raise PermError('Too many :. Not allowed in domain name.',mech)
+
+
+		# validate cidr and dual-cidr
+		if m in ('a', 'mx', 'ptr'):
+		  if cidrlength is None:
+		    cidrlength = 32;
+		  elif cidrlength > 32:
+		    raise PermError('Invalid IP4 CIDR length',mech)
+		  if cidr6length is None:
+		    cidr6length = 128
+		  elif cidr6length > 128:
+		    raise PermError('Invalid IP6 CIDR length',mech)
+		elif m == 'ip4':
+		  if cidr6length is not None:
+		    raise PermError('Dual CIDR not allowed',mech)
+		  if cidrlength is None:
+		    cidrlength = 32;
+		  elif cidrlength > 32:
+		    raise PermError('Invalid IP4 CIDR length',mech)
+		  if not RE_IP4.match(arg):
+		    raise PermError('Invalid IP4 address',mech)
+		elif m == 'ip6':
+		  if cidr6length is not None:
+		    raise PermError('Dual CIDR not allowed',mech)
+		  if cidrlength is None:
+		    cidrlength = 128
+		  elif cidrlength > 128:
+		    raise PermError('Invalid IP6 CIDR length',mech)
+		  if not RE_IP6.match(arg):
+		    raise PermError('Invalid IP6 address',mech)
+		else:
+		  if cidrlength is not None or cidr6length is not None:
+		    raise PermError('Dual CIDR not allowed',mech)
+		  cidrlength = 32
+
+		# validate domain-spec
 		if m in ('a', 'mx', 'ptr', 'exists', 'include'):
 		  arg = self.expand(arg)
-		  # FQDN must contain at least one '.'
-		  pos = arg.rfind('.')
 		  # any trailing dot was removed by expand()
-		  if not (0 < pos < len(arg) - 1):
-		    raise PermError('Invalid domain found (use FQDN)',
-			  arg)
-		  #Test for all numeric TLD as recommended by RFC 3696
-		  #Note this TLD test may pass non-existant TLDs.  3696
-		  #recommends using DNS lookups to test beyond this
-		  #initial test.
-                  if arg[pos+1:].isdigit(): 	 
-                    raise PermError('Top Level Domain may not be all numbers',
-			  arg) 	 
+		  if RE_TOPLAB.split(arg)[-1]:
+		    raise PermError('Invalid domain found (use FQDN)', arg)
 		  if m == 'include':
 		    if arg == self.d:
 		      if mech != 'include':
 			raise PermError('include has trivial recursion',mech)
 		      raise PermError('include mechanism missing domain',mech)
 		  return mech,m,arg,cidrlength,result
-		if m == 'ip4' and not RE_IP4.match(arg):
-		  raise PermError('Invalid IP4 address',mech)
-		#validate 'all' mechanism per RFC 4408 ABNF
-		if m == 'all' and \
-		    (arg != self.d  or mech.count(':') or mech.count('/')):
+
+		# validate 'all' mechanism per RFC 4408 ABNF
+		if m == 'all' and mech.count(':'):
 #		  print '|'+ arg + '|', mech, self.d,
 		  self.note_error(
 	      'Invalid all mechanism format - only qualifier allowed with all'
@@ -714,7 +752,10 @@ class query(object):
 			if cidrmatch(self.i, self.dns_mx(arg), cidrlength):
 			      break
 
-		    elif m == 'ip4' and arg != self.d:
+		    elif m == 'ip4':
+		        
+		        if arg == self.d:
+			  raise PermError('Missing IP4 arg',mech)
 			try:
 			    if cidrmatch(self.i, [arg], cidrlength):
 				break
@@ -722,6 +763,8 @@ class query(object):
 			    raise PermError('syntax error',mech)
 			    
 		    elif m == 'ip6':
+		        if arg == self.d:
+			  raise PermError('Missing IP6 arg',mech)
 			# Until we support IPV6, we should never
 			# get an IPv6 connection.  So this mech
 			# will never match.
@@ -919,23 +962,17 @@ class query(object):
 		"""
 # RFC 4408 section 5.4 "mx"
 # To prevent DoS attacks, more than 10 MX names MUST NOT be looked up
+		mxnames = self.dns(domainname, 'MX')
+		if len(mxnames) > MAX_MX:
+		  self.note_error('More than %d MX records returned'%MAX_MX)
 		if self.strict:
 		  max = MAX_MX
-		  if self.strict > 1:
-                      #Break out the number of MX records returned for testing
-                      mxnames = self.dns(domainname, 'MX')
-                      mxip = [a for mx in mxnames[:max] for a in self.dns_a(mx[1])]
-                      if len(mxnames) > max:
-                          warning = 'More than ' + str(max) + ' MX records returned'
-                          raise AmbiguityWarning(warning, domainname)
-                      else:
-                          if len(mxnames) == 0:
-                              raise AmbiguityWarning('No MX records found for mx mechanism', domainname)
-                          return mxip
+		  if self.strict > 1 and len(mxnames) == 0:
+		    raise AmbiguityWarning(
+		      'No MX records found for mx mechanism', domainname)
 		else:
 		  max = MAX_MX * 4
-		return [a for mx in self.dns(domainname, 'MX')[:max] \
-		          for a in self.dns_a(mx[1])]
+		return [a for mx in mxnames[:max] for a in self.dns_a(mx[1])]
 
 	def dns_a(self, domainname):
 		"""Get a list of IP addresses for a domainname."""
@@ -1082,51 +1119,50 @@ def split_email(s, h):
 
 def parse_mechanism(str, d):
 	"""Breaks A, MX, IP4, and PTR mechanisms into a (name, domain,
-	cidr) tuple.  The domain portion defaults to d if not present,
+	cidr,cidr6) tuple.  The domain portion defaults to d if not present,
 	the cidr defaults to 32 if not present.
 
 	Examples:
 	>>> parse_mechanism('a', 'foo.com')
-	('a', 'foo.com', 32)
+	('a', 'foo.com', None, None)
 
 	>>> parse_mechanism('a:bar.com', 'foo.com')
-	('a', 'bar.com', 32)
+	('a', 'bar.com', None, None)
 
 	>>> parse_mechanism('a/24', 'foo.com')
-	('a', 'foo.com', 24)
+	('a', 'foo.com', 24, None)
 
 	>>> parse_mechanism('A:foo:bar.com/16', 'foo.com')
-	('a', 'foo:bar.com', 16)
+	('a', 'foo:bar.com', 16, None)
 
 	>>> parse_mechanism('-exists:%{i}.%{s1}.100/86400.rate.%{d}','foo.com')
-	('-exists', '%{i}.%{s1}.100/86400.rate.%{d}', 32)
+	('-exists', '%{i}.%{s1}.100/86400.rate.%{d}', None, None)
 
 	>>> parse_mechanism('mx:%%%_/.Claranet.de/27','foo.com')
-	('mx', '%%%_/.Claranet.de', 27)
+	('mx', '%%%_/.Claranet.de', 27, None)
 
 	>>> parse_mechanism('mx:%{d}/27','foo.com')
-	('mx', '%{d}', 27)
+	('mx', '%{d}', 27, None)
 
 	>>> parse_mechanism('iP4:192.0.0.0/8','foo.com')
-	('ip4', '192.0.0.0', 8)
+	('ip4', '192.0.0.0', 8, None)
 	"""
 
-	a = RE_CIDR6.split(str)
+	a = RE_DUAL_CIDR.split(str)
 	if len(a) == 3:
-		str, cidr6 = a[0], int(a[1])
+	    str, cidr6 = a[0], int(a[1])
 	else:
-		str, cidr6 = str, 128
-	a = RE_CIDR4.split(str)
+	    cidr6 = None
+	a = RE_CIDR.split(str)
 	if len(a) == 3:
-		a, cidr4 = a[0], int(a[1])
+	    str, cidr = a[0], int(a[1])
 	else:
-		a, cidr4 = str, 32
+	    cidr = None
 
-	b = a.split(':',1)
-	if len(b) == 2:
-		return b[0].lower(), b[1], cidr4
-	else:
-		return a.lower(), d, cidr4
+	a = str.split(':',1)
+	if len(a) < 2:
+	  return str.lower(), d, cidr, cidr6
+	return a[0].lower(), a[1], cidr, cidr6
 
 def reverse_dots(name):
 	"""Reverse dotted IP addresses or domain names.
@@ -1179,17 +1215,17 @@ def cidrmatch(i, ipaddrs, cidr_length = 32):
 	>>> cidrmatch('192.168.0.43', ['192.168.0.44', '192.168.0.45'], 24)
 	1
 	"""
-	if not RE_IP4.match(i):
-	  return False
-	c = cidr(i, cidr_length)
-	for ip in ipaddrs:
+	try:
+	    c = cidr(i, cidr_length)
+	    for ip in ipaddrs:
 		if cidr(ip, cidr_length) == c:
-			return True
+		    return True
+	except socket.error: pass
 	return False
 
 def cidr(i, n):
 	"""Convert an IP address string with a CIDR mask into a 32-bit
-	integer.
+	or 128-bit integer.
 
 	i must be a string of numbers 0..255 separated by dots '.'::
 	pre: forall([0 <= int(p) < 256 for p in i.split('.')])
@@ -1235,7 +1271,12 @@ def addr2bin(str):
 	>>> 10 * (2 ** 24) + 93 * (2 ** 16) + 512
 	173867520
 	"""
-	return struct.unpack("!L", socket.inet_aton(str))[0]
+	try:
+	  return struct.unpack("!L", socket.inet_aton(str))[0]
+	except socket.error:
+	  if not socket.has_ipv6: raise
+	h,l = struct.unpack("!QQ", socket.inet_pton(socket.AF_INET6,str))
+	return h << 64 | l;
 
 def bin2addr(addr):
 	"""Convert a numeric IPv4 address into string n.n.n.n form.

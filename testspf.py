@@ -39,6 +39,8 @@ class SPFTest(object):
     self.explanation = None
     self.spec = None
     self.comment = []
+    if 'result' not in data:
+      print testid,'missing result'
     for k,v in data.items():
       setattr(self,k,v)
     if type(self.comment) is str:
@@ -89,14 +91,14 @@ class SPFScenario(object):
     self.tests[test.id] = test
 
 def loadYAML(fname):
-  "Load testcases in YAML format.  Return list of SPFTest"
+  "Load testcases in YAML format.  Return map of SPFTests by name."
   fp = open(fname,'rb')
   tests = {}
   for s in yaml.safe_load_all(fp):
     scenario = SPFScenario(fname,data=s)
     for k,v in scenario.tests.items():
       tests[k] = v
-  return tests.values()
+  return tests
 
 def loadBind(fname):
   "Load testcases in BIND format.  Return list of SPFTest"
@@ -161,7 +163,7 @@ verbose = False
 
 class SPFTestCase(unittest.TestCase):
 
-  def runTests(self,tests):
+  def runTest(self,tests):
     global zonedata
     passed,failed = 0,0
     for t in tests:
@@ -196,14 +198,22 @@ class SPFTestCase(unittest.TestCase):
   #  self.runTests(loadBind('otest.dat'))
 
   def testYAML(self):
-    self.runTests(loadYAML('test.yml'))
+    self.runTest(loadYAML('test.yml').values())
 
   def testRFC(self):
-    self.runTests(loadYAML('rfc4408-tests.yml'))
+    self.runTest(loadYAML('rfc4408-tests.yml').values())
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
 if __name__ == '__main__':
-  if '-v' in sys.argv:
-    verbose = True
-  unittest.main()
+  tc = None
+  for i in sys.argv[1:]:
+    if i == '-v':
+      verbose = True
+      continue
+    if not tc:
+      tc = SPFTestCase()
+      t = loadYAML('rfc4408-tests.yml')
+    tc.runTest([t[i]])
+  if not tc:
+    unittest.main()
