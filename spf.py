@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.66  2006/09/01 22:16:41  customdesigned
+# Parse IP6 for RFC conformance.
+#
 # Revision 1.65  2006/08/31 18:00:18  customdesigned
 # Fix dual-cidr-length parsing.
 #
@@ -199,24 +202,19 @@ RE_TOPLAB = re.compile(
     r'\.[0-9a-z]*[a-z][0-9a-z]*|[0-9a-z]+-[0-9a-z-]*[0-9a-z]$',re.IGNORECASE)
 
 RE_IP6 = re.compile('|'.join([
-    '(?:%(hex4)s:){6}%(ip4)s',
-    '::(%(hex4)s:){0,6}%(ip4)s',
-    '(?:%(hex4)s:):(?:%(hex4)s:){0,5}%(ip4)s',
-    '(?:%(hex4)s:){2}:(?:%(hex4)s:){0,4}%(ip4)s',
-    '(?:%(hex4)s:){3}:(?:%(hex4)s:){0,3}%(ip4)s',
-    '(?:%(hex4)s:){4}:(?:%(hex4)s:){0,2}%(ip4)s',
-    '(?:%(hex4)s:){5}:(?:%(hex4)s:){0,1}%(ip4)s',
-    '(?:%(hex4)s:){7}%(hex4)s',
-    '(?:%(hex4)s:){1,8}:',
-    '(?:%(hex4)s:){7}(?::%(hex4)s)',
-    '(?:%(hex4)s:){6}(?::%(hex4)s){1,2}',
-    '(?:%(hex4)s:){5}(?::%(hex4)s){1,3}',
-    '(?:%(hex4)s:){4}(?::%(hex4)s){1,4}',
-    '(?:%(hex4)s:){3}(?::%(hex4)s){1,5}',
-    '(?:%(hex4)s:){2}(?::%(hex4)s){1,6}',
-    '(?:%(hex4)s:)(?::%(hex4)s){1,7}',
-    ':(?::%(hex4)s){1,8}', '::'
-  ]) % {'ip4': PAT_IP4, 'hex4': r'(?:[0-9a-f]{1,4})'} + '$', re.IGNORECASE)
+				     '(?:%(hex4)s:){6}%(ls32)s',
+				   '::(?:%(hex4)s:){5}%(ls32)s',
+    		      '(?:%(hex4)s)?::(?:%(hex4)s:){4}%(ls32)s',
+    '(?:(?:%(hex4)s:){0,1}%(hex4)s)?::(?:%(hex4)s:){3}%(ls32)s',
+    '(?:(?:%(hex4)s:){0,2}%(hex4)s)?::(?:%(hex4)s:){2}%(ls32)s',
+    '(?:(?:%(hex4)s:){0,3}%(hex4)s)?::%(hex4)s:%(ls32)s',
+    '(?:(?:%(hex4)s:){0,4}%(hex4)s)?::%(ls32)s',
+    '(?:(?:%(hex4)s:){0,5}%(hex4)s)?::%(hex4)s',
+    '(?:(?:%(hex4)s:){0,6}%(hex4)s)?::',
+  ]) % {
+    'ls32': r'[0-9a-f]{1,4}:[0-9a-f]{1,4}|'+PAT_IP4,
+    'hex4': r'[0-9a-f]{1,4}'
+  } + '$', re.IGNORECASE)
 
 # Local parts and senders have their delimiters replaced with '.' during
 # macro expansion
