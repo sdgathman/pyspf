@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.68  2006/09/01 23:56:43  customdesigned
+# Fix improved RE_IP6
+#
 # Revision 1.67  2006/09/01 23:27:56  customdesigned
 # Improved RE_IP6
 #
@@ -1007,10 +1010,10 @@ class query(object):
                               raise AmbiguityWarning(warning, i)
                           else:
                               if len(ptrnames) == 0:
-                                  raise AmbiguityWarning('No PTR records found for ptr mechanism', ptrnames)
+                                  raise AmbiguityWarning('No PTR records found for ptr mechanism', i)
                               return ptrip
                       except:
-                          raise AmbiguityWarning('No PTR records found for ptr mechanism', ptrnames)
+                          raise AmbiguityWarning('No PTR records found for ptr mechanism', i)
 		else:
 		  max = MAX_PTR * 4
 		return [p for p in self.dns_ptr(i)[:max] if i in self.dns_a(p)]
