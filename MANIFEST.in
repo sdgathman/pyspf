@@ -7,4 +7,4 @@ include testspf.py
 include type99.py
 include setup.py
 include setup.cfg
-include *.yaml
+include *.yml
