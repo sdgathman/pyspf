@@ -48,6 +48,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.70  2006/09/18 02:13:27  kitterma
+# Worked through a large number of pylint issues - all 4 spaces, not a mix
+# of 4 spaces, 2 spaces, and tabs. Caught a few minor errors in the process.
+# All built in tests still pass.
+#
 # Revision 1.69  2006/09/17 18:44:25  kitterma
 # Fixed validation mode only crash bug when rDNS check had no PTR record
 #
@@ -879,6 +884,12 @@ class query(object):
 
         >>> q.expand('%{p2}.trusted-domains.example.net.')
         'example.org.trusted-domains.example.net'
+        
+        >>> q = query(s='@email.example.com',
+        ...           h='mx.example.org', i='192.0.2.3')
+        >>> q.p = 'mx.example.org'
+        >>> q.expand('%{l}')
+        'postmaster'
 
         """
         end = 0
@@ -1114,6 +1125,8 @@ def split_email(s, h):
         return 'postmaster', h
     else:
         parts = s.split('@', 1)
+        if parts[0] == '':
+            parts[0] = 'postmaster'
         if len(parts) == 2:
             return tuple(parts)
         else:
