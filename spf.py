@@ -48,6 +48,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.71  2006/09/22 01:02:54  kitterma
+# pySPF correction for nolocalpart in rfc4408-tests.yml failed, 4.3/2.
+# Added comments to testspf.py on where to get YAML.
+#
 # Revision 1.70  2006/09/18 02:13:27  kitterma
 # Worked through a large number of pylint issues - all 4 spaces, not a mix
 # of 4 spaces, 2 spaces, and tabs. Caught a few minor errors in the process.
@@ -917,7 +921,10 @@ class query(object):
             end = i.end()
         result += str[end:]
         if stripdot and result.endswith('.'):
-            return result[:-1]
+            result =  result[:-1]
+        if result.count('.') != 0:
+            if len(result) > 253:
+                result = result[(result.index('.')+1):]
         return result
 
     def dns_spf(self, domain):
