@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.73  2006/09/24 02:08:35  kitterma
+# Fixed invalid-macro-char test failure.
+#
 # Revision 1.72  2006/09/23 05:45:52  kitterma
 # Fixed domain-name-truncation test failure
 #
@@ -484,6 +487,12 @@ class query(object):
     >>> q.libspf_local='ip4:192.0.2.3 a:example.org'
     >>> q.check(spf='v=spf1 ip4:1.2.3.4 -a:example.net -all')
     ('pass', 250, 'sender SPF authorized')
+
+    >>> q.check(spf='v=spf1 ip4:1.2.3.4 -all exp=_exp.controlledmail.com')
+    ('fail', 550, 'Controlledmail.com does not send mail from itself.')
+    
+    >>> q.check(spf='v=spf1 ip4:1.2.3.4 ?all exp=_exp.controlledmail.com')
+    ('neutral', 250, 'access neither permitted nor denied')
         """
         self.mech = []        # unknown mechanisms
         # If not strict, certain PermErrors (mispelled
@@ -831,6 +840,7 @@ class query(object):
         >>> q = query(s='strong-bad@email.example.com',
         ...           h='mx.example.org', i='192.0.2.3')
         >>> q.p = 'mx.example.org'
+        >>> q.r = 'example.net'
 
         >>> q.expand('%{d}')
         'email.example.com'
@@ -873,6 +883,12 @@ class query(object):
 
         >>> q.expand('%{l1r-}')
         'strong'
+
+        >>> q.expand('%{c}')
+        '192.0.2.3'
+
+        >>> q.expand('%{r}')
+        'example.net'
 
         >>> q.expand('%{ir}.%{v}._spf.%{d2}')
         '3.2.0.192.in-addr._spf.example.com'
@@ -922,7 +938,6 @@ class query(object):
         for i in RE_CHAR.finditer(str):
             result += str[end:i.start()]
             macro = str[i.start():i.end()]
-#            print macro, result, macro[1]
             if macro == '%%':
                 result += '%'
             elif macro == '%_':
@@ -931,12 +946,13 @@ class query(object):
                 result += '%20'
             else:
                 letter = macro[2].lower()
+#                print letter
                 if letter == 'p':
                     self.getp()
                 expansion = getattr(self, letter, 'Macro Error')
                 if expansion:
                     if expansion == 'Macro Error':
-                        raise PermError('Unknown Macro Encountered') 
+                        raise PermError('Unknown Macro Encountered', macro) 
                     result += expand_one(expansion, macro[3:-1], 
                         JOINERS.get(letter))
 
