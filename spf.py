@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.72  2006/09/23 05:45:52  kitterma
+# Fixed domain-name-truncation test failure
+#
 # Revision 1.71  2006/09/22 01:02:54  kitterma
 # pySPF correction for nolocalpart in rfc4408-tests.yml failed, 4.3/2.
 # Added comments to testspf.py on where to get YAML.
@@ -883,12 +886,16 @@ class query(object):
         >>> q.expand('%{ir}.%{v}.%{l1r-}.lp._spf.%{d2}')
         '3.2.0.192.in-addr.strong.lp._spf.example.com'
 
+        >>> try: q.expand('%(ir).%{v}.%{l1r-}.lp._spf.%{d2}')
+        ... except PermError,x: print x
+        invalid-macro-char : %(ir)
+
         >>> q.expand('%{p2}.trusted-domains.example.net')
         'example.org.trusted-domains.example.net'
 
         >>> q.expand('%{p2}.trusted-domains.example.net.')
         'example.org.trusted-domains.example.net'
-        
+
         >>> q = query(s='@email.example.com',
         ...           h='mx.example.org', i='192.0.2.3')
         >>> q.p = 'mx.example.org'
@@ -896,11 +903,26 @@ class query(object):
         'postmaster'
 
         """
+        macro_delimiters = ['{', '%', '-', '_']
         end = 0
         result = ''
+        macro_count = str.count('%')
+        if macro_count != 0:
+            labels = str.split('.')
+            for label in labels:
+                is_macro = False
+                if len(label) > 1:
+                    if label[0] == '%':
+                        for delimit in macro_delimiters:
+                            if label[1] == delimit:
+                                is_macro = True
+                        if not is_macro:
+                            raise PermError ('invalid-macro-char ', label)
+                            break
         for i in RE_CHAR.finditer(str):
             result += str[end:i.start()]
             macro = str[i.start():i.end()]
+#            print macro, result, macro[1]
             if macro == '%%':
                 result += '%'
             elif macro == '%_':
