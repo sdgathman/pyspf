@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.76  2006/09/25 19:10:40  customdesigned
+# Fix exp= error and add another failing test.
+#
 # Revision 1.75  2006/09/25 02:02:30  kitterma
 # Fixed redirect-cancels-exp test suite failure.
 #
@@ -395,6 +398,8 @@ class query(object):
     t: current timestamp
     p: SMTP client domain name
     o: domain part of sender s
+    r: receiver
+    c: pretty ip address (different from i for IPv6)
 
     This is also, by design, the same variables used in SPF macro
     expansion.
@@ -414,6 +419,7 @@ class query(object):
             self.r = receiver
         else:
             self.r = 'unknown'
+	self.c = self.i
         # Since the cache does not track Time To Live, it is created
         # fresh for each query.  It is important for efficiently using
         # multiple results provided in DNS answers.
@@ -970,12 +976,9 @@ class query(object):
 		elif letter in 'crt' and stripdot:
 		    raise PermError(
 		        'c,r,t macros allowed in exp= text only', macro)
-		if letter == 'c':
-		    # FIXME: different for IPv6
-		    self.c = self.i
-                expansion = getattr(self, letter, 'Macro Error')
+                expansion = getattr(self, letter, self)
                 if expansion:
-                    if expansion == 'Macro Error':
+                    if expansion == self:
                         raise PermError('Unknown Macro Encountered', macro) 
                     result += expand_one(expansion, macro[3:-1], 
                         JOINERS.get(letter))
