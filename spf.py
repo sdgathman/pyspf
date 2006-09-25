@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.74  2006/09/24 04:04:08  kitterma
+# Implemented check for macro 'c' - Macro unimplimented.
+#
 # Revision 1.73  2006/09/24 02:08:35  kitterma
 # Fixed invalid-macro-char test failure.
 #
@@ -449,6 +452,9 @@ class query(object):
     >>> q.check(spf='v=spf1 ?all')
     ('neutral', 250, 'access neither permitted nor denied')
 
+    >>> q.check(spf='v=spf1 redirect=controlledmail.com exp=_exp.controlledmail.com')
+    ('fail', 550, 'SPF fail - not authorized')
+    
     >>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ?all moo')
     ('permerror', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
 
@@ -809,6 +815,7 @@ class query(object):
                 if not redirect_record:
                     raise PermError('redirect domain has no SPF record',
                         redirect)
+                self.exps = dict(EXPLANATIONS)
                 return self.check1(redirect_record, redirect, recursion + 1)
             else:
                 result = default
