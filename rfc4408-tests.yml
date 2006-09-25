@@ -15,7 +15,13 @@ tests:
     spec: 4.3/1
     helo: mail.example.net
     host: 1.2.3.5
-    mailfrom: lyme.eater@A12345678901234567890123456789012345678901234567890123.example.com
+    mailfrom: lyme.eater@A123456789012345678901234567890123456789012345678901234567890123.example.com
+    result: none
+  emptylabel:
+    spec: 4.3/1
+    helo: mail.example.net
+    host: 1.2.3.5
+    mailfrom: lyme.eater@A..example.com
     result: none
   nolocalpart:
     spec: 4.3/2
@@ -28,6 +34,8 @@ zonedata:
   example.com:
     - TIMEOUT
   example.net:
+    - SPF:  v=spf1 -all exp=exp.example.net
+  A.example.net:
     - SPF:  v=spf1 -all exp=exp.example.net
   exp.example.net:
     - TXT:  '%{l}'
@@ -791,6 +799,18 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e6.example.com
     result: permerror
+  dorky-sentinel:
+    description: >-
+      An implementation that uses a legal expansion as a sentinel.  We
+      can't check them all, but we can check this one.
+    comment: >-
+      Spaces are allowed in local-part.
+    spec: 8.1/8
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: "Macro Error@e8.example.com"
+    result: fail
+    explanation: Macro Error in implementation
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -808,12 +828,16 @@ zonedata:
     - TXT: See me.
   exp3.example.com:
     - TXT: Correct!
+  exp4.example.com:
+    - TXT: "%{l} in implementation"
   e5.example.com:
     - SPF: v=spf1 1up=foo
   e6.example.com:
     - SPF: v=spf1 =all
   e7.example.com:
     - SPF: v=spf1 include:e3.example.com -all exp=exp3.example.com
+  e8.example.com:
+    - SPF: v=spf1 -all exp=exp4.example.com
 
 ---
 description: |

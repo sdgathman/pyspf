@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.75  2006/09/25 02:02:30  kitterma
+# Fixed redirect-cancels-exp test suite failure.
+#
 # Revision 1.74  2006/09/24 04:04:08  kitterma
 # Implemented check for macro 'c' - Macro unimplimented.
 #
@@ -424,6 +427,13 @@ class query(object):
 
     def set_default_explanation(self, exp):
         exps = self.exps
+        defexps = self.defexps
+        for i in 'softfail', 'fail', 'permerror':
+            exps[i] = exp
+            defexps[i] = exp
+
+    def set_explanation(self, exp):
+        exps = self.exps
         for i in 'softfail', 'fail', 'permerror':
             exps[i] = exp
 
@@ -733,10 +743,11 @@ class query(object):
                 continue
 
             if m[0] == 'exp':
-                try:
-                    self.set_default_explanation(self.get_explanation(m[1]))
-                except PermError:
-                    pass
+	        # always fetch explanation to check permerrors
+	        exp = self.get_explanation(m[1])
+	        if not recursion:
+		    # only set explanation in base recursion level
+		    self.set_explanation(exp)
             elif m[0] == 'redirect':
                 self.check_lookups()
                 redirect = self.expand(m[1])
@@ -815,8 +826,8 @@ class query(object):
                 if not redirect_record:
                     raise PermError('redirect domain has no SPF record',
                         redirect)
-                self.exps = dict(EXPLANATIONS)
-                return self.check1(redirect_record, redirect, recursion + 1)
+                self.exps = dict(self.defexps)
+                return self.check1(redirect_record, redirect, recursion)
             else:
                 result = default
 
@@ -891,10 +902,10 @@ class query(object):
         >>> q.expand('%{l1r-}')
         'strong'
 
-        >>> q.expand('%{c}')
+        >>> q.expand('%{c}',stripdot=False)
         '192.0.2.3'
 
-        >>> q.expand('%{r}')
+        >>> q.expand('%{r}',stripdot=False)
         'example.net'
 
         >>> q.expand('%{ir}.%{v}._spf.%{d2}')
@@ -956,6 +967,12 @@ class query(object):
 #                print letter
                 if letter == 'p':
                     self.getp()
+		elif letter in 'crt' and stripdot:
+		    raise PermError(
+		        'c,r,t macros allowed in exp= text only', macro)
+		if letter == 'c':
+		    # FIXME: different for IPv6
+		    self.c = self.i
                 expansion = getattr(self, letter, 'Macro Error')
                 if expansion:
                     if expansion == 'Macro Error':
