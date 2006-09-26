@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.78  2006/09/26 16:15:50  kitterma
+# added additional IP4 and CIDR validation tests - no code changes.
+#
 # Revision 1.77  2006/09/25 19:42:32  customdesigned
 # Fix unknown macro sentinel
 #
@@ -283,39 +286,6 @@ except NameError:
     False, True = 0, 1
     def bool(x): return not not x
 # ...pre 2.2.1
-
-#Default receiver policies - can be overridden.
-POLICY = {'tfwl': False, #Check trusted-forwarder.org
-          'skip_localhost': True, #Don't check SPF on local connections
-          'always_helo': False, #Only works if helo_first is also True.
-          'spf_helo_mustpass': True, #Treat HELO test returning softfail or
-          #neutral as Fail - HELO should be a single IP per name.  No reason to
-          #accept SPF relaxed provisions for HELO.  No affect if None.
-          'reject_helo_fail': False, 
-          'spf_reject_fail': True,
-          'spf_reject_neutral': False,
-          'spf_accept_softfail': True,
-          'spf_best_guess': True,
-          'spf_strict': True,
-        }
-# Recommended SMTP codes for certain SPF results.  For results not in
-# this table the recommendation is to accept the message as authorized.
-# An SPF result is never enough to recommend that a message be accepted for
-# delivery.  Additional checks are generally required.
-# The softfail result requires special processing.
-
-SMTP_CODES = {
-  'fail': [550,'5.7.1'],
-  'temperror': [451,'4.4.3'],
-  'permerror': [550,'5.5.2'],
-  'softfail': [451,'4.3.0']
-        }
-if not POLICY['spf_accept_softfail']:
-    SMTP_CODES['softfail'] = (550,'5.7.1')
-if POLICY['spf_reject_neutral']:
-    SMTP_CODES['neutral'] = (550,'5.7.1')
-# if set to a domain name, search _spf.domain namespace if no SPF record
-# found in source domain.
 
 DELEGATE = None
 
