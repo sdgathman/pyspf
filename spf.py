@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.77  2006/09/25 19:42:32  customdesigned
+# Fix unknown macro sentinel
+#
 # Revision 1.76  2006/09/25 19:10:40  customdesigned
 # Fix exp= error and add another failing test.
 #
@@ -605,6 +608,10 @@ class query(object):
     >>> try: q.validate_mechanism('ip4:1.2.3.4/247')
     ... except PermError,x: print x
     Invalid IP4 CIDR length: ip4:1.2.3.4/247
+    
+    >>> try: q.validate_mechanism('ip4:1.2.3.4/33')
+    ... except PermError,x: print x
+    Invalid IP4 CIDR length: ip4:1.2.3.4/33
 
     >>> try: q.validate_mechanism('a:example.com:8080')
     ... except PermError,x: print x
@@ -613,6 +620,10 @@ class query(object):
     >>> try: q.validate_mechanism('ip4:1.2.3.444/24')
     ... except PermError,x: print x
     Invalid IP4 address: ip4:1.2.3.444/24
+    
+    >>> try: q.validate_mechanism('ip4:1.2.03.4/24')
+    ... except PermError,x: print x
+    Invalid IP4 address: ip4:1.2.03.4/24
     
     >>> try: q.validate_mechanism('-all:3030')
     ... except PermError,x: print x
