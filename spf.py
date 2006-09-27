@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.81  2006/09/27 17:38:14  kitterma
+# Updated initial comments and moved pre-1.7 changes to spf_changelog.
+#
 # Revision 1.80  2006/09/27 17:33:53  kitterma
 # Fixed indentation error in check0.
 #
@@ -947,13 +950,15 @@ class query(object):
         # RFC 4408 section 5.4 "mx"
         # To prevent DoS attacks, more than 10 MX names MUST NOT be looked up
         mxnames = self.dns(domainname, 'MX')
-        if len(mxnames) > MAX_MX:
-            self.note_error('More than %d MX records returned'%MAX_MX)
         if self.strict:
             max = MAX_MX
-            if self.strict > 1 and len(mxnames) == 0:
-                raise AmbiguityWarning(
-                    'No MX records found for mx mechanism', domainname)
+            if self.strict > 1:
+                if len(mxnames) > MAX_MX:
+                    raise AmbiguityWarning(
+                        'More than %d MX records returned'%MAX_MX)
+                if len(mxnames) == 0:
+                    raise AmbiguityWarning(
+                        'No MX records found for mx mechanism', domainname)
         else:
             max = MAX_MX * 4
         return [a for mx in mxnames[:max] for a in self.dns_a(mx[1])]
