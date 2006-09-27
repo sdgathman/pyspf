@@ -48,6 +48,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Terrence is not responding to email.
 #
 # $Log$
+# Revision 1.79  2006/09/26 18:05:44  kitterma
+# Removed unused receiver policy definitions.
+#
 # Revision 1.78  2006/09/26 16:15:50  kitterma
 # added additional IP4 and CIDR validation tests - no code changes.
 #
@@ -775,13 +778,13 @@ class query(object):
 
             elif m == 'a':
                 self.check_lookups()
-            if cidrmatch(self.i, self.dns_a(arg), cidrlength):
-                break
+                if cidrmatch(self.i, self.dns_a(arg), cidrlength):
+                    break
 
             elif m == 'mx':
                 self.check_lookups()
-            if cidrmatch(self.i, self.dns_mx(arg), cidrlength):
-                break
+                if cidrmatch(self.i, self.dns_mx(arg), cidrlength):
+                    break
 
             elif m == 'ip4':
                 if arg == self.d:
