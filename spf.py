@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.82  2006/09/27 18:02:21  kitterma
+# Converted max MX limit to ambiguity warning for validator.
+#
 # Revision 1.81  2006/09/27 17:38:14  kitterma
 # Updated initial comments and moved pre-1.7 changes to spf_changelog.
 #
@@ -267,18 +270,44 @@ class PermError(Exception):
             return '%s: %s'%(self.msg, self.mech)
         return self.msg
 
+def check2(i, s, h, local=None, receiver=None):
+    """Test an incoming MAIL FROM:<s>, from a client with ip address i.
+    h is the HELO/EHLO domain name.  This is the RFC4408 compliant pySPF2.0
+    interface.  The interface returns an SPF result and explanation only.
+    SMTP response codes are not returned since RFC 4408 does not specify
+    receiver policy.  Applications updated for RFC 4408 should use this
+    interface.
+
+    Returns (result, explanation) where result in
+    ['pass', 'permerror', 'fail', 'temperror', 'softfail', 'none', 'neutral' ].
+
+    Example:
+    #>>> check2(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
+
+    """
+    result = query(i=i, s=s, h=h, local=local, receiver=receiver).check()
+    return result[0], result[2]
+
 def check(i, s, h, local=None, receiver=None):
     """Test an incoming MAIL FROM:<s>, from a client with ip address i.
-    h is the HELO/EHLO domain name.
+    h is the HELO/EHLO domain name.  This is the pre-RFC SPF Classic interface.
+    Applications written for pySPF 1.6/1.7 can use this interface to allow
+    pySPF2 to be a drop in replacement for older versions.  With the exception
+    of result codes, performance in RFC 4408 compliant.
 
-    Returns (result,  code, explanation) where result in
-    ['pass', 'permerror', 'fail', 'temperror', 'softfail', 'none', 'neutral' ].
+    Returns (result, code, explanation) where result in
+    ['pass', 'unknown', 'fail', 'error', 'softfail', 'none', 'neutral' ].
 
     Example:
     #>>> check(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
 
     """
-    return query(i=i, s=s, h=h, local=local, receiver=receiver).check()
+    result, code, exp = query(i=i, s=s, h=h, local=local, receiver=receiver).check()
+    if result == 'permerror':
+        result = 'unknown'
+    if result == 'tempfail':
+        result =='error'
+    return result, code, exp
 
 class query(object):
     """A query object keeps the relevant information about a single SPF
