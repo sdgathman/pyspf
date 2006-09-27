@@ -1,3 +1,90 @@
+# Revision 1.68  2006/09/01 23:56:43  customdesigned
+# Fix improved RE_IP6
+#
+# Revision 1.67  2006/09/01 23:27:56  customdesigned
+# Improved RE_IP6
+#
+# Revision 1.66  2006/09/01 22:16:41  customdesigned
+# Parse IP6 for RFC conformance.
+#
+# Revision 1.65  2006/08/31 18:00:18  customdesigned
+# Fix dual-cidr-length parsing.
+#
+# Revision 1.64  2006/08/30 17:54:23  customdesigned
+# Fix dual-cidr.
+#
+# Revision 1.63  2006/07/28 01:53:03  customdesigned
+# Localhost shouldn't get automatic pass
+#
+# Revision 1.62  2006/07/27 03:56:45  customdesigned
+# Removed redundant trailing dot check.
+#
+# Revision 1.61  2006/07/26 21:40:19  customdesigned
+# YAML test format.  Accept trailing dot on domains.
+#
+# Revision 1.60  2006/06/28 04:25:38  customdesigned
+# Catch unexpected IO errors from pydns.
+#
+# Revision 1.59  2006/05/19 13:18:23  kitterma
+# Fix to disallow ':' except between the mechanism and domain-spec.
+#
+# Revision 1.58  2006/05/19 02:04:58  kitterma
+# Corrected validation bug where 'all' mechanism was not correctly checked,
+# updated for RFC 4408 Auth 48 changes - trailing dot now allowed in domain
+# name and Type TXT and Type SPF DNS records not identical raises a warning
+# instead of a permanent error, and changed internet draft references to refer
+# to RFC 4408.
+#
+# Revision 1.57  2006/05/12 16:38:12  customdesigned
+# a:1.2.3.4 -> ip4:1.2.3.4 heuristic.
+#
+# Revision 1.56  2005/12/29 19:14:11  customdesigned
+# Handle NULL MX and other A lookups of DNS root.
+#
+# Revision 1.55  2005/10/30 00:41:48  customdesigned
+# Ignore SPF records missing space after version as required by RFC.
+# FIXME: in "relaxed" mode, give permerror when there is exactly one
+# such malformed record.
+#
+# Revision 1.54  2005/08/23 21:50:10  customdesigned
+# Missing separator line in insert_libspf_local_policy self test.
+#
+# Revision 1.53  2005/08/23 20:37:19  customdesigned
+# Simplify libspf_local further.  FIXME for possible specification error.
+#
+# Revision 1.52  2005/08/23 20:23:31  customdesigned
+# Clean up libspf_local and add inline test cases.
+# Repair try..finally in check1() broken when Ambiguity warning added.
+#
+# Revision 1.51  2005/08/19 19:06:49  customdesigned
+# use note_error method for consistent extended processing.
+# Return extended result, strict result in self.perm_error
+#
+# Revision 1.50  2005/08/19 18:13:31  customdesigned
+# Still want to do strict tests in even stricter modes.
+#
+# Revision 1.49  2005/08/12 18:54:34  kitterma
+# Consistently treat strict as a numeric for hard processing.
+#
+# Revision 1.48  2005/08/11 14:30:44  kitterma
+# Restore all numeric TLD test from 1.44 that was inadvertently deleted.  Ugh.
+#
+# Revision 1.47  2005/08/10 13:31:34  kitterma
+# Completed first part of local policy implementation.  Local policy will now be
+# added before the last non-fail mechanism as in Libspf2 and Mail::SPF::Query.
+# Still ToDo for local policy is: don't do local policy until after redirect=,
+# modify explanation to indicate result is based on local policy, and an option
+# for RFE [ 1224459 ] local policy API to execute local policy before public
+# policy.  Will do the RFE after basic compatibility with the reference
+# implementations.  Restored Unix line endings.  Changed Harsh mode check for
+# ambiguity to exclude exists: mechanisms.
+#
+# Revision 1.46  2005/08/08 15:03:28  kitterma
+# Added PermError for redirect= to a domain without an SPF record.
+#
+# Revision 1.45  2005/08/08 03:04:44  kitterma
+# Added PermError for multiple SPF records per para 4.5 of schlitt-02
+#
 # Revision 1.44  2005/08/06 06:31:21  kitterma
 # Added RFC 3696 test for all numeric TLD, new PermError.
 #
