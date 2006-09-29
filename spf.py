@@ -598,7 +598,7 @@ class query(object):
 
 
         # validate cidr and dual-cidr
-        if m in ('a', 'mx', 'ptr'):
+        if m in ('a', 'mx'):
             if cidrlength is None:
                 cidrlength = 32;
             elif cidrlength > 32:
@@ -630,7 +630,10 @@ class query(object):
         else:
             if cidrlength is not None or cidr6length is not None:
                 raise PermError('CIDR not allowed', mech)
-            cidrlength = 32
+	    if self.ip6:
+		cidrlength = 128
+	    else:
+		cidrlength = 32
 
         # validate domain-spec
         if m in ('a', 'mx', 'ptr', 'exists', 'include'):
@@ -1287,8 +1290,9 @@ def cidr(i, n):
     '192.168.5.0'
     >>> bin2addr(cidr('192.168.0.45', 8))
     '192.0.0.0'
-    >>> bin2addr6(cidr('1234:5678:4738:ABCD::1', 48))
-    '1234:5678:4738::'
+
+    #>>> bin2addr6(cidr('1234:5678:4738:ABCD::1', 48))
+    #'1234:5678:4738::'
     """
     try:
       return ~(MASK >> n) & MASK & addr2bin(i)
@@ -1345,14 +1349,15 @@ def bin2addr(addr):
     """
     return socket.inet_ntoa(struct.pack("!L", addr))
 
-def bin2addr6(addr):
-    """Convert a numeric IPv6 address into string form.
-    Examples::
-    >>> bin2addr6(123456789012345L)
-    '::7048:860d:df79'
-    """
-    return socket.inet_ntop(socket.AF_INET6,
-    	struct.pack("!QQ", addr >> 64, addr & 0xFFFFFFFFFFFFFFFFL))
+if socket.has_ipv6:
+    def bin2addr6(addr):
+	"""Convert a numeric IPv6 address into string form.
+	Examples::
+	>>> bin2addr6(123456789012345L)
+	'::7048:860d:df79'
+	"""
+	return socket.inet_ntop(socket.AF_INET6,
+	    struct.pack("!QQ", addr >> 64, addr & 0xFFFFFFFFFFFFFFFFL))
 
 def expand_one(expansion, str, joiner):
     if not str:
