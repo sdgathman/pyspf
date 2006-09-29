@@ -361,6 +361,76 @@ zonedata:
 
 ---
 description: >-
+  PTR mechanism syntax
+tests:
+  ptr-cidr:
+    description: |-
+      PTR              = "ptr"    [ ":" domain-spec ]
+    spec: 5.5/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e1.example.com
+    result: permerror
+  ptr-match-target:
+    description: >-
+      Check all validated domain names to see if they end in the <target-name>
+      domain.
+    spec: 5.5/5
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e2.example.com
+    result: pass
+  ptr-match-implicit:
+    description: >-
+      Check all validated domain names to see if they end in the <target-name>
+      domain.
+    spec: 5.5/5
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e3.example.com
+    result: pass
+  ptr-nomatch-invalid:
+    description: >-
+      Check all validated domain names to see if they end in the <target-name>
+      domain.
+    comment: >-
+      This PTR record does not validate
+    spec: 5.5/5
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e4.example.com
+    result: fail
+  ptr-match-ip6:
+    description: >-
+      Check all validated domain names to see if they end in the <target-name>
+      domain.
+    spec: 5.5/5
+    helo: mail.example.com
+    host: CAFE:BABE::1
+    mailfrom: foo@e3.example.com
+    result: pass
+zonedata:
+  mail.example.com:
+    - A: 1.2.3.4
+  e1.example.com:
+    - SPF: v=spf1 ptr/0 -all
+  e2.example.com:
+    - SPF: v=spf1 ptr:example.com -all
+  4.3.2.1.in-addr.arpa:
+    - PTR: e3.example.com
+    - PTR: e4.example.com
+    - PTR: mail.example.com
+  1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa:
+    - PTR: e3.example.com
+  e3.example.com:
+    - SPF: v=spf1 ptr -all
+    - A: 1.2.3.4
+    - AAAA: CAFE:BABE::1
+  e4.example.com:
+    - SPF: v=spf1 ptr -all
+  
+---
+description: >-
   A mechanism syntax
 tests:
   a-cidr6:
@@ -918,6 +988,32 @@ tests:
     mailfrom: test@somewhat.long.exp.example.com
     result: fail
     explanation: Congratulations!  That was tricky.
+  v-macro-ip4:
+    spec: 8.1/6
+    description: |-
+      v	= the string "in-addr" if <ip> is ipv4, or "ip6" if <ip> is ipv6
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.40
+    mailfrom: test@e4.example.com
+    result: fail
+    explanation: 192.168.218.40 is queried as 40.218.168.192.in-addr.arpa
+  v-macro-ip6:
+    spec: 8.1/6
+    description: |-
+      v	= the string "in-addr" if <ip> is ipv4, or "ip6" if <ip> is ipv6
+    helo: msgbas2x.cos.example.com
+    host: CAFE:BABE::1
+    mailfrom: test@e4.example.com
+    result: fail
+    explanation: cafe:babe::1 is queried as 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa
+  undef-macro:
+    spec: 8.1/6
+    description: >-
+      Allowed macros chars are 'slodipvh' plus 'crt' in explanation.
+    helo: msgbas2x.cos.example.com
+    host: CAFE:BABE::192.168.218.40
+    mailfrom: test@e5.example.com
+    result: permerror
 zonedata:
   example.com.d.spf.example.com:
     - SPF: v=spf1 redirect=a.spf.example.com
@@ -946,6 +1042,11 @@ zonedata:
     - SPF: v=spf1 -all exp=foobar.%{o}.%{o}.%{o}.%{o}.%{o}.%{o}.%{o}.%{o}.example.com
   somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.example.com:
     - TXT: Congratulations!  That was tricky.
+  e4.example.com:
+    - SPF: v=spf1 -all exp=e4.example.com
+    - TXT: "%{c} is queried as %{ir}.%{v}.arpa"
+  e5.example.com:
+    - SPF: v=spf1 a:%{a}.example.com -all
 
 ---
 description: >-

@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.86  2006/09/29 17:55:22  customdesigned
+# Pass ip6 tests
+#
 # Revision 1.85  2006/09/29 15:58:02  customdesigned
 # Pass self test on non IP6 python.
 # PTR accepts no cidr.
@@ -163,7 +166,7 @@ MASK6 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
 RE_MODIFIER = re.compile(r'^([a-z][a-z0-9_\-\.]*)=', re.IGNORECASE)
 
 # Regular expression to find macro expansions
-RE_CHAR = re.compile(r'%(%|_|-|(\{[a-zA-Z][0-9]*r?[^\}]*\}))')
+RE_CHAR = re.compile(r'%(%|_|-|(\{[^\}]*\}))')
 
 # Regular expression to break up a macro expansion
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
@@ -325,7 +328,7 @@ class query(object):
     """A query object keeps the relevant information about a single SPF
     query:
 
-    i: ip address of SMTP client
+    i: ip address of SMTP client in dotted notation
     s: sender declared in MAIL FROM:<>
     l: local part of sender s
     d: current domain, initially domain part of sender s
@@ -348,7 +351,6 @@ class query(object):
             self.s = 'postmaster@' + h
         self.l, self.o = split_email(s, h)
         self.t = str(int(time.time()))
-        self.v = 'in-addr'
         self.d = self.o
         self.p = None
         if receiver:
@@ -372,18 +374,20 @@ class query(object):
 	    assert socket.has_ipv6,"No IPv6 python support"
 	    self.ip = addr2bin6(i)
 	    if (self.ip >> 32) == 0xFFFF:	# IP4 mapped address
-	      self.ip = self.ip & 0xFFFFFFFF
-	      self.ip6 = False
+		self.ip = self.ip & 0xFFFFFFFF
+		self.ip6 = False
 	    else:
-	      self.ip6 = True
+		self.ip6 = True
 	if self.ip6:
-	  self.c = bin2addr6(self.ip)
-	  self.i = '.'.join(list('%032X'%self.ip))
-	  self.A = 'AAAA'
+	    self.c = bin2addr6(self.ip)
+	    self.i = '.'.join(list('%032X'%self.ip))
+	    self.A = 'AAAA'
+	    self.v = 'ip6'
 	else:
-	  self.c = bin2addr(self.ip)
-	  self.i = self.c
-	  self.A = 'A'
+	    self.c = bin2addr(self.ip)
+	    self.i = self.c
+	    self.A = 'A'
+	    self.v = 'in-addr'
 
     def set_default_explanation(self, exp):
         exps = self.exps
@@ -726,10 +730,13 @@ class query(object):
                 self.check_lookups()
                 redirect = self.expand(m[1])
             elif m[0] == 'default':
+		arg = self.expand(m[1])
                 # default=- is the same as default=fail
-                default = RESULTS.get(m[1], default)
+                default = RESULTS.get(arg, default)
+	    else:
+		# spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
+		self.expand(m[1])	# syntax error on invalid macro
 
-            # spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
 
         # Evaluate mechanisms
         #
@@ -780,7 +787,7 @@ class query(object):
 
             elif m == 'ptr':
                 self.check_lookups()
-                if domainmatch(self.validated_ptrs(self.i), arg):
+                if domainmatch(self.validated_ptrs(), arg):
                     break
 
         else:
@@ -932,6 +939,8 @@ class query(object):
 #                print letter
                 if letter == 'p':
                     self.getp()
+		elif letter not in 'slodipvhcrt':
+		    raise PermError('invalid macro',macro)
 		elif letter in 'crt' and stripdot:
 		    raise PermError(
 		        'c,r,t macros allowed in exp= text only', macro)
@@ -1032,9 +1041,9 @@ class query(object):
                 return alist
         return self.dns(domainname, A)
 
-    def validated_ptrs(self, i):
-        """Figure out the validated PTR domain names for a given IP
-        address.  i is in dotted notation
+    def validated_ptrs(self):
+        """Figure out the validated PTR domain names for the connect IP
+        address. 
         """
 # To prevent DoS attacks, more than 10 PTR names MUST NOT be looked up
         if self.strict:
@@ -1042,8 +1051,9 @@ class query(object):
             if self.strict > 1:
                 #Break out the number of PTR records returned for testing
                 try:
-                    ptrnames = self.dns_ptr(i)
-                    ptrip = [p for p in ptrnames if i in self.dns_a(p,self.A)]
+                    ptrnames = self.dns_ptr(self.i)
+                    ptrip = [p for p in ptrnames
+		    	if self.c in self.dns_a(p,self.A)]
                     if len(ptrnames) > max:
                         warning = 'More than ' + str(max)\
                              + ' PTR records returned'
@@ -1058,15 +1068,16 @@ class query(object):
                       'No PTR records found for ptr mechanism', i)
         else:
             max = MAX_PTR * 4
-        return [p for p in self.dns_ptr(i)[:max] if i in self.dns_a(p,self.A)]
+	if self.ip6:
+	    cidrlength = 128
+	else:
+	    cidrlength = 32
+        return [p for p in self.dns_ptr(self.i)[:max]
+	    if cidrmatch(self.c,self.dns_a(p,self.A),cidrlength)]
 
     def dns_ptr(self, i):
         """Get a list of domain names for an IP address."""
-	if self.ip6:
-	    base = ".ip6.arpa"
-	else:
-	    base = ".in-addr.arpa"
-        return self.dns(reverse_dots(i) + base, 'PTR')
+        return self.dns('%s.%s.arpa'%(reverse_dots(i),self.v), 'PTR')
 
     def dns(self, name, qtype, cnames=None):
         """DNS query.

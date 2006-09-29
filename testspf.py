@@ -16,7 +16,7 @@ def DNSLookup(name,qtype):
   try:
     #print name
     timeout = True
-    for i in zonedata[name]:
+    for i in zonedata[name.lower()]:
       if i == 'TIMEOUT':
         if timeout:
 	  raise spf.TempError,'DNS timeout'
@@ -78,7 +78,7 @@ class SPFScenario(object):
     self.tests = {}
     if data:
       self.zonedata= dict([
-        (d, list(getrdata(r))) for d,r in data['zonedata'].items()
+        (d.lower(), list(getrdata(r))) for d,r in data['zonedata'].items()
       ])
       for t,v in data['tests'].items():
         self.tests[t] = SPFTest(t,self,v)
