@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.87  2006/09/29 19:26:53  customdesigned
+# Add PTR tests and fix ip6 ptr
+#
 # Revision 1.86  2006/09/29 17:55:22  customdesigned
 # Pass ip6 tests
 #
@@ -1042,9 +1045,7 @@ class query(object):
         return self.dns(domainname, A)
 
     def validated_ptrs(self):
-        """Figure out the validated PTR domain names for the connect IP
-        address. 
-        """
+        """Figure out the validated PTR domain names for the connect IP."""
 # To prevent DoS attacks, more than 10 PTR names MUST NOT be looked up
         if self.strict:
             max = MAX_PTR
@@ -1052,17 +1053,13 @@ class query(object):
                 #Break out the number of PTR records returned for testing
                 try:
                     ptrnames = self.dns_ptr(self.i)
-                    ptrip = [p for p in ptrnames
-		    	if self.c in self.dns_a(p,self.A)]
                     if len(ptrnames) > max:
-                        warning = 'More than ' + str(max)\
-                             + ' PTR records returned'
+                        warning = 'More than %d PTR records returned' % max
                         raise AmbiguityWarning(warning, i)
                     else:
                         if len(ptrnames) == 0:
                             raise AmbiguityWarning(
-                                'No PTR records found for ptr mechanism', i)
-                    return ptrip
+                                'No PTR records found for ptr mechanism', self.c)
                 except:
                     raise AmbiguityWarning(
                       'No PTR records found for ptr mechanism', i)
