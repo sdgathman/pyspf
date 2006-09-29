@@ -1,4 +1,5 @@
 import unittest
+import socket
 import sys
 import spf
 import csv
@@ -169,7 +170,7 @@ class SPFTestCase(unittest.TestCase):
     global zonedata
     passed,failed = 0,0
     for t in tests:
-      if not spf.RE_IP4.match(t.host):
+      if not socket.has_ipv6 and not spf.RE_IP4.match(t.host):
         continue	# we don't implement IP6 yet
       zonedata = t.scenario.zonedata
       q = spf.query(i=t.host, s=t.mailfrom, h=t.helo)

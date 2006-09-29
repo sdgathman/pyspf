@@ -737,7 +737,7 @@ zonedata:
   mail.example.com:
     - A: 1.2.3.4
   e1.example.com:
-    - SPF: v=spf1 ip6
+    - SPF: v=spf1 -all ip6
   e2.example.com:
     - SPF: v=spf1 ip6:::1.1.1.1/0
   e3.example.com:

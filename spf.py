@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.85  2006/09/29 15:58:02  customdesigned
+# Pass self test on non IP6 python.
+# PTR accepts no cidr.
+#
 # Revision 1.83  2006/09/27 18:09:40  kitterma
 # Converted spf.check to return pre-MARID result codes for drop in
 # compatibility with pySPF 1.6/1.7.  Added new procedure, spf.check2 to
@@ -339,7 +343,7 @@ class query(object):
     Also keeps cache: DNS cache.  
     """
     def __init__(self, i, s, h, local=None, receiver=None, strict=True):
-        self.i, self.s, self.h = i, s, h
+        self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
         self.l, self.o = split_email(s, h)
@@ -351,7 +355,6 @@ class query(object):
             self.r = receiver
         else:
             self.r = 'unknown'
-	self.c = self.i
         # Since the cache does not track Time To Live, it is created
         # fresh for each query.  It is important for efficiently using
         # multiple results provided in DNS answers.
@@ -362,15 +365,25 @@ class query(object):
         self.lookups = 0
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
-	try:
+	if RE_IP4.match(i):
 	    self.ip = addr2bin(i)
 	    self.ip6 = False
-	    self.A = 'A'
-	except socket.error:
-	    if not socket.has_ipv6: raise
+	else:
+	    assert socket.has_ipv6,"No IPv6 python support"
 	    self.ip = addr2bin6(i)
-	    self.ip6 = True
-	    self.A = 'AAAA'
+	    if (self.ip >> 32) == 0xFFFF:	# IP4 mapped address
+	      self.ip = self.ip & 0xFFFFFFFF
+	      self.ip6 = False
+	    else:
+	      self.ip6 = True
+	if self.ip6:
+	  self.c = bin2addr6(self.ip)
+	  self.i = '.'.join(list('%032X'%self.ip))
+	  self.A = 'AAAA'
+	else:
+	  self.c = bin2addr(self.ip)
+	  self.i = self.c
+	  self.A = 'A'
 
     def set_default_explanation(self, exp):
         exps = self.exps
@@ -384,6 +397,7 @@ class query(object):
         for i in 'softfail', 'fail', 'permerror':
             exps[i] = exp
 
+    # Compute p macro only if needed
     def getp(self):
         if not self.p:
             p = self.dns_ptr(self.i)
@@ -748,30 +762,21 @@ class query(object):
 
             elif m == 'a':
                 self.check_lookups()
-		if cidrmatch(self.i, self.dns_a(arg,self.A), cidrlength):
+		if cidrmatch(self.c, self.dns_a(arg,self.A), cidrlength):
 		    break
 
             elif m == 'mx':
                 self.check_lookups()
-                if cidrmatch(self.i, self.dns_mx(arg), cidrlength):
+                if cidrmatch(self.c, self.dns_mx(arg), cidrlength):
                     break
 
-            elif m == 'ip4':
-                if arg == self.d:
-                    raise PermError('Missing IP4 arg', mech)
-                try:
-                    if cidrmatch(self.i, [arg], cidrlength):
-                        break
-                except socket.error:
-                    raise PermError('syntax error', mech)
-
-            elif m == 'ip6':
-                if arg == self.d:
-                    raise PermError('Missing IP6 arg', mech)
-            # Until we support IPV6, we should never
-            # get an IPv6 connection.  So this mech
-            # will never match.
-                pass
+            elif m in ('ip4', 'ip6'):
+	        if self.ip6 == (m == 'ip6'): # match own connection type only
+		    try:
+			if cidrmatch(self.c, [arg], cidrlength):
+			    break
+		    except socket.error:
+			raise PermError('syntax error', mech)
 
             elif m == 'ptr':
                 self.check_lookups()
@@ -1029,7 +1034,7 @@ class query(object):
 
     def validated_ptrs(self, i):
         """Figure out the validated PTR domain names for a given IP
-        address.
+        address.  i is in dotted notation
         """
 # To prevent DoS attacks, more than 10 PTR names MUST NOT be looked up
         if self.strict:
@@ -1058,10 +1063,10 @@ class query(object):
     def dns_ptr(self, i):
         """Get a list of domain names for an IP address."""
 	if self.ip6:
-	    a = list('%032X'%addr2bin6(i))
-	    a.reverse()
-	    return self.dns('.'.join(a) + ".ip6.arpa",'PTR')
-        return self.dns(reverse_dots(i) + ".in-addr.arpa", 'PTR')
+	    base = ".ip6.arpa"
+	else:
+	    base = ".in-addr.arpa"
+        return self.dns(reverse_dots(i) + base, 'PTR')
 
     def dns(self, name, qtype, cnames=None):
         """DNS query.
@@ -1102,7 +1107,7 @@ class query(object):
             receiver = self.r
         if res in ('pass', 'fail',' softfail'):
             return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s;' % (
-                res, receiver, self.get_header_comment(res), self.i,
+                res, receiver, self.get_header_comment(res), self.c,
                 self.l + '@' + self.o, self.h)
         if res == 'permerror':
             return '%s (%s: %s)' % (' '.join([res] + self.mech),
@@ -1116,16 +1121,16 @@ class query(object):
         if res == 'pass':
             return \
                 "domain of %s designates %s as permitted sender" \
-                % (sender, self.i)
+                % (sender, self.c)
         elif res == 'softfail': return \
       "transitioning domain of %s does not designate %s as permitted sender" \
-            % (sender, self.i)
+            % (sender, self.c)
         elif res == 'neutral': return \
             "%s is neither permitted nor denied by domain of %s" \
-                % (self.i, sender)
+                % (self.c, sender)
         elif res == 'none': return \
             "%s is neither permitted nor denied by domain of %s" \
-                  % (self.i, sender)
+                  % (self.c, sender)
             #"%s does not designate permitted sender hosts" % sender
         elif res == 'permerror': return \
             "permanent error in processing domain of %s: %s" \
@@ -1134,7 +1139,7 @@ class query(object):
               "temporary error in processing during lookup of %s" % sender
         elif res == 'fail': return \
               "domain of %s does not designate %s as permitted sender" \
-              % (sender, self.i)
+              % (sender, self.c)
         raise ValueError("invalid SPF result for header comment: "+res)
 
 def split_email(s, h):
@@ -1209,11 +1214,6 @@ def parse_mechanism(str, d):
         return str.lower(), d, cidr, cidr6
     return a[0].lower(), a[1], cidr, cidr6
 
-def reverse_ip6(i):
-    a = list('%032X'%addr2bin6(i))
-    a.reverse()
-    return '.'.join(a)
-
 def reverse_dots(name):
     """Reverse dotted IP addresses or domain names.
 
@@ -1264,9 +1264,12 @@ def cidrmatch(i, ipaddrs, cidr_length = 32):
 
     >>> cidrmatch('192.168.0.43', ['192.168.0.44', '192.168.0.45'], 24)
     1
+
+    >>> cidrmatch('CAFE:BABE:8000::1', ['CAFE:BABE:8001::2'],33)
+    1
     """
     try:
-        c = cidr(i, cidr_length)
+	c = cidr(i, cidr_length)
         for ip in ipaddrs:
             if cidr(ip, cidr_length) == c:
                 return True
