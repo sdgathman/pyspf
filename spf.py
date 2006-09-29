@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.88  2006/09/29 19:44:10  customdesigned
+# Fix ptr with ip6 for harsh mode.
+#
 # Revision 1.87  2006/09/29 19:26:53  customdesigned
 # Add PTR tests and fix ip6 ptr
 #
@@ -160,10 +163,6 @@ def DNSLookup(name, qtype):
 def isSPF(txt):
     "Return True if txt has SPF record signature."
     return txt.startswith('v=spf1 ') or txt == 'v=spf1'
-
-# 32-bit IPv4 address mask
-MASK = 0xFFFFFFFFL
-MASK6 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
 
 # Regular expression to look for modifiers
 RE_MODIFIER = re.compile(r'^([a-z][a-z0-9_\-\.]*)=', re.IGNORECASE)
@@ -772,18 +771,18 @@ class query(object):
 
             elif m == 'a':
                 self.check_lookups()
-		if cidrmatch(self.c, self.dns_a(arg,self.A), cidrlength):
+		if self.cidrmatch(self.dns_a(arg,self.A), cidrlength):
 		    break
 
             elif m == 'mx':
                 self.check_lookups()
-                if cidrmatch(self.c, self.dns_mx(arg), cidrlength):
+                if self.cidrmatch(self.dns_mx(arg), cidrlength):
                     break
 
             elif m in ('ip4', 'ip6'):
 	        if self.ip6 == (m == 'ip6'): # match own connection type only
 		    try:
-			if cidrmatch(self.c, [arg], cidrlength):
+			if self.cidrmatch([arg], cidrlength):
 			    break
 		    except socket.error:
 			raise PermError('syntax error', mech)
@@ -1070,7 +1069,7 @@ class query(object):
 	else:
 	    cidrlength = 32
         return [p for p in self.dns_ptr(self.i)[:max]
-	    if cidrmatch(self.c,self.dns_a(p,self.A),cidrlength)]
+	    if self.cidrmatch(self.dns_a(p,self.A),cidrlength)]
 
     def dns_ptr(self, i):
         """Get a list of domain names for an IP address."""
@@ -1109,6 +1108,21 @@ class query(object):
                 raise PermError, 'CNAME loop'
             result = self.dns(cname, qtype, cnames=cnames)
         return result
+
+    def cidrmatch(self, ipaddrs, n):
+	"""Match connect IP against a list of other IP addresses."""
+	try:
+	    if self.ip6:
+		MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
+		ipaddrs = [addr2bin6(ip) for ip in ipaddrs]
+	    else:
+		MASK = 0xFFFFFFFFL
+		ipaddrs = [addr2bin(ip) for ip in ipaddrs]
+	    c = ~(MASK >> n) & MASK & self.ip
+	    for ip in ipaddrs:
+		if c == ~(MASK >> n) & MASK & ip: return True
+	except socket.error: pass
+	return False
 
     def get_header(self, res, receiver=None):
         if not receiver:
@@ -1260,57 +1274,6 @@ def domainmatch(ptrs, domainsuffix):
 
     return False
 
-def cidrmatch(i, ipaddrs, cidr_length = 32):
-    """Match an IP address against a list of other IP addresses.
-
-    Examples:
-    >>> cidrmatch('192.168.0.45', ['192.168.0.44', '192.168.0.45'])
-    1
-
-    >>> cidrmatch('192.168.0.43', ['192.168.0.44', '192.168.0.45'])
-    0
-
-    >>> cidrmatch('192.168.0.43', ['192.168.0.44', '192.168.0.45'], 24)
-    1
-
-    >>> cidrmatch('CAFE:BABE:8000::1', ['CAFE:BABE:8001::2'],33)
-    1
-    """
-    try:
-	c = cidr(i, cidr_length)
-        for ip in ipaddrs:
-            if cidr(ip, cidr_length) == c:
-                return True
-    except socket.error: pass
-    return False
-
-def cidr(i, n):
-    """Convert an IP address string with a CIDR mask into a 32-bit
-    or 128-bit integer.
-
-    i must be a string of numbers 0..255 separated by dots '.', or ipv6::
-    pre: forall([0 <= int(p) < 256 for p in i.split('.')])
-
-    n is a number of bits to mask::
-    pre: 0 <= n <= 32, or <= 128 for ipv6
-
-    Examples::
-    >>> bin2addr(cidr('192.168.5.45', 32))
-    '192.168.5.45'
-    >>> bin2addr(cidr('192.168.5.45', 24))
-    '192.168.5.0'
-    >>> bin2addr(cidr('192.168.0.45', 8))
-    '192.0.0.0'
-
-    #>>> bin2addr6(cidr('1234:5678:4738:ABCD::1', 48))
-    #'1234:5678:4738::'
-    """
-    try:
-      return ~(MASK >> n) & MASK & addr2bin(i)
-    except socket.error:
-        if not socket.has_ipv6: raise
-	return ~(MASK6 >> n) & MASK6 & addr2bin6(i)
-
 def addr2bin(str):
     """Convert a string IPv4 address into an unsigned integer.
 
@@ -1341,9 +1304,6 @@ def addr2bin(str):
     """
     return struct.unpack("!L", socket.inet_aton(str))[0]
 
-def addr2bin6(str):
-    h, l = struct.unpack("!QQ", socket.inet_pton(socket.AF_INET6, str))
-    return h << 64 | l
 
 def bin2addr(addr):
     """Convert a numeric IPv4 address into string n.n.n.n form.
@@ -1361,6 +1321,10 @@ def bin2addr(addr):
     return socket.inet_ntoa(struct.pack("!L", addr))
 
 if socket.has_ipv6:
+    def addr2bin6(str):
+	h, l = struct.unpack("!QQ", socket.inet_pton(socket.AF_INET6, str))
+	return h << 64 | l
+
     def bin2addr6(addr):
 	"""Convert a numeric IPv6 address into string form.
 	Examples::
