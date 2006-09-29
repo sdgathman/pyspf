@@ -3,10 +3,13 @@
 # vim:sw=2 sts=2
 #
 # Contributors:
-#   Stuart D Gathman	sections 4.3 - 4.5, 5.3, 5.6, 6.2, 8.1, 10.1
+#   Stuart D Gathman	everything so far
 # Informal contributors (suggestions but no code):
 #   Craig Whitmore
 #   Frank Ellermann
+#   Wayne Schlitt
+#   Scott Kitterman
+#   Norman Maurer
 #
 ---
 description: Initial processing
@@ -805,12 +808,22 @@ tests:
       can't check them all, but we can check this one.
     comment: >-
       Spaces are allowed in local-part.
-    spec: 8.1/8
+    spec: 8.1/6
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: "Macro Error@e8.example.com"
     result: fail
     explanation: Macro Error in implementation
+  unknown-modifier-syntax:
+    description: |
+      unknown-modifier = name "=" macro-string
+    comment: >-
+      Unknown modifiers must have valid macro syntax.
+    spec: A/3
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e9.example.com
+    result: permerror
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -838,6 +851,8 @@ zonedata:
     - SPF: v=spf1 include:e3.example.com -all exp=exp3.example.com
   e8.example.com:
     - SPF: v=spf1 -all exp=exp4.example.com
+  e9.example.com:
+    - SPF: v=spf1 -all foo=%abc
 
 ---
 description: |
@@ -864,8 +879,16 @@ tests:
     mailfrom: test@exp.example.com
     result: fail
     explanation: This is a test.
+  exp-only-macro-char:
+    spec: 8.1/8
+    description: >-
+      The following macro letters are allowed only in "exp" text: c, r, t
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.40
+    mailfrom: test@e2.example.com
+    result: permerror
   invalid-macro-char:
-    spec: 8.1/19
+    spec: 8.1/9
     description: >-
       A '%' character not followed by a '{', '%', '-', or '_' character
       is a syntax error.
@@ -873,16 +896,8 @@ tests:
     host: 192.168.218.40
     mailfrom: test@e1.example.com
     result: permerror
-  exp-only-macro-char:
-    spec: 8.1/16
-    description: >-
-      The following macro letters are allowed only in "exp" text: c, r, t
-    helo: msgbas2x.cos.example.com
-    host: 192.168.218.40
-    mailfrom: test@e2.example.com
-    result: permerror
   exp-txt-macro-char:
-    spec: 8.1/31
+    spec: 8.1/20
     description: >-
       For IPv4 addresses, both the "i" and "c" macros expand
       to the standard dotted-quad format.
@@ -892,7 +907,7 @@ tests:
     result: fail
     explanation: Connections from 192.168.218.40 not authorized.
   domain-name-truncation:
-    spec: 8.1/36
+    spec: 8.1/25
     description: >-
       When the result of macro expansion is used in a domain name query, if the
       expanded domain name exceeds 253 characters, the left side is truncated

@@ -47,6 +47,13 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.83  2006/09/27 18:09:40  kitterma
+# Converted spf.check to return pre-MARID result codes for drop in
+# compatibility with pySPF 1.6/1.7.  Added new procedure, spf.check2 to
+# return RFC4408 results in a two part answer (result, explanation).
+# This is the external API for pySPF 2.0.  No longer any need to branch
+# for 'classic' and RFC compliant pySPF libraries.
+#
 # Revision 1.82  2006/09/27 18:02:21  kitterma
 # Converted max MX limit to ambiguity warning for validator.
 #
@@ -146,6 +153,7 @@ def isSPF(txt):
 
 # 32-bit IPv4 address mask
 MASK = 0xFFFFFFFFL
+MASK6 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
 
 # Regular expression to look for modifiers
 RE_MODIFIER = re.compile(r'^([a-z][a-z0-9_\-\.]*)=', re.IGNORECASE)
@@ -285,8 +293,8 @@ def check2(i, s, h, local=None, receiver=None):
     #>>> check2(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
 
     """
-    result = query(i=i, s=s, h=h, local=local, receiver=receiver).check()
-    return result[0], result[2]
+    res,_,exp = query(i=i, s=s, h=h, local=local, receiver=receiver).check()
+    return res,exp
 
 def check(i, s, h, local=None, receiver=None):
     """Test an incoming MAIL FROM:<s>, from a client with ip address i.
@@ -302,12 +310,12 @@ def check(i, s, h, local=None, receiver=None):
     #>>> check(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
 
     """
-    result, code, exp = query(i=i, s=s, h=h, local=local, receiver=receiver).check()
-    if result == 'permerror':
-        result = 'unknown'
-    if result == 'tempfail':
-        result =='error'
-    return result, code, exp
+    res,code,exp = query(i=i, s=s, h=h, local=local, receiver=receiver).check()
+    if res == 'permerror':
+        res = 'unknown'
+    elif res == 'tempfail':
+        res =='error'
+    return res, code, exp
 
 class query(object):
     """A query object keeps the relevant information about a single SPF
@@ -354,6 +362,15 @@ class query(object):
         self.lookups = 0
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
+	try:
+	    self.ip = addr2bin(i)
+	    self.ip6 = False
+	    self.A = 'A'
+	except socket.error:
+	    if not socket.has_ipv6: raise
+	    self.ip = addr2bin6(i)
+	    self.ip6 = True
+	    self.A = 'AAAA'
 
     def set_default_explanation(self, exp):
         exps = self.exps
@@ -590,6 +607,8 @@ class query(object):
                 cidr6length = 128
             elif cidr6length > 128:
                 raise PermError('Invalid IP6 CIDR length', mech)
+	    if self.ip6:
+	    	cidrlength = cidr6length
         elif m == 'ip4':
             if cidr6length is not None:
                 raise PermError('Dual CIDR not allowed', mech)
@@ -610,7 +629,7 @@ class query(object):
                 raise PermError('Invalid IP6 address', mech)
         else:
             if cidrlength is not None or cidr6length is not None:
-                raise PermError('Dual CIDR not allowed', mech)
+                raise PermError('CIDR not allowed', mech)
             cidrlength = 32
 
         # validate domain-spec
@@ -717,7 +736,7 @@ class query(object):
             elif m == 'exists':
                 self.check_lookups()
                 try:
-                    if len(self.dns_a(arg)) > 0:
+                    if len(self.dns_a(arg,'A')) > 0:
                         break
                 except AmbiguityWarning:
                     # Exists wants no response sometimes so don't raise
@@ -726,8 +745,8 @@ class query(object):
 
             elif m == 'a':
                 self.check_lookups()
-                if cidrmatch(self.i, self.dns_a(arg), cidrlength):
-                    break
+		if cidrmatch(self.i, self.dns_a(arg,self.A), cidrlength):
+		    break
 
             elif m == 'mx':
                 self.check_lookups()
@@ -990,22 +1009,20 @@ class query(object):
                         'No MX records found for mx mechanism', domainname)
         else:
             max = MAX_MX * 4
-        return [a for mx in mxnames[:max] for a in self.dns_a(mx[1])]
+        return [a for mx in mxnames[:max] for a in self.dns_a(mx[1],self.A)]
 
-    def dns_a(self, domainname):
-        """Get a list of IP addresses for a domainname."""
+    def dns_a(self, domainname, A='A'):
+        """Get a list of IP addresses for a domainname.
+	"""
         if not domainname: return []
         if self.strict > 1:
-            alist = self.dns(domainname, 'A')
+            alist = self.dns(domainname, A)
             if len(alist) == 0:
-                raise AmbiguityWarning('No A records found for', domainname)
+                raise AmbiguityWarning(
+			'No %s records found for'%A, domainname)
             else:
                 return alist
-        return self.dns(domainname, 'A')
-
-    def dns_aaaa(self, domainname):
-        """Get a list of IPv6 addresses for a domainname."""
-        return self.dns(domainname, 'AAAA')
+        return self.dns(domainname, A)
 
     def validated_ptrs(self, i):
         """Figure out the validated PTR domain names for a given IP
@@ -1018,9 +1035,9 @@ class query(object):
                 #Break out the number of PTR records returned for testing
                 try:
                     ptrnames = self.dns_ptr(i)
-                    ptrip = [p for p in ptrnames if i in self.dns_a(p)]
+                    ptrip = [p for p in ptrnames if i in self.dns_a(p,self.A)]
                     if len(ptrnames) > max:
-                        warning = 'More orgthan ' + str(max)\
+                        warning = 'More than ' + str(max)\
                              + ' PTR records returned'
                         raise AmbiguityWarning(warning, i)
                     else:
@@ -1033,10 +1050,14 @@ class query(object):
                       'No PTR records found for ptr mechanism', i)
         else:
             max = MAX_PTR * 4
-        return [p for p in self.dns_ptr(i)[:max] if i in self.dns_a(p)]
+        return [p for p in self.dns_ptr(i)[:max] if i in self.dns_a(p,self.A)]
 
     def dns_ptr(self, i):
         """Get a list of domain names for an IP address."""
+	if self.ip6:
+	    a = list('%032X'%addr2bin6(i))
+	    a.reverse()
+	    return self.dns('.'.join(a) + ".ip6.arpa",'PTR')
         return self.dns(reverse_dots(i) + ".in-addr.arpa", 'PTR')
 
     def dns(self, name, qtype, cnames=None):
@@ -1185,6 +1206,11 @@ def parse_mechanism(str, d):
         return str.lower(), d, cidr, cidr6
     return a[0].lower(), a[1], cidr, cidr6
 
+def reverse_ip6(i):
+    a = list('%032X'%addr2bin6(i))
+    a.reverse()
+    return '.'.join(a)
+
 def reverse_dots(name):
     """Reverse dotted IP addresses or domain names.
 
@@ -1248,21 +1274,27 @@ def cidr(i, n):
     """Convert an IP address string with a CIDR mask into a 32-bit
     or 128-bit integer.
 
-    i must be a string of numbers 0..255 separated by dots '.'::
+    i must be a string of numbers 0..255 separated by dots '.', or ipv6::
     pre: forall([0 <= int(p) < 256 for p in i.split('.')])
 
     n is a number of bits to mask::
-    pre: 0 <= n <= 32
+    pre: 0 <= n <= 32, or <= 128 for ipv6
 
-    Examples:
+    Examples::
     >>> bin2addr(cidr('192.168.5.45', 32))
     '192.168.5.45'
     >>> bin2addr(cidr('192.168.5.45', 24))
     '192.168.5.0'
     >>> bin2addr(cidr('192.168.0.45', 8))
     '192.0.0.0'
+    >>> bin2addr6(cidr('1234:5678:4738:ABCD::1', 48))
+    '1234:5678:4738::'
     """
-    return ~(MASK >> n) & MASK & addr2bin(i)
+    try:
+      return ~(MASK >> n) & MASK & addr2bin(i)
+    except socket.error:
+        if not socket.has_ipv6: raise
+	return ~(MASK6 >> n) & MASK6 & addr2bin6(i)
 
 def addr2bin(str):
     """Convert a string IPv4 address into an unsigned integer.
@@ -1292,12 +1324,11 @@ def addr2bin(str):
     >>> 10 * (2 ** 24) + 93 * (2 ** 16) + 512
     173867520
     """
-    try:
-        return struct.unpack("!L", socket.inet_aton(str))[0]
-    except socket.error:
-        if not socket.has_ipv6: raise
+    return struct.unpack("!L", socket.inet_aton(str))[0]
+
+def addr2bin6(str):
     h, l = struct.unpack("!QQ", socket.inet_pton(socket.AF_INET6, str))
-    return h << 64 | l;
+    return h << 64 | l
 
 def bin2addr(addr):
     """Convert a numeric IPv4 address into string n.n.n.n form.
@@ -1313,6 +1344,15 @@ def bin2addr(addr):
     '255.255.255.255'
     """
     return socket.inet_ntoa(struct.pack("!L", addr))
+
+def bin2addr6(addr):
+    """Convert a numeric IPv6 address into string form.
+    Examples::
+    >>> bin2addr6(123456789012345L)
+    '::7048:860d:df79'
+    """
+    return socket.inet_ntop(socket.AF_INET6,
+    	struct.pack("!QQ", addr >> 64, addr & 0xFFFFFFFFFFFFFFFFL))
 
 def expand_one(expansion, str, joiner):
     if not str:
