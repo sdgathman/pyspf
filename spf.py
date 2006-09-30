@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.91  2006/09/30 19:37:49  customdesigned
+# Missing L
+#
 # Revision 1.90  2006/09/30 19:29:58  customdesigned
 # pydns returns AAAA RR as binary string
 #
@@ -160,6 +163,9 @@ def DNSLookup(name, qtype):
         resp = req.req()
         #resp.show()
         # key k: ('wayforward.net', 'A'), value v
+	# FIXME: pydns returns AAAA RR as 16 byte binary string, but
+	# A RR as dotted quad.  For consistency, this driver should
+	# return both as binary string.
         return [((a['name'], a['typename']), a['data']) for a in resp.answers]
     except IOError, x:
         raise TempError, 'DNS ' + str(x)
@@ -381,16 +387,17 @@ class query(object):
         "Set connect ip, and ip6 or ip4 mode."
 	if RE_IP4.match(i):
 	    self.ip = addr2bin(i)
-	    self.ip6 = False
+	    ip6 = False
 	else:
 	    assert socket.has_ipv6,"No IPv6 python support"
 	    self.ip = bin2long6(socket.inet_pton(socket.AF_INET6, i))
 	    if (self.ip >> 32) == 0xFFFF:	# IP4 mapped address
 		self.ip = self.ip & 0xFFFFFFFFL
-		self.ip6 = False
+		ip6 = False
 	    else:
-		self.ip6 = True
-	if self.ip6:
+		ip6 = True
+	# NOTE: self.A is not lowercase, so isn't a macro.  See query.expand()
+	if ip6:
 	    self.c = socket.inet_ntop(socket.AF_INET6,
 		struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFFL))
 	    self.i = '.'.join(list('%032X'%self.ip))
@@ -398,7 +405,7 @@ class query(object):
 	    self.v = 'ip6'
 	    self.cidrmax = 128
 	else:
-	    self.c = bin2addr(self.ip)
+	    self.c = socket.inet_ntoa(struct.pack("!L", self.ip))
 	    self.i = self.c
 	    self.A = 'A'
 	    self.v = 'in-addr'
@@ -640,7 +647,7 @@ class query(object):
                 cidr6length = 128
             elif cidr6length > 128:
                 raise PermError('Invalid IP6 CIDR length', mech)
-	    if self.ip6:
+	    if self.v == 'ip6':
 	    	cidrlength = cidr6length
         elif m == 'ip4':
             if cidr6length is not None:
@@ -790,7 +797,7 @@ class query(object):
                     break
 
             elif m == 'ip4':
-	        if self.v == 'in-addr':
+	        if self.v == 'in-addr': # match own connection type only
 		    try:
 			if self.cidrmatch([arg], cidrlength): break
 		    except socket.error:
@@ -958,8 +965,6 @@ class query(object):
 #                print letter
                 if letter == 'p':
                     self.getp()
-		elif letter not in 'slodipvhcrt':
-		    raise PermError('invalid macro',macro)
 		elif letter in 'crt' and stripdot:
 		    raise PermError(
 		        'c,r,t macros allowed in exp= text only', macro)
@@ -1126,7 +1131,7 @@ class query(object):
     def cidrmatch(self, ipaddrs, n):
 	"""Match connect IP against a list of other IP addresses."""
 	try:
-	    if self.ip6:
+	    if self.v == 'ip6':
 	        MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
 		bin = bin2long6
 	    else:
@@ -1317,22 +1322,6 @@ def addr2bin(str):
     173867520
     """
     return struct.unpack("!L", socket.inet_aton(str))[0]
-
-
-def bin2addr(addr):
-    """Convert a numeric IPv4 address into string n.n.n.n form.
-
-    Examples::
-    >>> bin2addr(socket.INADDR_LOOPBACK)
-    '127.0.0.1'
-
-    >>> bin2addr(socket.INADDR_ANY)
-    '0.0.0.0'
-
-    >>> bin2addr(socket.INADDR_NONE)
-    '255.255.255.255'
-    """
-    return socket.inet_ntoa(struct.pack("!L", addr))
 
 if socket.has_ipv6:
     def bin2long6(str):
