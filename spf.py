@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.92  2006/09/30 19:52:52  customdesigned
+# Removed redundant flag and unneeded global.
+#
 # Revision 1.91  2006/09/30 19:37:49  customdesigned
 # Missing L
 #
@@ -1138,7 +1141,7 @@ class query(object):
 	        MASK = 0xFFFFFFFFL
 		bin = addr2bin
 	    c = ~(MASK >> n) & MASK & self.ip
-	    for ip in (bin(ip) for ip in ipaddrs):
+	    for ip in [bin(ip) for ip in ipaddrs]:
 		if c == ~(MASK >> n) & MASK & ip: return True
 	except socket.error: pass
 	return False
