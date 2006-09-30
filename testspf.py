@@ -185,6 +185,9 @@ class SPFTestCase(unittest.TestCase):
       if res != t.result and res not in t.result:
         if verbose: print t.result,'!=',res
 	ok = False
+      elif res != t.result and res != t.result[0]:
+        print "WARN: %s in %s, %s: %s preferred to %s" % (
+		t.id,t.scenario.filename,t.spec,t.result[0],res)
       if t.explanation is not None and t.explanation != exp:
         if verbose: print t.explanation,'!=',exp
         ok = False
