@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.90  2006/09/30 19:29:58  customdesigned
+# pydns returns AAAA RR as binary string
+#
 # Revision 1.89  2006/09/29 20:23:11  customdesigned
 # Optimize cidrmatch
 #
@@ -383,7 +386,7 @@ class query(object):
 	    assert socket.has_ipv6,"No IPv6 python support"
 	    self.ip = bin2long6(socket.inet_pton(socket.AF_INET6, i))
 	    if (self.ip >> 32) == 0xFFFF:	# IP4 mapped address
-		self.ip = self.ip & 0xFFFFFFFF
+		self.ip = self.ip & 0xFFFFFFFFL
 		self.ip6 = False
 	    else:
 		self.ip6 = True
