@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.94  2006/09/30 22:23:25  customdesigned
+# p macro tests and fixes
+#
 # Revision 1.93  2006/09/30 20:57:06  customdesigned
 # Remove generator expression for compatibility with python2.3.
 #
@@ -433,10 +436,18 @@ class query(object):
     def getp(self):
         if not self.p:
             p = self.validated_ptrs()
-            if len(p) > 0:
-                self.p = p[0]
-            else:
+            if not p:
                 self.p = "unknown"
+	    elif self.d in p:
+	        self.p = self.d
+	    else:
+	        sfx = '.' + self.d
+	        for d in p:
+		    if d.endswith(sfx):
+		        self.p = d
+			break
+		else:
+		    self.p = p[0]
         return self.p
 
     def best_guess(self, spf=DEFAULT_SPF):

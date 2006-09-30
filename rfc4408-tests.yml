@@ -1092,7 +1092,6 @@ tests:
       p	= the validated domain name of <ip>
     comment: >-
       If a subdomain of the <domain> is present, it SHOULD be used.  
-      Need preferred, acceptable explanations to test this.
     helo: msgbas2x.cos.example.com
     host: CAFE:BABE::3
     mailfrom: test@e6.example.com
@@ -1104,7 +1103,6 @@ tests:
       p	= the validated domain name of <ip>
     comment: >-
       If a subdomain of the <domain> is present, it SHOULD be used.  
-      Need preferred, acceptable explanations to test this.
     helo: msgbas2x.cos.example.com
     host: 192.168.218.42
     mailfrom: test@e7.example.com
@@ -1164,9 +1162,9 @@ zonedata:
   mx.e7.example.com:
     - A: 192.168.218.42
   mx.e7.example.com.should.example.com:
-    - A: 192.168.218.42
+    - A: 127.0.0.2
   mx.example.com.ok.example.com:
-    - A: 192.168.218.42
+    - A: 127.0.0.2
   e7.example.com:
     - SPF: v=spf1 exists:%{p}.should.example.com ?exists:%{p}.ok.example.com -all
 
