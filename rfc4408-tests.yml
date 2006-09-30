@@ -1053,6 +1053,62 @@ tests:
     host: CAFE:BABE::192.168.218.40
     mailfrom: test@e5.example.com
     result: permerror
+  p-macro-ip4-novalid:
+    spec: 8.1/22
+    description: |-
+      p	= the validated domain name of <ip>
+    comment: >-
+      The PTR in this example does not validate.
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.40
+    mailfrom: test@e6.example.com
+    result: fail
+    explanation: connect from unknown
+  p-macro-ip4-valid:
+    spec: 8.1/22
+    description: |-
+      p	= the validated domain name of <ip>
+    comment: >-
+      If a subdomain of the <domain> is present, it SHOULD be used.
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.41
+    mailfrom: test@e6.example.com
+    result: fail
+    explanation: connect from mx.example.com
+  p-macro-ip6-novalid:
+    spec: 8.1/22
+    description: |-
+      p	= the validated domain name of <ip>
+    comment: >-
+      The PTR in this example does not validate.
+    helo: msgbas2x.cos.example.com
+    host: CAFE:BABE::1
+    mailfrom: test@e6.example.com
+    result: fail
+    explanation: connect from unknown
+  p-macro-ip6-valid:
+    spec: 8.1/22
+    description: |-
+      p	= the validated domain name of <ip>
+    comment: >-
+      If a subdomain of the <domain> is present, it SHOULD be used.  
+      Need preferred, acceptable explanations to test this.
+    helo: msgbas2x.cos.example.com
+    host: CAFE:BABE::3
+    mailfrom: test@e6.example.com
+    result: fail
+    explanation: connect from mx.example.com
+  p-macro-multiple:
+    spec: 8.1/22
+    description: |-
+      p	= the validated domain name of <ip>
+    comment: >-
+      If a subdomain of the <domain> is present, it SHOULD be used.  
+      Need preferred, acceptable explanations to test this.
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.42
+    mailfrom: test@e7.example.com
+    result: [ pass, neutral ]
 zonedata:
   example.com.d.spf.example.com:
     - SPF: v=spf1 redirect=a.spf.example.com
@@ -1086,6 +1142,33 @@ zonedata:
     - TXT: "%{c} is queried as %{ir}.%{v}.arpa"
   e5.example.com:
     - SPF: v=spf1 a:%{a}.example.com -all
+  e6.example.com:
+    - SPF: v=spf1 -all exp=e6.example.com
+    - TXT: "connect from %{p}"
+  mx.example.com:
+    - A: 192.168.218.41
+    - A: 192.168.218.42
+    - AAAA: CAFE:BABE::2
+    - AAAA: CAFE:BABE::3
+  40.218.168.192.in-addr.arpa:
+    - PTR: mx.example.com
+  41.218.168.192.in-addr.arpa:
+    - PTR: mx.example.com
+  42.218.168.192.in-addr.arpa:
+    - PTR: mx.example.com
+    - PTR: mx.e7.example.com
+  1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa:
+    - PTR: mx.example.com
+  3.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa:
+    - PTR: mx.example.com
+  mx.e7.example.com:
+    - A: 192.168.218.42
+  mx.e7.example.com.should.example.com:
+    - A: 192.168.218.42
+  mx.example.com.ok.example.com:
+    - A: 192.168.218.42
+  e7.example.com:
+    - SPF: v=spf1 exists:%{p}.should.example.com ?exists:%{p}.ok.example.com -all
 
 ---
 description: >-

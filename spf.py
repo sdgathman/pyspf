@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.93  2006/09/30 20:57:06  customdesigned
+# Remove generator expression for compatibility with python2.3.
+#
 # Revision 1.92  2006/09/30 19:52:52  customdesigned
 # Removed redundant flag and unneeded global.
 #
@@ -429,11 +432,11 @@ class query(object):
     # Compute p macro only if needed
     def getp(self):
         if not self.p:
-            p = self.dns_ptr(self.i)
+            p = self.validated_ptrs()
             if len(p) > 0:
                 self.p = p[0]
             else:
-                self.p = self.i
+                self.p = "unknown"
         return self.p
 
     def best_guess(self, spf=DEFAULT_SPF):
