@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.89  2006/09/29 20:23:11  customdesigned
+# Optimize cidrmatch
+#
 # Revision 1.88  2006/09/29 19:44:10  customdesigned
 # Fix ptr with ip6 for harsh mode.
 #
@@ -369,27 +372,34 @@ class query(object):
         self.lookups = 0
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
+	self.set_ip(i)
+
+    def set_ip(self, i):
+        "Set connect ip, and ip6 or ip4 mode."
 	if RE_IP4.match(i):
 	    self.ip = addr2bin(i)
 	    self.ip6 = False
 	else:
 	    assert socket.has_ipv6,"No IPv6 python support"
-	    self.ip = addr2bin6(i)
+	    self.ip = bin2long6(socket.inet_pton(socket.AF_INET6, i))
 	    if (self.ip >> 32) == 0xFFFF:	# IP4 mapped address
 		self.ip = self.ip & 0xFFFFFFFF
 		self.ip6 = False
 	    else:
 		self.ip6 = True
 	if self.ip6:
-	    self.c = bin2addr6(self.ip)
+	    self.c = socket.inet_ntop(socket.AF_INET6,
+		struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFFL))
 	    self.i = '.'.join(list('%032X'%self.ip))
 	    self.A = 'AAAA'
 	    self.v = 'ip6'
+	    self.cidrmax = 128
 	else:
 	    self.c = bin2addr(self.ip)
 	    self.i = self.c
 	    self.A = 'A'
 	    self.v = 'in-addr'
+	    self.cidrmax = 32
 
     def set_default_explanation(self, exp):
         exps = self.exps
@@ -650,10 +660,7 @@ class query(object):
         else:
             if cidrlength is not None or cidr6length is not None:
                 raise PermError('CIDR not allowed', mech)
-	    if self.ip6:
-		cidrlength = 128
-	    else:
-		cidrlength = 32
+	    cidrlength = self.cidrmax
 
         # validate domain-spec
         if m in ('a', 'mx', 'ptr', 'exists', 'include'):
@@ -779,11 +786,18 @@ class query(object):
                 if self.cidrmatch(self.dns_mx(arg), cidrlength):
                     break
 
-            elif m in ('ip4', 'ip6'):
-	        if self.ip6 == (m == 'ip6'): # match own connection type only
+            elif m == 'ip4':
+	        if self.v == 'in-addr':
 		    try:
-			if self.cidrmatch([arg], cidrlength):
-			    break
+			if self.cidrmatch([arg], cidrlength): break
+		    except socket.error:
+			raise PermError('syntax error', mech)
+
+            elif m == 'ip6':
+	        if self.v == 'ip6': # match own connection type only
+		    try:
+			arg = socket.inet_pton(socket.AF_INET6,arg)
+			if self.cidrmatch([arg], cidrlength): break
 		    except socket.error:
 			raise PermError('syntax error', mech)
 
@@ -1064,10 +1078,7 @@ class query(object):
                       'No PTR records found for ptr mechanism', i)
         else:
             max = MAX_PTR * 4
-	if self.ip6:
-	    cidrlength = 128
-	else:
-	    cidrlength = 32
+	cidrlength = self.cidrmax
         return [p for p in self.dns_ptr(self.i)[:max]
 	    if self.cidrmatch(self.dns_a(p,self.A),cidrlength)]
 
@@ -1113,13 +1124,13 @@ class query(object):
 	"""Match connect IP against a list of other IP addresses."""
 	try:
 	    if self.ip6:
-		MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
-		ipaddrs = [addr2bin6(ip) for ip in ipaddrs]
+	        MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
+		bin = bin2long6
 	    else:
-		MASK = 0xFFFFFFFFL
-		ipaddrs = [addr2bin(ip) for ip in ipaddrs]
+	        MASK = 0xFFFFFFFFL
+		bin = addr2bin
 	    c = ~(MASK >> n) & MASK & self.ip
-	    for ip in ipaddrs:
+	    for ip in (bin(ip) for ip in ipaddrs):
 		if c == ~(MASK >> n) & MASK & ip: return True
 	except socket.error: pass
 	return False
@@ -1321,18 +1332,9 @@ def bin2addr(addr):
     return socket.inet_ntoa(struct.pack("!L", addr))
 
 if socket.has_ipv6:
-    def addr2bin6(str):
-	h, l = struct.unpack("!QQ", socket.inet_pton(socket.AF_INET6, str))
+    def bin2long6(str):
+	h, l = struct.unpack("!QQ", str)
 	return h << 64 | l
-
-    def bin2addr6(addr):
-	"""Convert a numeric IPv6 address into string form.
-	Examples::
-	>>> bin2addr6(123456789012345L)
-	'::7048:860d:df79'
-	"""
-	return socket.inet_ntop(socket.AF_INET6,
-	    struct.pack("!QQ", addr >> 64, addr & 0xFFFFFFFFFFFFFFFFL))
 
 def expand_one(expansion, str, joiner):
     if not str:

@@ -28,6 +28,9 @@ def DNSLookup(name,qtype):
         if t == qtype:
 	  raise spf.TempError,'DNS timeout'
 	continue
+      # keep test zonedata human readable, but translate to simulate pydns
+      if t == 'AAAA' and socket.has_ipv6:
+	v = socket.inet_pton(socket.AF_INET6,v)
       yield ((name,t),v)
   except KeyError:
     if name.startswith('error.'):
