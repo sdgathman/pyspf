@@ -51,6 +51,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.63.2.3  2006/10/01 02:46:51  kitterma
+# Cleaned up indentation.  Restored localhost Pass for backward compatibility.
+# Modified test driver to work with test.yml.  Commented out RFC4408 compliance
+# test set.  This should be version 1.7.1.  Drop in replacement for pySPF 1.6.
+#
 # Revision 1.63.2.2  2006/10/01 02:34:13  kitterma
 # Backport pySPF HEAD revision 1.82.
 #
@@ -143,9 +148,9 @@ def DNSLookup(name, qtype):
         # key k: ('wayforward.net', 'A'), value v
         return [((a['name'], a['typename']), a['data']) for a in resp.answers]
     except IOError, x:
-        raise error, 'DNS ' + str(x)
+        raise TempError, 'DNS ' + str(x)
     except DNS.DNSError, x:
-        raise error, 'DNS ' + str(x)
+        raise TempError, 'DNS ' + str(x)
 
 def isSPF(txt):
     "Return True if txt has SPF record signature."
@@ -253,7 +258,7 @@ class AmbiguityWarning(Exception):
             return '%s: %s' %(self.msg, self.mech)
         return self.msg
 
-class error(Exception):
+class TempError(Exception):
     "Temporary SPF error"
     def __init__(self, msg, mech=None, ext=None):
         Exception.__init__(self, msg, mech)
@@ -265,7 +270,7 @@ class error(Exception):
             return '%s: %s '%(self.msg, self.mech)
         return self.msg
 
-class unknown(Exception):
+class PermError(Exception):
     "Permanent SPF error"
     def __init__(self, msg, mech=None, ext=None):
         Exception.__init__(self, msg, mech)
@@ -442,12 +447,12 @@ class query(object):
                 spf = insert_libspf_local_policy(
                     spf, self.libspf_local)
             return self.check1(spf, self.d, 0)
-        except error, x:
+        except TempError, x:
             self.prob = x.msg
             if x.mech:
                 self.mech.append(x.mech)
             return ('error', 451, 'SPF Temporary Error: ' + str(x))
-        except unknown, x:
+        except PermError, x:
             if not self.perm_error:
                 self.perm_error = x
             self.prob = x.msg
@@ -470,7 +475,7 @@ class query(object):
                 raise AssertionError('Too many levels of recursion')
             # As an extended result, however, it should be
             # a unknown.
-            raise unknown('Too many levels of recursion')
+            raise PermError('Too many levels of recursion')
         try:
             try:
                 tmp, self.d = self.d, domain
@@ -485,12 +490,12 @@ class query(object):
 
     def note_error(self, *msg):
         if self.strict:
-            raise unknown(*msg)
+            raise PermError(*msg)
         # if lax mode, note error and continue
         if not self.perm_error:
             try:
-                raise unknown(*msg)
-            except unknown, x:
+                raise PermError(*msg)
+            except PermError, x:
                 # FIXME: keep a list of errors for even friendlier diagnostics.
                 self.perm_error = x
         return self.perm_error
@@ -514,27 +519,27 @@ class query(object):
     ('?mx:%{d}/27', 'mx', 'email.example.com', 27, 'neutral')
 
     >>> try: q.validate_mechanism('ip4:1.2.3.4/247')
-    ... except unknown,x: print x
+    ... except PermError,x: print x
     Invalid IP4 CIDR length: ip4:1.2.3.4/247
     
     >>> try: q.validate_mechanism('ip4:1.2.3.4/33')
-    ... except unknown,x: print x
+    ... except PermError,x: print x
     Invalid IP4 CIDR length: ip4:1.2.3.4/33
 
     >>> try: q.validate_mechanism('a:example.com:8080')
-    ... except unknown,x: print x
+    ... except PermError,x: print x
     Invalid domain found (use FQDN): example.com:8080
     
     >>> try: q.validate_mechanism('ip4:1.2.3.444/24')
-    ... except unknown,x: print x
+    ... except PermError,x: print x
     Invalid IP4 address: ip4:1.2.3.444/24
     
     >>> try: q.validate_mechanism('ip4:1.2.03.4/24')
-    ... except unknown,x: print x
+    ... except PermError,x: print x
     Invalid IP4 address: ip4:1.2.03.4/24
     
     >>> try: q.validate_mechanism('-all:3030')
-    ... except unknown,x: print x
+    ... except PermError,x: print x
     Invalid all mechanism format - only qualifier allowed with all: -all:3030
 
     >>> q.validate_mechanism('-mx:%%%_/.Clara.de/27')
@@ -572,32 +577,32 @@ class query(object):
             if cidrlength is None:
                 cidrlength = 32;
             elif cidrlength > 32:
-                raise unknown('Invalid IP4 CIDR length', mech)
+                raise PermError('Invalid IP4 CIDR length', mech)
             if cidr6length is None:
                 cidr6length = 128
             elif cidr6length > 128:
-                raise unknown('Invalid IP6 CIDR length', mech)
+                raise PermError('Invalid IP6 CIDR length', mech)
         elif m == 'ip4':
             if cidr6length is not None:
-                raise unknown('Dual CIDR not allowed', mech)
+                raise PermError('Dual CIDR not allowed', mech)
             if cidrlength is None:
                 cidrlength = 32;
             elif cidrlength > 32:
-                raise unknown('Invalid IP4 CIDR length', mech)
+                raise PermError('Invalid IP4 CIDR length', mech)
             if not RE_IP4.match(arg):
-                raise unknown('Invalid IP4 address', mech)
+                raise PermError('Invalid IP4 address', mech)
         elif m == 'ip6':
             if cidr6length is not None:
-                raise unknown('Dual CIDR not allowed', mech)
+                raise PermError('Dual CIDR not allowed', mech)
             if cidrlength is None:
                 cidrlength = 128
             elif cidrlength > 128:
-                raise unknown('Invalid IP6 CIDR length', mech)
+                raise PermError('Invalid IP6 CIDR length', mech)
             if not RE_IP6.match(arg):
-                raise unknown('Invalid IP6 address', mech)
+                raise PermError('Invalid IP6 address', mech)
         else:
             if cidrlength is not None or cidr6length is not None:
-                raise unknown('Dual CIDR not allowed', mech)
+                raise PermError('Dual CIDR not allowed', mech)
             cidrlength = 32
 
         # validate domain-spec
@@ -605,12 +610,12 @@ class query(object):
             arg = self.expand(arg)
             # any trailing dot was removed by expand()
             if RE_TOPLAB.split(arg)[-1]:
-                raise unknown('Invalid domain found (use FQDN)', arg)
+                raise PermError('Invalid domain found (use FQDN)', arg)
             if m == 'include':
                 if arg == self.d:
                     if mech != 'include':
-                        raise unknown('include has trivial recursion', mech)
-                    raise unknown('include mechanism missing domain', mech)
+                        raise PermError('include has trivial recursion', mech)
+                    raise PermError('include mechanism missing domain', mech)
             return mech, m, arg, cidrlength, result
 
         # validate 'all' mechanism per RFC 4408 ABNF
@@ -646,7 +651,7 @@ class query(object):
         # for common mistakes like IN TXT "v=spf1" "mx" "-all"
         # in relaxed mode.
         if spf[0] != 'v=spf1':
-            raise unknown('Invalid SPF record in', self.d)
+            raise PermError('Invalid SPF record in', self.d)
         spf = spf[1:]
 
         # copy of explanations to be modified by exp=
@@ -723,16 +728,16 @@ class query(object):
 
             elif m == 'ip4':
                 if arg == self.d:
-                    raise unknown('Missing IP4 arg', mech)
+                    raise PermError('Missing IP4 arg', mech)
                 try:
                     if cidrmatch(self.i, [arg], cidrlength):
                         break
                 except socket.error:
-                    raise unknown('syntax error', mech)
+                    raise PermError('syntax error', mech)
 
             elif m == 'ip6':
                 if arg == self.d:
-                    raise unknown('Missing IP6 arg', mech)
+                    raise PermError('Missing IP6 arg', mech)
             # Until we support IPV6, we should never
             # get an IPv6 connection.  So this mech
             # will never match.
@@ -749,7 +754,7 @@ class query(object):
                 #Catch redirect to a non-existant SPF record.
                 redirect_record = self.dns_spf(redirect)
                 if not redirect_record:
-                    raise unknown('redirect domain has no SPF record',
+                    raise PermError('redirect domain has no SPF record',
                         redirect)
                 self.exps = dict(self.defexps)
                 return self.check1(redirect_record, redirect, recursion)
@@ -764,7 +769,7 @@ class query(object):
     def check_lookups(self):
         self.lookups = self.lookups + 1
         if self.lookups > MAX_LOOKUP*4:
-            raise unknown('More than %d DNS lookups'%MAX_LOOKUP*4)
+            raise PermError('More than %d DNS lookups'%MAX_LOOKUP*4)
         if self.lookups > MAX_LOOKUP:
             self.note_error('Too many DNS lookups')
 
@@ -846,7 +851,7 @@ class query(object):
         '3.2.0.192.in-addr.strong.lp._spf.example.com'
 
         >>> try: q.expand('%(ir).%{v}.%{l1r-}.lp._spf.%{d2}')
-        ... except unknown,x: print x
+        ... except PermError,x: print x
         invalid-macro-char : %(ir)
 
         >>> q.expand('%{p2}.trusted-domains.example.net')
@@ -876,7 +881,7 @@ class query(object):
                             if label[1] == delimit:
                                 is_macro = True
                         if not is_macro:
-                            raise unknown ('invalid-macro-char ', label)
+                            raise PermError ('invalid-macro-char ', label)
                             break
         for i in RE_CHAR.finditer(str):
             result += str[end:i.start()]
@@ -893,12 +898,12 @@ class query(object):
                 if letter == 'p':
                     self.getp()
                 elif letter in 'crt' and stripdot:
-                    raise unknown(
+                    raise PermError(
                         'c,r,t macros allowed in exp= text only', macro)
                 expansion = getattr(self, letter, self)
                 if expansion:
                     if expansion == self:
-                        raise unknown('Unknown Macro Encountered', macro) 
+                        raise PermError('Unknown Macro Encountered', macro) 
                     result += expand_one(expansion, macro[3:-1], 
                         JOINERS.get(letter))
 
@@ -919,19 +924,19 @@ class query(object):
         # for performance, check for most common case of TXT first
         a = [t for t in self.dns_txt(domain) if isSPF(t)]
         if len(a) > 1:
-            raise unknown('Two or more type TXT spf records found.')
+            raise PermError('Two or more type TXT spf records found.')
         if len(a) == 1 and self.strict < 2:
             return a[0]               
         # check official SPF type first when it becomes more popular
         try:
             b = [t for t in self.dns_99(domain) if isSPF(t)]
-        except error,x:
+        except TempError,x:
             # some braindead DNS servers hang on type 99 query
             if self.strict > 1: raise error(x)
             b = []
 
         if len(b) > 1:
-            raise unknown('Two or more type SPF spf records found.')
+            raise PermError('Two or more type SPF spf records found.')
         if len(b) == 1:
             if self.strict > 1 and len(a) == 1 and a[0] != b[0]:
             #Changed from unknown to warning based on RFC 4408 Auth 48 change
@@ -1053,10 +1058,10 @@ class query(object):
                 cnames = {}
             elif len(cnames) >= MAX_CNAME:
                 #return result    # if too many == NX_DOMAIN
-                raise unknown('Length of CNAME chain exceeds %d' % MAX_CNAME)
+                raise PermError('Length of CNAME chain exceeds %d' % MAX_CNAME)
             cnames[name] = cname
             if cname in cnames:
-                raise unknown, 'CNAME loop'
+                raise PermError, 'CNAME loop'
             result = self.dns(cname, qtype, cnames=cnames)
         return result
 

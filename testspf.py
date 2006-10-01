@@ -173,8 +173,8 @@ class SPFTestCase(unittest.TestCase):
   def testYAML(self):
     self.runTests(loadYAML('test.yml'))
 
-#  def testRFC(self):
-#    self.runTests(loadYAML('rfc4408-tests.yml'))
+  def testRFC(self):
+    self.runTests(loadYAML('rfc4408-tests.yml'))
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
