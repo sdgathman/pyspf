@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.95  2006/09/30 22:53:44  customdesigned
+# Fix getp to obey SHOULDs in RFC.
+#
 # Revision 1.94  2006/09/30 22:23:25  customdesigned
 # p macro tests and fixes
 #
@@ -486,6 +489,8 @@ class query(object):
 
     >>> q.strict = False
     >>> q.check(spf='v=spf1 ip4:192.0.0.0/8 -all moo')
+    ('permerror', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+    >>> q.perm_error.ext
     ('pass', 250, 'sender SPF authorized')
 
     >>> q.strict = True
@@ -520,6 +525,7 @@ class query(object):
         # will continue processing.  However, the exception
         # that strict processing would raise is saved here
         self.perm_error = None
+	self.result = None
 
         try:
             self.lookups = 0
@@ -528,7 +534,14 @@ class query(object):
             if self.libspf_local and spf: 
                 spf = insert_libspf_local_policy(
                     spf, self.libspf_local)
-            return self.check1(spf, self.d, 0)
+            rc = self.check1(spf, self.d, 0)
+	    self.result = rc[0]
+	    if self.perm_error:
+		# lax processing encountered a permerror, but continued
+		self.perm_error.ext = rc
+		raise self.perm_error
+	    return rc
+	        
         except TempError, x:
             self.prob = x.msg
             if x.mech:
