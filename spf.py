@@ -51,6 +51,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.63.2.2  2006/10/01 02:34:13  kitterma
+# Backport pySPF HEAD revision 1.82.
+#
 # Revision 1.82  2006/09/27 18:02:21  kitterma
 # Converted max MX limit to ambiguity warning for validator.
 #
@@ -325,7 +328,7 @@ class query(object):
             self.r = receiver
         else:
             self.r = 'unknown'
-	self.c = self.i
+        self.c = self.i
         # Since the cache does not track Time To Live, it is created
         # fresh for each query.  It is important for efficiently using
         # multiple results provided in DNS answers.
@@ -665,11 +668,11 @@ class query(object):
                 continue
 
             if m[0] == 'exp':
-	        # always fetch explanation to check unknowns
-	        exp = self.get_explanation(m[1])
-	        if not recursion:
-		    # only set explanation in base recursion level
-		    self.set_explanation(exp)
+                # always fetch explanation to check unknowns
+                exp = self.get_explanation(m[1])
+                if not recursion:
+                    # only set explanation in base recursion level
+                    self.set_explanation(exp)
             elif m[0] == 'redirect':
                 self.check_lookups()
                 redirect = self.expand(m[1])
@@ -805,7 +808,7 @@ class query(object):
 
         >>> q.expand('%{dr}')
         'com.example.email'
-    
+
         >>> q.expand('%{d2r}')
         'example.email'
 
@@ -889,9 +892,9 @@ class query(object):
 #                print letter
                 if letter == 'p':
                     self.getp()
-		elif letter in 'crt' and stripdot:
-		    raise unknown(
-		        'c,r,t macros allowed in exp= text only', macro)
+                elif letter in 'crt' and stripdot:
+                    raise unknown(
+                        'c,r,t macros allowed in exp= text only', macro)
                 expansion = getattr(self, letter, self)
                 if expansion:
                     if expansion == self:
