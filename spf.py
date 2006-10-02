@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.96  2006/10/01 01:27:54  customdesigned
+# Switch to pymilter lax processing convention:
+# Always return strict result, extended result in q.perm_error.ext
+#
 # Revision 1.95  2006/09/30 22:53:44  customdesigned
 # Fix getp to obey SHOULDs in RFC.
 #
@@ -161,6 +165,7 @@ import re
 import socket  # for inet_ntoa() and inet_aton()
 import struct  # for pack() and unpack()
 import time    # for time()
+import urllib  # for quote()
 
 import DNS    # http://pydns.sourceforge.net
 if not hasattr(DNS.Type, 'SPF'):
@@ -393,7 +398,8 @@ class query(object):
         self.lookups = 0
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
-	self.set_ip(i)
+	if i:
+	    self.set_ip(i)
 
     def set_ip(self, i):
         "Set connect ip, and ip6 or ip4 mode."
@@ -1002,8 +1008,10 @@ class query(object):
                 if expansion:
                     if expansion == self:
                         raise PermError('Unknown Macro Encountered', macro) 
-                    result += expand_one(expansion, macro[3:-1], 
-                        JOINERS.get(letter))
+		    e = expand_one(expansion, macro[3:-1], JOINERS.get(letter))
+		    if letter != macro[2]:
+		        e = urllib.quote(e)
+                    result += e
 
             end = i.end()
         result += str[end:]

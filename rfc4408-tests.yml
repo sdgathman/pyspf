@@ -1106,7 +1106,17 @@ tests:
     helo: msgbas2x.cos.example.com
     host: 192.168.218.42
     mailfrom: test@e7.example.com
-    result: [ pass, neutral ]
+    result: [ pass, softfail ]
+  upper-macro:
+    spec: 8.1/26
+    description: >-
+      Uppercased macros expand exactly as their lowercased equivalents, 
+      and are then URL escaped.
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.42
+    mailfrom: jack&jill=up@e8.example.com
+    result: fail
+    explanation: http://example.com/why.html?l=jack%26jill%3Dup
 zonedata:
   example.com.d.spf.example.com:
     - SPF: v=spf1 redirect=a.spf.example.com
@@ -1166,7 +1176,11 @@ zonedata:
   mx.example.com.ok.example.com:
     - A: 127.0.0.2
   e7.example.com:
-    - SPF: v=spf1 exists:%{p}.should.example.com ?exists:%{p}.ok.example.com -all
+    - SPF: v=spf1 exists:%{p}.should.example.com ~exists:%{p}.ok.example.com
+  e8.example.com:
+    - SPF: v=spf1 -all exp=msg8.%{D2}
+  msg8.example.com:
+    - TXT: "http://example.com/why.html?l=%{L}"
 
 ---
 description: >-
