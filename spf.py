@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.98  2006/10/03 17:35:45  customdesigned
+# Provide python inet_ntop and inet_pton when not socket.has_ipv6
+#
 # Revision 1.97  2006/10/02 17:10:13  customdesigned
 # Test and fix for uppercase macros.
 #
@@ -1460,13 +1463,6 @@ else:
 		*[int(s,16) for s in a[0].split(':')])
       except ValueError: pass
       raise ValueError,p
-
-def _test():
-  import doctest, ip6
-  return doctest.testmod(ip6)
-
-if __name__ == '__main__':
-  _test()
 
 def expand_one(expansion, str, joiner):
     if not str:
