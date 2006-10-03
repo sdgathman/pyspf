@@ -29,8 +29,8 @@ def DNSLookup(name,qtype):
 	  raise spf.TempError,'DNS timeout'
 	continue
       # keep test zonedata human readable, but translate to simulate pydns
-      if t == 'AAAA' and socket.has_ipv6:
-	v = socket.inet_pton(socket.AF_INET6,v)
+      if t == 'AAAA':
+	v = spf.inet_pton(v)
       yield ((name,t),v)
   except KeyError:
     if name.startswith('error.'):
@@ -173,8 +173,6 @@ class SPFTestCase(unittest.TestCase):
     global zonedata
     passed,failed = 0,0
     for t in tests:
-      if not socket.has_ipv6 and not spf.RE_IP4.match(t.host):
-        continue	# we don't implement IP6 yet
       zonedata = t.scenario.zonedata
       q = spf.query(i=t.host, s=t.mailfrom, h=t.helo)
       q.set_default_explanation('DEFAULT')

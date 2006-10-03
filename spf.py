@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.97  2006/10/02 17:10:13  customdesigned
+# Test and fix for uppercase macros.
+#
 # Revision 1.96  2006/10/01 01:27:54  customdesigned
 # Switch to pymilter lax processing convention:
 # Always return strict result, extended result in q.perm_error.ext
@@ -407,8 +410,7 @@ class query(object):
 	    self.ip = addr2bin(i)
 	    ip6 = False
 	else:
-	    assert socket.has_ipv6,"No IPv6 python support"
-	    self.ip = bin2long6(socket.inet_pton(socket.AF_INET6, i))
+	    self.ip = bin2long6(inet_pton(i))
 	    if (self.ip >> 32) == 0xFFFF:	# IP4 mapped address
 		self.ip = self.ip & 0xFFFFFFFFL
 		ip6 = False
@@ -416,8 +418,8 @@ class query(object):
 		ip6 = True
 	# NOTE: self.A is not lowercase, so isn't a macro.  See query.expand()
 	if ip6:
-	    self.c = socket.inet_ntop(socket.AF_INET6,
-		struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFFL))
+	    self.c = inet_ntop(
+	    	struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFFL))
 	    self.i = '.'.join(list('%032X'%self.ip))
 	    self.A = 'AAAA'
 	    self.v = 'ip6'
@@ -842,7 +844,7 @@ class query(object):
             elif m == 'ip6':
 	        if self.v == 'ip6': # match own connection type only
 		    try:
-			arg = socket.inet_pton(socket.AF_INET6,arg)
+			arg = inet_pton(arg)
 			if self.cidrmatch([arg], cidrlength): break
 		    except socket.error:
 			raise PermError('syntax error', mech)
@@ -1361,10 +1363,110 @@ def addr2bin(str):
     """
     return struct.unpack("!L", socket.inet_aton(str))[0]
 
+def bin2long6(str):
+    h, l = struct.unpack("!QQ", str)
+    return h << 64 | l
+
 if socket.has_ipv6:
-    def bin2long6(str):
-	h, l = struct.unpack("!QQ", str)
-	return h << 64 | l
+    def inet_ntop(s):
+        return socket.inet_ntop(socket.AF_INET6,s)
+    def inet_pton(s):
+        return socket.inet_pton(socket.AF_INET6,s)
+else:
+    def inet_ntop(s):
+      """Convert ip6 address to standard hex notation.
+      Examples:
+      >>> inet_ntop(struct.pack("!HHHHHHHH",0,0,0,0,0,0xFFFF,0x0102,0x0304))
+      '::FFFF:1.2.3.4'
+      >>> inet_ntop(struct.pack("!HHHHHHHH",0x1234,0x5678,0,0,0,0,0x0102,0x0304))
+      '1234:5678::102:304'
+      >>> inet_ntop(struct.pack("!HHHHHHHH",0,0,0,0x1234,0x5678,0,0x0102,0x0304))
+      '::1234:5678:0:102:304'
+      >>> inet_ntop(struct.pack("!HHHHHHHH",0x1234,0x5678,0,0x0102,0x0304,0,0,0))
+      '1234:5678:0:102:304::'
+      >>> inet_ntop(struct.pack("!HHHHHHHH",0,0,0,0,0,0,0,0))
+      '::'
+      """
+      # convert to 8 words
+      a = struct.unpack("!HHHHHHHH",s)
+      n = (0,0,0,0,0,0,0,0)	# null ip6
+      if a == n: return '::'
+      # check for ip4 mapped
+      if a[:5] == (0,0,0,0,0) and a[5] in (0,0xFFFF):
+	ip4 = '.'.join([str(i) for i in struct.unpack("!HHHHHHBBBB",s)[6:]])
+	if a[5]:
+	  return "::FFFF:" + ip4
+	return "::" + ip4
+      # find index of longest sequence of 0
+      for l in (7,6,5,4,3,2,1):
+	e = n[:l]
+	for i in range(9-l):
+	  if a[i:i+l] == e:
+	    if i == 0:
+	      return ':'+':%x'*(8-l) % a[l:]
+	    if i == 8 - l:
+	      return '%x:'*(8-l) % a[:-l] + ':'
+	    return '%x:'*i % a[:i] + ':%x'*(8-l-i) % a[i+l:]
+      return "%x:%x:%x:%x:%x:%x:%x:%x" % a
+
+    def inet_pton(p):
+      """Convert ip6 standard hex notation to ip6 address.
+      Examples:
+      >>> struct.unpack('!HHHHHHHH',inet_pton('::'))
+      (0, 0, 0, 0, 0, 0, 0, 0)
+      >>> struct.unpack('!HHHHHHHH',inet_pton('::1234'))
+      (0, 0, 0, 0, 0, 0, 0, 4660)
+      >>> struct.unpack('!HHHHHHHH',inet_pton('1234::'))
+      (4660, 0, 0, 0, 0, 0, 0, 0)
+      >>> struct.unpack('!HHHHHHHH',inet_pton('1234::5678'))
+      (4660, 0, 0, 0, 0, 0, 0, 22136)
+      >>> struct.unpack('!HHHHHHHH',inet_pton('::FFFF:1.2.3.4'))
+      (0, 0, 0, 0, 0, 65535, 258, 772)
+      >>> struct.unpack('!HHHHHHHH',inet_pton('1.2.3.4'))
+      (0, 0, 0, 0, 0, 65535, 258, 772)
+      >>> try: inet_pton('::1.2.3.4.5')
+      ... except ValueError,x: print x
+      ::1.2.3.4.5
+      """
+      if p == '::':
+	return '\0'*16
+      s = p
+      m = RE_IP4.search(s)
+      try:
+	  if m:
+	      pos = m.start()
+	      ip4 = [int(i) for i in s[pos:].split('.')]
+	      if not pos:
+	          return struct.pack('!QLBBBB',0,65535,*ip4)
+	      s = s[:pos]+'%x%02x:%x%02x'%tuple(ip4)
+	  a = s.split('::')
+	  if len(a) == 2:
+	    l,r = a
+	    if not l:
+	      r = r.split(':')
+	      return struct.pack('!HHHHHHHH',
+		*[0]*(8-len(r)) + [int(s,16) for s in r])
+	    if not r:
+	      l = l.split(':')
+	      return struct.pack('!HHHHHHHH',
+		*[int(s,16) for s in l] + [0]*(8-len(l)))
+	    l = l.split(':')
+	    r = r.split(':')
+	    return struct.pack('!HHHHHHHH',
+		*[int(s,16) for s in l] + [0]*(8-len(l)-len(r))
+		+ [int(s,16) for s in r])
+	  if len(a) == 1:
+	    return struct.pack('!HHHHHHHH',
+		*[int(s,16) for s in a[0].split(':')])
+      except ValueError: pass
+      raise ValueError,p
+
+def _test():
+  import doctest, ip6
+  return doctest.testmod(ip6)
+
+if __name__ == '__main__':
+  _test()
 
 def expand_one(expansion, str, joiner):
     if not str:
