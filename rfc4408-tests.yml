@@ -1117,6 +1117,14 @@ tests:
     mailfrom: jack&jill=up@e8.example.com
     result: fail
     explanation: http://example.com/why.html?l=jack%26jill%3Dup
+  hello-macro:
+    spec: 8.1/6
+    description: |-
+      h	= HELO/EHLO domain
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.42
+    mailfrom: test@e9.example.com
+    result: pass
 zonedata:
   example.com.d.spf.example.com:
     - SPF: v=spf1 redirect=a.spf.example.com
@@ -1181,6 +1189,10 @@ zonedata:
     - SPF: v=spf1 -all exp=msg8.%{D2}
   msg8.example.com:
     - TXT: "http://example.com/why.html?l=%{L}"
+  e9.example.com:
+    - SPF: v=spf1 exists:%{h3} -all
+  cos.example.com:
+    - A: 127.0.0.1
 
 ---
 description: >-

@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.99  2006/10/03 21:00:26  customdesigned
+# Correct fat fingered merge error.
+#
 # Revision 1.98  2006/10/03 17:35:45  customdesigned
 # Provide python inet_ntop and inet_pton when not socket.has_ipv6
 #
@@ -389,7 +392,7 @@ class query(object):
         self.l, self.o = split_email(s, h)
         self.t = str(int(time.time()))
         self.d = self.o
-        self.p = None
+        self.p = None	# lazy evaluation
         if receiver:
             self.r = receiver
         else:
@@ -536,7 +539,6 @@ class query(object):
         # will continue processing.  However, the exception
         # that strict processing would raise is saved here
         self.perm_error = None
-	self.result = None
 
         try:
             self.lookups = 0
@@ -546,7 +548,6 @@ class query(object):
                 spf = insert_libspf_local_policy(
                     spf, self.libspf_local)
             rc = self.check1(spf, self.d, 0)
-	    self.result = rc[0]
 	    if self.perm_error:
 		# lax processing encountered a permerror, but continued
 		self.perm_error.ext = rc
