@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.100  2006/10/04 02:14:04  customdesigned
+# Remove incomplete saving of result.  Was messing up bmsmilter.  Would
+# be useful if done consistently - and disabled when passing spf= to check().
+#
 # Revision 1.99  2006/10/03 21:00:26  customdesigned
 # Correct fat fingered merge error.
 #
@@ -198,9 +202,11 @@ def DNSLookup(name, qtype):
     except DNS.DNSError, x:
         raise TempError, 'DNS ' + str(x)
 
+RE_SPF = re.compile(r'^v=spf1$|^v=spf1 ',re.IGNORECASE)
+
 def isSPF(txt):
     "Return True if txt has SPF record signature."
-    return txt.startswith('v=spf1 ') or txt == 'v=spf1'
+    return bool(RE_SPF.match(txt))
 
 # Regular expression to look for modifiers
 RE_MODIFIER = re.compile(r'^([a-z][a-z0-9_\-\.]*)=', re.IGNORECASE)
@@ -759,7 +765,7 @@ class query(object):
         # in the future we might want to give permerror
         # for common mistakes like IN TXT "v=spf1" "mx" "-all"
         # in relaxed mode.
-        if spf[0] != 'v=spf1':
+        if spf[0].lower() != 'v=spf1':
             raise PermError('Invalid SPF record in', self.d)
         spf = spf[1:]
 

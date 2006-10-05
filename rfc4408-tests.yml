@@ -166,6 +166,8 @@ tests:
     mailfrom: foo@example5.com
     result: [pass, permerror]
   multitxt2:
+    description: >-
+      Multiple records is a permerror, v=spf1 is case insensitive
     spec: 4.5/6
     helo: mail.example1.com
     host: 1.2.3.4
@@ -195,6 +197,14 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@mail.example1.com
     result: none
+  case-insensitive:
+    description: >-
+      v=spf1 is case insensitive
+    spec: 4.5/6
+    helo: mail.example1.com
+    host: 1.2.3.4
+    mailfrom: foo@example9.com
+    result: softfail
 zonedata:
   example3.com:
     - SPF:  v=spf10
@@ -215,7 +225,7 @@ zonedata:
     - TXT:  v=spf1 +all
   example6.com:
     - TXT:  v=spf1 -all
-    - TXT:  v=spf1 +all
+    - TXT:  V=sPf1 +all
   example7.com:
     - SPF:  v=spf1 -all
     - SPF:  v=spf1 -all
@@ -223,6 +233,8 @@ zonedata:
     - SPF:  v=spf1 -all
     - SPF:  v=spf1 -all
     - TXT:  v=spf1 +all
+  example9.com:
+    - SPF:  v=SpF1 ~all
 ---
 description: Record evaluation
 tests:
