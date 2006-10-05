@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.101  2006/10/05 13:39:11  customdesigned
+# SPF version tag is case insensitive.
+#
 # Revision 1.100  2006/10/04 02:14:04  customdesigned
 # Remove incomplete saving of result.  Was messing up bmsmilter.  Would
 # be useful if done consistently - and disabled when passing spf= to check().
@@ -203,10 +206,6 @@ def DNSLookup(name, qtype):
         raise TempError, 'DNS ' + str(x)
 
 RE_SPF = re.compile(r'^v=spf1$|^v=spf1 ',re.IGNORECASE)
-
-def isSPF(txt):
-    "Return True if txt has SPF record signature."
-    return bool(RE_SPF.match(txt))
 
 # Regular expression to look for modifiers
 RE_MODIFIER = re.compile(r'^([a-z][a-z0-9_\-\.]*)=', re.IGNORECASE)
@@ -762,11 +761,12 @@ class query(object):
         spf = spf.split()
         # Catch case where SPF record has no spaces.
         # Can never happen with conforming dns_spf(), however
-        # in the future we might want to give permerror
+        # in the future we might want to give warnings
         # for common mistakes like IN TXT "v=spf1" "mx" "-all"
         # in relaxed mode.
         if spf[0].lower() != 'v=spf1':
-            raise PermError('Invalid SPF record in', self.d)
+	    assert strict > 1
+	    raise AmbiguityWarning('Invalid SPF record in', self.d)
         spf = spf[1:]
 
         # copy of explanations to be modified by exp=
@@ -1040,14 +1040,14 @@ class query(object):
         is found.
         """
         # for performance, check for most common case of TXT first
-        a = [t for t in self.dns_txt(domain) if isSPF(t)]
+        a = [t for t in self.dns_txt(domain) if RE_SPF.match(t)]
         if len(a) > 1:
             raise PermError('Two or more type TXT spf records found.')
         if len(a) == 1 and self.strict < 2:
             return a[0]               
         # check official SPF type first when it becomes more popular
         try:
-            b = [t for t in self.dns_99(domain) if isSPF(t)]
+            b = [t for t in self.dns_99(domain) if RE_SPF.match(t)]
         except TempError,x:
             # some braindead DNS servers hang on type 99 query
             if self.strict > 1: raise TempError(x)
@@ -1066,7 +1066,7 @@ class query(object):
         if DELEGATE:    # use local record if neither found
             a = [t
               for t in self.dns_txt(domain+'._spf.'+DELEGATE)
-            if isSPF(t)
+            if RE_SPF.match(t)
             ]
             if len(a) == 1: return a[0]
         return None
