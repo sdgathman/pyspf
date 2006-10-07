@@ -1213,9 +1213,7 @@ zonedata:
   msg8.example.com:
     - TXT: "http://example.com/why.html?l=%{L}"
   e9.example.com:
-    - SPF: v=spf1 a:%{h} -all
-  cos.example.com:
-    - A: 127.0.0.1
+    - SPF: v=spf1 a:%{H} -all
 
 ---
 description: >-

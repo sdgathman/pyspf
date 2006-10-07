@@ -189,12 +189,12 @@ class SPFTestCase(unittest.TestCase):
       if t.explanation is not None and t.explanation != exp:
         if verbose: print t.explanation,'!=',exp
         ok = False
-      elif verbose: print exp
       if ok:
 	passed += 1
       else:
 	failed += 1
 	print "%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec)
+	if verbose and not t.explanation: print exp
 	if verbose > 1: print t.scenario.zonedata
     if failed:
       print "%d passed" % passed,"%d failed" % failed
