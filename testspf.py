@@ -165,7 +165,7 @@ def loadBind(fname):
 
 oldresults = { 'unknown': 'permerror', 'error': 'temperror' }
 
-verbose = False
+verbose = 0
 
 class SPFTestCase(unittest.TestCase):
 
@@ -189,12 +189,13 @@ class SPFTestCase(unittest.TestCase):
       if t.explanation is not None and t.explanation != exp:
         if verbose: print t.explanation,'!=',exp
         ok = False
+      elif verbose: print exp
       if ok:
 	passed += 1
       else:
 	failed += 1
 	print "%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec)
-	if verbose: print t.scenario.zonedata
+	if verbose > 1: print t.scenario.zonedata
     if failed:
       print "%d passed" % passed,"%d failed" % failed
 
@@ -216,7 +217,7 @@ if __name__ == '__main__':
   tc = None
   for i in sys.argv[1:]:
     if i == '-v':
-      verbose = True
+      verbose += 1
       continue
     if not tc:
       tc = SPFTestCase()

@@ -1134,9 +1134,20 @@ tests:
     description: |-
       h	= HELO/EHLO domain
     helo: msgbas2x.cos.example.com
-    host: 192.168.218.42
+    host: 192.168.218.40
     mailfrom: test@e9.example.com
     result: pass
+  invalid-hello-macro:
+    spec: 8.1/2
+    description: |-
+      h	= HELO/EHLO domain, but HELO is invalid
+    comment: >-
+      Domain-spec must end in either a macro, or a valid toplabel.
+      It is not correct to check syntax after macro expansion.
+    helo: JUMPIN' JUPITER
+    host: 192.168.218.40
+    mailfrom: test@e9.example.com
+    result: fail
 zonedata:
   example.com.d.spf.example.com:
     - SPF: v=spf1 redirect=a.spf.example.com
@@ -1202,7 +1213,7 @@ zonedata:
   msg8.example.com:
     - TXT: "http://example.com/why.html?l=%{L}"
   e9.example.com:
-    - SPF: v=spf1 exists:%{h3} -all
+    - SPF: v=spf1 a:%{h} -all
   cos.example.com:
     - A: 127.0.0.1
 
