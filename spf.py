@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.104  2006/10/07 21:59:37  customdesigned
+# long/empty label tests and fix.
+#
 # Revision 1.103  2006/10/07 18:16:20  customdesigned
 # Add tests for and fix RE_TOPLAB.
 #
@@ -196,7 +199,7 @@ if not hasattr(DNS.Type, 'SPF'):
     DNS.Type.typemap[99] = 'SPF'
     DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
 
-def DNSLookup(name, qtype):
+def DNSLookup(name, qtype, strict=True):
     try:
         req = DNS.DnsRequest(name, qtype=qtype)
         resp = req.req()
@@ -1174,7 +1177,7 @@ class query(object):
         result = self.cache.get( (name, qtype) )
         cname = None
         if not result:
-            for k, v in DNSLookup(name, qtype):
+            for k, v in DNSLookup(name, qtype, self.strict):
                 if k == (name, 'CNAME'):
                     cname = v
                 self.cache.setdefault(k, []).append(v)
