@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.102  2006/10/05 13:57:15  customdesigned
+# Remove isSPF and make missing space after version tag a warning.
+#
 # Revision 1.101  2006/10/05 13:39:11  customdesigned
 # SPF version tag is case insensitive.
 #
@@ -211,7 +214,8 @@ RE_SPF = re.compile(r'^v=spf1$|^v=spf1 ',re.IGNORECASE)
 RE_MODIFIER = re.compile(r'^([a-z][a-z0-9_\-\.]*)=', re.IGNORECASE)
 
 # Regular expression to find macro expansions
-RE_CHAR = re.compile(r'%(%|_|-|(\{[^\}]*\}))')
+PAT_CHAR = r'%(%|_|-|(\{[^\}]*\}))'
+RE_CHAR = re.compile(PAT_CHAR)
 
 # Regular expression to break up a macro expansion
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
@@ -223,7 +227,8 @@ PAT_IP4 = r'\.'.join([r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)
 RE_IP4 = re.compile(PAT_IP4+'$')
 
 RE_TOPLAB = re.compile(
-    r'\.[0-9a-z]*[a-z][0-9a-z]*|[0-9a-z]+-[0-9a-z-]*[0-9a-z]$', re.IGNORECASE)
+    r'\.(?:[0-9a-z]*[a-z][0-9a-z]*|[0-9a-z]+-[0-9a-z-]*[0-9a-z])\.?$|%s'
+    	% PAT_CHAR, re.IGNORECASE)
 
 RE_IP6 = re.compile(                 '(?:%(hex4)s:){6}%(ls32)s$'
                    '|::(?:%(hex4)s:){5}%(ls32)s$'
@@ -721,10 +726,10 @@ class query(object):
 
         # validate domain-spec
         if m in ('a', 'mx', 'ptr', 'exists', 'include'):
-            arg = self.expand(arg)
             # any trailing dot was removed by expand()
             if RE_TOPLAB.split(arg)[-1]:
                 raise PermError('Invalid domain found (use FQDN)', arg)
+            arg = self.expand(arg)
             if m == 'include':
                 if arg == self.d:
                     if mech != 'include':

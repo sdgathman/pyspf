@@ -302,6 +302,14 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@t8.example.com
     result: permerror
+  invalid-domain:
+    description: >-
+      Domain-spec must end in macro-expand or valid toplabel.
+    spec: 8.1/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@t9.example.com
+    result: permerror
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -321,6 +329,8 @@ zonedata:
     - SPF: v=spf1 ip4:1.2.3.4
   t8.example.com:
     - SPF: v=spf1 ip4:1.2.3.4 redirect:t2.example.com
+  t9.example.com:
+    - SPF: v=spf1 a:foo-bar -all
 
 ---
 description: >-
@@ -1148,6 +1158,14 @@ tests:
     host: 192.168.218.40
     mailfrom: test@e9.example.com
     result: fail
+  require-valid-helo:
+    spec: 8.1/6
+    description: >-
+      Example of requiring valid helo in sender policy.
+    helo: OEMCOMPUTER
+    host: 1.2.3.4
+    mailfrom: test@e10.example.com
+    result: fail
 zonedata:
   example.com.d.spf.example.com:
     - SPF: v=spf1 redirect=a.spf.example.com
@@ -1214,6 +1232,10 @@ zonedata:
     - TXT: "http://example.com/why.html?l=%{L}"
   e9.example.com:
     - SPF: v=spf1 a:%{H} -all
+  e10.example.com:
+    - SPF: v=spf1 -include:_spfh.%{d2} ip4:1.2.3.0/24 -all
+  _spfh.example.com:
+    - SPF: v=spf1 -a:%{h} +all
 
 ---
 description: >-
