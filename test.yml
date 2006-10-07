@@ -98,45 +98,6 @@ zonedata:
 
 ---
 comment: |
-  check trailing dot with redirect and exp
-tests:
-  traildot1:
-    spec: 8.1/16
-    comment: Check that trailing dot is accepted for domains
-    helo: msgbas2x.cos.example.com
-    host: 192.168.218.40
-    mailfrom: test@example.com
-    result: pass
-  traildot2:
-    spec: 8.1
-    comment: Check that trailing dot is not removed from explanation
-    helo: msgbas2x.cos.example.com
-    host: 192.168.218.40
-    mailfrom: test@exp.example.com
-    result: fail
-    explanation: This is a test.
-zonedata:
-  example.com.d.spf.example.com:
-  - SPF: v=spf1 redirect=a.spf.example.com
-  a.spf.example.com:
-  - SPF: v=spf1 mx:example.com include:o.spf.example.com
-      -exists:%{s}.S.bl.spf.example.com
-      exists:%{s}.S.%{i}.AI.spf.example.com ~all
-  o.spf.example.com:
-  - SPF: v=spf1 ip4:192.168.144.41 ip4:192.168.218.40 ip4:192.168.218.41
-  msgbas1x.cos.example.com:
-  - A: 192.168.240.36
-  example.com:
-  - A: 192.168.90.76
-  - SPF: v=spf1 redirect=%{d}.d.spf.example.com.
-  - MX: [10, msgbas1x.cos.example.com]
-  exp.example.com:
-  - SPF: v=spf1 exp=msg.example.com. -all
-  msg.example.com:
-  - TXT: This is a test.
-
----
-comment: |
   corner cases
 tests:
   emptyMX:
