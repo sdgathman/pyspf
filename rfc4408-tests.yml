@@ -17,6 +17,8 @@ tests:
   toolonglabel:
     description: >-
       DNS labels limited to 63 chars.
+    comment: >-
+      For initial processing, a long label results in None, not TempError
     spec: 4.3/1
     helo: mail.example.net
     host: 1.2.3.5
@@ -310,6 +312,33 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@t9.example.com
     result: permerror
+  invalid-domain-empty-label:
+    description: >-
+      Domain-spec must end in macro-expand or valid toplabel.
+    comment: >-
+      But anything goes before the toplabel.  Empty labels cannot be
+      encoded for sending to a name server, so resolver must give error
+      or empty result.  Empty result is analogous to 4.3/1, and so
+      is preferred.
+    spec: 8.1/2, 5/10
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@t10.example.com
+    result: [ fail, temperror ]
+  invalid-domain-long:
+    description: >-
+      Domain-spec must end in macro-expand or valid toplabel.
+    comment: >-
+      But anything goes before the toplabel.  Upper case H macro
+      url escapes the HELO string, the result is longer than 63 chars.
+      Long labels cannot be coded in a DNS query packet, so resolver must
+      give error or empty result.  Empty result is analogous to 4.3/1,
+      and so is preferred.
+    spec: 8.1/2, 5/10
+    helo: "%%%%%%%%%%%%%%%%%%%%%%"
+    host: 1.2.3.4
+    mailfrom: foo@t11.example.com
+    result: [ fail, temperror ]
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -331,6 +360,10 @@ zonedata:
     - SPF: v=spf1 ip4:1.2.3.4 redirect:t2.example.com
   t9.example.com:
     - SPF: v=spf1 a:foo-bar -all
+  t10.example.com:
+    - SPF: v=spf1 a:mail.example...com -all
+  t11.example.com:
+    - SPF: v=spf1 a:%{H}.bar -all
 
 ---
 description: >-

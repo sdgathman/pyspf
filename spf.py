@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.103  2006/10/07 18:16:20  customdesigned
+# Add tests for and fix RE_TOPLAB.
+#
 # Revision 1.102  2006/10/05 13:57:15  customdesigned
 # Remove isSPF and make missing space after version tag a warning.
 #
@@ -197,7 +200,7 @@ def DNSLookup(name, qtype):
     try:
         req = DNS.DnsRequest(name, qtype=qtype)
         resp = req.req()
-        #resp.show()
+	#resp.show()
         # key k: ('wayforward.net', 'A'), value v
 	# FIXME: pydns returns AAAA RR as 16 byte binary string, but
 	# A RR as dotted quad.  For consistency, this driver should
@@ -1044,6 +1047,11 @@ class query(object):
         name.  Returns None if not found, or if more than one record
         is found.
         """
+	# Per RFC 4.3/1, check for malformed domain.  This produces
+	# no results as a special case.
+	for label in domain.split('.'):
+	  if not label or len(label) > 63:
+	    return None
         # for performance, check for most common case of TXT first
         a = [t for t in self.dns_txt(domain) if RE_SPF.match(t)]
         if len(a) > 1:

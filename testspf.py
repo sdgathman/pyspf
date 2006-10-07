@@ -16,6 +16,16 @@ def DNSLookup(name,qtype):
   try:
     #print name
     timeout = True
+
+    # emulate pydns-2.3.0 label processing
+    a = []
+    for label in name.split('.'):
+      if label:
+        if len(label) > 63:
+          raise spf.TempError,'DNS label too long'
+        a.append(label)
+    name = '.'.join(a)
+
     for i in zonedata[name.lower()]:
       if i == 'TIMEOUT':
         if timeout:
