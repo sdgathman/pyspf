@@ -8,3 +8,4 @@ include type99.py
 include setup.py
 include setup.cfg
 include *.yml
+include python-pyspf.spec
