@@ -36,7 +36,7 @@ tests:
     spec: 4.3/1
     helo: mail.example.net
     host: 1.2.3.5
-    mailfrom: lyme.eater@A..example.com
+    mailfrom: lyme.eater@A...example.com
     result: none
   nolocalpart:
     spec: 4.3/2
@@ -1326,6 +1326,45 @@ tests:
     host: 1.2.3.5
     mailfrom: foo@e5.example.com
     result: [neutral, pass]
+  mech-at-limit:
+    description: >-
+      SPF implementations MUST limit the number of mechanisms and modifiers 
+      that do DNS lookups to at most 10 per SPF check.
+    spec: 10.1/6
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e6.example.com
+    result: pass
+  mech-over-limit:
+    description: >-
+      SPF implementations MUST limit the number of mechanisms and modifiers 
+      that do DNS lookups to at most 10 per SPF check.
+    comment: >-
+      We don't check whether an implementation counts mechanisms before
+      or after evaluation.  The RFC is not clear on this.
+    spec: 10.1/6
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e7.example.com
+    result: permerror
+  include-at-limit:
+    description: >-
+      SPF implementations MUST limit the number of mechanisms and modifiers 
+      that do DNS lookups to at most 10 per SPF check.
+    spec: 10.1/6
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e8.example.com
+    result: pass
+  include-over-limit:
+    description: >-
+      SPF implementations MUST limit the number of mechanisms and modifiers 
+      that do DNS lookups to at most 10 per SPF check.
+    spec: 10.1/6
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e9.example.com
+    result: permerror
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -1364,3 +1403,13 @@ zonedata:
     - PTR: e9.example.com.
     - PTR: e10.example.com.
     - PTR: e5.example.com.
+  e6.example.com:
+    - SPF: v=spf1 a mx a mx a mx a mx a ptr ip4:1.2.3.4 -all
+  e7.example.com:
+    - SPF: v=spf1 a mx a mx a mx a mx a ptr a ip4:1.2.3.4 -all
+  e8.example.com:
+    - SPF: v=spf1 a include:inc.example.com ip4:1.2.3.4 -all
+  inc.example.com:
+    - SPF: v=spf1 a a a a a a a a
+  e9.example.com:
+    - SPF: v=spf1 a include:inc.example.com a ip4:1.2.3.4 -all

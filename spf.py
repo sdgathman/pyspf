@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.105  2006/10/07 22:06:28  kitterma
+# Pass strict status to DNSLookup - will be needed for TCP failover.
+#
 # Revision 1.104  2006/10/07 21:59:37  customdesigned
 # long/empty label tests and fix.
 #
@@ -300,8 +303,9 @@ MAX_CNAME = 10 # analogous interpretation to MAX_PTR
 MAX_RECURSION = 20
 
 ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
-COMMON_MISTAKES = { 'prt': 'ptr', 'ip': 'ip4', 'ipv4': 'ip4', 'ipv6': 'ip6' }
-
+COMMON_MISTAKES = {
+  'prt': 'ptr', 'ip': 'ip4', 'ipv4': 'ip4', 'ipv6': 'ip6', 'all.': 'all'
+}
 
 #If harsh processing, for the validator, is invoked, warn if results
 #likely deviate from the publishers intention.
