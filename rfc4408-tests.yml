@@ -1351,6 +1351,11 @@ tests:
     description: >-
       SPF implementations MUST limit the number of mechanisms and modifiers 
       that do DNS lookups to at most 10 per SPF check.
+    comment: >-
+      The part of the RFC that talks about MAY parse the entire record first
+      (4.6) is specific to syntax errors.  Processing limits is a different,
+      non-syntax issue.  Processing limits (10.1) specifically talks about
+      limits during a check.
     spec: 10.1/6
     helo: mail.example.com
     host: 1.2.3.4
@@ -1408,7 +1413,7 @@ zonedata:
   e7.example.com:
     - SPF: v=spf1 a mx a mx a mx a mx a ptr a ip4:1.2.3.4 -all
   e8.example.com:
-    - SPF: v=spf1 a include:inc.example.com ip4:1.2.3.4 -all
+    - SPF: v=spf1 a include:inc.example.com ip4:1.2.3.4 mx -all
   inc.example.com:
     - SPF: v=spf1 a a a a a a a a
   e9.example.com:
