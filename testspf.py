@@ -4,9 +4,12 @@ import sys
 import spf
 import csv
 import re
-import yaml
-# yaml can be found at http://pyyaml.org/
-# Tested with PYYAML 3.04
+try:
+  import yaml
+except:
+  print "yaml can be found at http://pyyaml.org/"
+  print "Tested with PYYAML 3.04"
+  raise
 
 zonedata = {}
 RE_IP4 = re.compile(r'\.'.join(
