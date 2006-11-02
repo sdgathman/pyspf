@@ -12,7 +12,7 @@ Source0:        pyspf-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
-BuildRequires:  python-setuptools
+#BuildRequires:  python-setuptools
 Requires:       python-pydns
 
 %description
@@ -46,7 +46,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc CHANGELOG PKG-INFO README rfc4408-tests.yml test.yml
+%doc CHANGELOG PKG-INFO README rfc4408-tests.yml test.yml testspf.py
 %{python_sitelib}/spf.py*
 /usr/bin/type99
 /usr/bin/spfquery
