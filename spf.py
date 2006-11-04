@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.106  2006/10/16 20:48:24  customdesigned
+# More DOS limit tests.
+#
 # Revision 1.105  2006/10/07 22:06:28  kitterma
 # Pass strict status to DNSLookup - will be needed for TCP failover.
 #
@@ -1164,6 +1167,22 @@ class query(object):
         """Get a list of domain names for an IP address."""
         return self.dns('%s.%s.arpa'%(reverse_dots(i),self.v), 'PTR')
 
+    # We have to be careful which additional DNS RRs we cache.  For
+    # instance, PTR records are controlled by the connecting IP, and they
+    # could poison our local cache with bogus A and MX records.  
+
+    SAFE2CACHE = {
+      ('MX','A'): None,
+      ('MX','MX'): None,
+      ('CNAME','A'): None,
+      ('CNAME','CNAME'): None,
+      ('A','A'): None,
+      ('AAAA','AAAA'): None,
+      ('PTR','PTR'): None,
+      ('TXT','TXT'): None,
+      ('SPF','SPF'): None
+    }
+
     def dns(self, name, qtype, cnames=None):
         """DNS query.
 
@@ -1180,11 +1199,14 @@ class query(object):
         """
         result = self.cache.get( (name, qtype) )
         cname = None
+
         if not result:
+	    safe2cache = query.SAFE2CACHE
             for k, v in DNSLookup(name, qtype, self.strict):
                 if k == (name, 'CNAME'):
                     cname = v
-                self.cache.setdefault(k, []).append(v)
+		if (qtype,k[1]) in safe2cache:
+		    self.cache.setdefault(k, []).append(v)
             result = self.cache.get( (name, qtype), [])
         if not result and cname:
             if not cnames:
