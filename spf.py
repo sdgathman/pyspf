@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.107  2006/11/04 21:58:12  customdesigned
+# Prevent cache poisoning by bogus additional RRs in PTR DNS response.
+#
 # Revision 1.106  2006/10/16 20:48:24  customdesigned
 # More DOS limit tests.
 #
@@ -412,6 +415,9 @@ class query(object):
         self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
+	    self.ident = 'helo'
+	else:
+	    self.ident = 'mailfrom'
         self.l, self.o = split_email(s, h)
         self.t = str(int(time.time()))
         self.d = self.o
@@ -1238,14 +1244,16 @@ class query(object):
     def get_header(self, res, receiver=None):
         if not receiver:
             receiver = self.r
-        if res in ('pass', 'fail',' softfail'):
-            return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s;' % (
-                res, receiver, self.get_header_comment(res), self.c,
-                self.l + '@' + self.o, self.h)
         if res == 'permerror':
-            return '%s (%s: %s)' % (' '.join([res] + self.mech),
-            receiver,self.get_header_comment(res))
-        return '%s (%s: %s)' % (res, receiver, self.get_header_comment(res))
+            tag = ' '.join([res] + self.mech)
+	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
+	    	   'receiver=%s; identity=%s; problem=%s;' % (
+		tag, receiver, self.get_header_comment(res), self.c,
+		self.l + '@' + self.o, self.h, receiver, self.ident, self.mech)
+	return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
+		'receiver=%s; identity=%s;' % (
+	    res, receiver, self.get_header_comment(res), self.c,
+	    self.l + '@' + self.o, self.h, receiver, self.ident)
 
     def get_header_comment(self, res):
         """Return comment for Received-SPF header.
