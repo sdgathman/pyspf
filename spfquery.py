@@ -2,11 +2,18 @@
 
 # Author: Stuart D. Gathman <stuart@bmsi.com>
 # Copyright 2004 Business Management Systems, Inc.
-# This code is under the GNU General Public License.  See COPYING for details.
+
+# This module is free software, and you may redistribute it and/or modify
+# it under the same terms as Python itself, so long as this copyright message
+# and disclaimer are retained in their original form.
 
 # Emulate the spfquery command line tool used by Wayne Schlitt's SPF test suite
 
 # $Log$
+# Revision 1.3  2005/07/22 02:11:57  customdesigned
+# Use dictionary to check for CNAME loops.  Check limit independently for
+# each top level name, just like for PTR.
+#
 # Revision 1.2  2005/07/14 04:18:01  customdesigned
 # Bring explanations and Received-SPF header into line with
 # the unknown=PermErr and error=TempErr convention.

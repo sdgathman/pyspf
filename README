@@ -7,6 +7,8 @@ Quick Start
 Installation
 ------------
 This package requires PyDNS, available at http://pydns.sourceforge.net.
+Binary and source RPMs for PyDNS are also available from
+http://pymilter.sourceforge.net.
 
 After unpacking the source distribution, install this in your site-
 specific Python extension directory::
@@ -20,14 +22,25 @@ Testing
 After this package is installed, cd into the test directory and
 execute testspf.py::
 
-	% cd test
-	% python testspf.py
-	2... 3... 4...
-	...
-	... 129,130,131...126 tests succeeded
+    % cd test
+    % python testspf.py
+    WARN: invalid-domain-long in rfc4408-tests.yml, 8.1/2, 5/10: fail preferred to temperror
+    WARN: txttimeout in rfc4408-tests.yml, 4.4/1: fail preferred to temperror
+    WARN: spfoverride in rfc4408-tests.yml, 4.5/5: pass preferred to fail
+    WARN: multitxt1 in rfc4408-tests.yml, 4.5/5: pass preferred to permerror
+    WARN: multispf2 in rfc4408-tests.yml, 4.5/6: permerror preferred to pass
+    ..
+    ----------------------------------------------------------------------
+    Ran 2 tests in 3.036s
 
-Some tests may fail due to DNS timeouts.  If the errors persist after
-several attempts, log the results and email them to terry@wayforward.net.
+    OK
+
+This runs the SPF council test-suite as of when this package was built.
+It does not test the pyDNS installation, but uses an internal driver.
+This avoids changing results due to DNS timeouts.
+
+In addition, spf.py runs an internal self-test every time it is used from the
+command line.
 
 If you're running on Mac OS X, and it looks like DNS.DiscoverNameServers()
 is failing, you'll need to edit your /etc/resolv.conf and specify a
@@ -38,7 +51,7 @@ domain name.  For some reason, OS X writes out resolv.conf with a single
 Description
 ===========
 SPF does email sender validation.  For more information about SPF,
-please see http://spf.pobox.com.
+please see http://new.openspf.org
 
 This SPF client is intended to be installed on the border MTA, checking
 if incoming SMTP clients are permitted to forward mail.  The SPF check
@@ -58,14 +71,14 @@ For instance, during an SMTP exchange from client 69.55.226.139::
 
 Then the following command line would check if this is a valid sender:
 	% ./spf.py 69.55.226.139 terry@wayforward.net mx1.wayforward.net
-	('pass', 250, 'sender SPF verified')
+	('pass', 250, 'sender SPF authorized')
 
 The second way is via the module's API:
 	>>> import spf
 	>>> spf.check(i='69.55.226.139',
 	...           s='terry@wayforward.net',
 	...           h='mx1.wayforward.net')
-	('pass', 250, 'sender SPF verified')
+	('pass', 250, 'sender SPF authorized')
 
 The first element in the tuple is one of 'pass', 'deny', 'unknown', or
 'error'.  The second is the SMTP response status code: 550 for 'deny',

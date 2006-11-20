@@ -1,3 +1,12 @@
+# Author: Stuart D. Gathman <stuart@bmsi.com>
+# Copyright 2006 Business Management Systems, Inc.
+
+# This module is free software, and you may redistribute it and/or modify
+# it under the same terms as Python itself, so long as this copyright message
+# and disclaimer are retained in their original form.
+
+# Run SPF test cases in the YAML format specified by the SPF council.
+
 import unittest
 import socket
 import sys

@@ -46,7 +46,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc CHANGELOG PKG-INFO README rfc4408-tests.yml test.yml testspf.py
+%doc CHANGELOG PKG-INFO README test
 %{python_sitelib}/spf.py*
 /usr/bin/type99
 /usr/bin/spfquery
