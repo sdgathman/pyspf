@@ -1,3 +1,6 @@
+Version 2.0 - November 20, 2006
+  * Fedora Core compatible RPM spec file
+  * Update README, licenses
 Version 1.8 - July 26, 2006
   * YAML test suite syntax
   * trailing dot support (RFC4408 8.1)
