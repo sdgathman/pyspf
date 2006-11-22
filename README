@@ -53,6 +53,11 @@ Description
 SPF does email sender validation.  For more information about SPF,
 please see http://new.openspf.org
 
+One incompatible change was introduced in version 1.7.  Prior to version 1.7,
+connections from a local IP address (127...) would always return a Pass 
+result.  The special case was eliminated.  Programs calling pySPF should not
+do SPF checks on locally submitted mail.
+
 This SPF client is intended to be installed on the border MTA, checking
 if incoming SMTP clients are permitted to forward mail.  The SPF check
 should be done during the MAIL FROM:<...> command.
@@ -73,28 +78,38 @@ Then the following command line would check if this is a valid sender:
 	% ./spf.py 69.55.226.139 terry@wayforward.net mx1.wayforward.net
 	('pass', 250, 'sender SPF authorized')
 
-The second way is via the module's API:
+The second way is via the module's APIs.
+
+The legacy (pySPF 1.6) API:
 	>>> import spf
 	>>> spf.check(i='69.55.226.139',
 	...           s='terry@wayforward.net',
 	...           h='mx1.wayforward.net')
 	('pass', 250, 'sender SPF authorized')
 
-The first element in the tuple is one of 'pass', 'deny', 'unknown', or
+The first element in the tuple is one of 'pass', 'fail', 'unknown', or
 'error'.  The second is the SMTP response status code: 550 for 'deny',
 450 for 'error' and 250 for all else.  The third is an explanation.
 
+The RFC 4408 compliant API:
+        >>> import spf
+        >>> spf.check2(i='69.55.226.139',
+        ...           s='terry@wayforward.net',
+        ...           h='mx1.wayforward.net')
+        ('pass', 'sender SPF verified')
+
+The first element in the tuple is one of 'pass', 'fail', 'permerror', or
+'temperror'.  The second is an explanation.
+
 License: Python Software Foundation License
 
-Current Maintainers
--------------------
-Stuart Gathman stuart@bmsi.com
-Scott Kitterman scott@kitterman.com
-
-Currently part of the pymilter project: http://pymilter.sourceforge.net
-
-Original Author
----------------
+Author:
 Terence Way terry@wayforward.net
 http://www.wayforward.net/spf/
 
+Maintainers:
+Stuart Gathman stuart@bmsi.com
+Scott Kitterman scott@kitterman.com
+http://cheeseshop.python.org/pypi/pyspf
+
+Currently part of the pymilter project: http://pymilter.sourceforge.net
