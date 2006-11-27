@@ -87,7 +87,10 @@ def getrdata(r):
 	elif t == 'SPF' and gen:
 	  txt.append(('TXT',v))
 	if v != 'NONE':
-	  yield i
+	  if t in ('TXT','SPF') and type(v) == str:
+	    yield (t,(v,))
+	  else:
+	    yield i
     except:
       yield m
   if gen:

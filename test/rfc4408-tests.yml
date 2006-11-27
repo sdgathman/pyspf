@@ -52,11 +52,11 @@ zonedata:
     - TIMEOUT
   example.net:
     - SPF:  v=spf1 -all exp=exp.example.net
-  A.example.net:
+  a.example.net:
     - SPF:  v=spf1 -all exp=exp.example.net
   exp.example.net:
     - TXT:  '%{l}'
-  A12345678901234567890123456789012345678901234567890123456789012.example.com:
+  a12345678901234567890123456789012345678901234567890123456789012.example.com:
     - SPF:  v=spf1 -all
 ---
 description: Record lookup
@@ -126,12 +126,13 @@ zonedata:
     - TIMEOUT
   alltimeout.example.net:
     - TIMEOUT
-
 ---
 description: Selecting records
 tests:
   nospace1:
-    description: Version must be terminated by space or end of record.
+    description: >-
+      Version must be terminated by space or end of record.  TXT pieces
+      are joined without intervening spaces.
     spec: 4.5/4
     helo: mail.example1.com
     host: 1.2.3.4
@@ -217,7 +218,7 @@ zonedata:
   example1.com:
     - SPF:  v=spf1
   example2.com:
-    - SPF:  v=spf1mx
+    - SPF:  [ 'v=spf1', 'mx' ]
   mail.example1.com:
     - A:    1.2.3.4
   example4.com:
@@ -322,7 +323,7 @@ tests:
       encoded for sending to a name server, so resolver must give error
       or empty result.  Empty result is analogous to 4.3/1, and so
       is preferred.
-    spec: 8.1/2, 5/10
+    spec: [8.1/2, 5/10]
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@t10.example.com
@@ -336,7 +337,7 @@ tests:
       Long labels cannot be coded in a DNS query packet, so resolver must
       give error or empty result.  Empty result is analogous to 4.3/1,
       and so is preferred.
-    spec: 8.1/2, 5/10
+    spec: [8.1/2, 5/10]
     helo: "%%%%%%%%%%%%%%%%%%%%%%"
     host: 1.2.3.4
     mailfrom: foo@t11.example.com
@@ -366,10 +367,8 @@ zonedata:
     - SPF: v=spf1 a:mail.example...com -all
   t11.example.com:
     - SPF: v=spf1 a:%{H}.bar -all
-
 ---
-description: >-
-  ALL mechanism syntax
+description: ALL mechanism syntax
 tests:
   all-dot:
     description: |
@@ -428,10 +427,8 @@ zonedata:
     - SPF: v=spf1 ?all
   e5.example.com:
     - SPF: v=spf1 all -all
-
 ---
-description: >-
-  PTR mechanism syntax
+description: PTR mechanism syntax
 tests:
   ptr-cidr:
     description: |-
@@ -498,10 +495,8 @@ zonedata:
     - AAAA: CAFE:BABE::1
   e4.example.com:
     - SPF: v=spf1 ptr -all
-  
 ---
-description: >-
-  A mechanism syntax
+description: A mechanism syntax
 tests:
   a-cidr6:
     description: |
@@ -558,7 +553,7 @@ tests:
     result: permerror
   a-nxdomain:
     description: >-
-      If no ips are returned, A mechanism doesn't match, even with /0.
+      If no ips are returned, A mechanism does not match, even with /0.
     spec: 5.3/3
     helo: mail.example.com
     host: 1.2.3.4
@@ -705,10 +700,8 @@ zonedata:
     - A: 1.2.3.4
   e12.example.com:
     - SPF: v=spf1 a:example.-com
-
 ---
-description: >-
-  include semantics and syntax
+description: Include mechanism semantics and syntax
 tests:
   include-fail:
     description: >-
@@ -776,7 +769,6 @@ zonedata:
   ip7.example.com:
     - SPF: v=spf1 ip4:1.2.3.7 ?all
   ip8.example.com:
-    - SPF: v=spf1 a -all
     - TIMEOUT
   erehwon.example.com:
     - TXT: v=spfl am not an SPF record
@@ -794,10 +786,8 @@ zonedata:
     - SPF: v=spf1 include +all
   e7.example.com:
     - SPF: v=spf1 include:erehwon.example.com -all
-
 ---
-description: >-
-  MX mechanism syntax
+description: MX mechanism syntax
 tests:
   mx-cidr6:
     description: |
@@ -854,7 +844,7 @@ tests:
     result: permerror
   mx-nxdomain:
     description: >-
-      If no ips are returned, MX mechanism doesn't match, even with /0.
+      If no ips are returned, MX mechanism does not match, even with /0.
     spec: 5.4/3
     helo: mail.example.com
     host: 1.2.3.4
@@ -958,7 +948,7 @@ tests:
     spec: 5.4/3
     helo: mail.example.com
     host: 1.2.3.4
-    mailfrom: ''
+    mailfrom: ""
     result: neutral
   mx-implicit:
     description: >-
@@ -973,7 +963,7 @@ tests:
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
-    - MX: [0, '']
+    - MX: [0, ""]
     - SPF: v=spf1 mx
   e1.example.com:
     - SPF: v=spf1 mx/0 -all
@@ -1020,10 +1010,8 @@ zonedata:
     - A: 1.2.3.4
   e12.example.com:
     - SPF: v=spf1 mx:example.-com
-
 ---
-description: >-
-  IP4 mechanism syntax
+description: IP4 mechanism syntax
 tests:
   cidr4-0:
     description: >-
@@ -1129,10 +1117,8 @@ zonedata:
     - SPF: v=spf1 ip4:1.2.3.4:8080
   e9.example.com:
     - SPF: v=spf1 ip4:1.2.3
-
 ---
-description: >-
-  IP6 mechanism syntax
+description: IP6 mechanism syntax
 comment: >-
   IP4 only implementations may skip tests where host is not IP4
 tests:
@@ -1229,11 +1215,11 @@ zonedata:
     - SPF: v=spf1 ip6:CAFE:BABE:8000::/33
   e6.example.com:
     - SPF: v=spf1 ip6::CAFE::BABE
-  
 ---
-description: >-
-  Semantics of exp and other modifiers.  Implementing exp= is optional.  If not
-  implemented, the test driver should not check the explanation field.
+description: Semantics of exp and other modifiers
+comment: >-
+  Implementing exp= is optional.  If not implemented, the test driver should
+  not check the explanation field.
 tests:
   redirect-none:
     description: >-
@@ -1255,7 +1241,7 @@ tests:
     explanation: DEFAULT
   include-ignores-exp:
     description: >-
-      when executing "incde", exp= from the target domain MUST NOT be used.
+      when executing "include", exp= from the target domain MUST NOT be used.
     spec: 6.2/13
     helo: mail.example.com
     host: 1.2.3.4
@@ -1295,7 +1281,7 @@ tests:
   dorky-sentinel:
     description: >-
       An implementation that uses a legal expansion as a sentinel.  We
-      can't check them all, but we can check this one.
+      cannot check them all, but we can check this one.
     comment: >-
       Spaces are allowed in local-part.
     spec: 8.1/6
@@ -1345,10 +1331,8 @@ zonedata:
     - SPF: v=spf1 -all foo=%abc
   e10.example.com:
     - SPF: v=spf1 redirect=erehwon.example.com
-
 ---
-description: |
-  check macro expansion rules
+description: Macro expansion rules
 tests:
   trailing-dot-domain:
     spec: 8.1/16
@@ -1515,7 +1499,7 @@ tests:
     comment: >-
       Domain-spec must end in either a macro, or a valid toplabel.
       It is not correct to check syntax after macro expansion.
-    helo: JUMPIN' JUPITER
+    helo: "JUMPIN' JUPITER"
     host: 192.168.218.40
     mailfrom: test@e9.example.com
     result: fail
@@ -1597,10 +1581,8 @@ zonedata:
     - SPF: v=spf1 -include:_spfh.%{d2} ip4:1.2.3.0/24 -all
   _spfh.example.com:
     - SPF: v=spf1 -a:%{h} +all
-
 ---
-description: >-
-  Processing limits
+description: Processing limits
 tests:
   redirect-loop:
     description: >-
@@ -1626,7 +1608,7 @@ tests:
     comment: >-
       The required result for this test was the subject of much
       controversy.  Many felt that the RFC *should* have specified
-      permerror, but the concensus was that it failed to actually do so.
+      permerror, but the consensus was that it failed to actually do so.
       The preferred result reflects evaluating the 10 allowed MX records in the
       order returned by the test data - or sorted via priority.
       If testing with live DNS, the MX order may be random, and a pass
@@ -1642,7 +1624,7 @@ tests:
       there MUST be a limit of no more than 10 PTR looked up and checked.
     comment: >-
       The result of this test cannot be permerror not only because the
-      RFC doesn't specify it, but because the sender has no control over
+      RFC does not specify it, but because the sender has no control over
       the PTR records of spammers.
       The preferred result reflects evaluating the 10 allowed PTR records in
       the order returned by the test data.
@@ -1668,7 +1650,7 @@ tests:
       SPF implementations MUST limit the number of mechanisms and modifiers 
       that do DNS lookups to at most 10 per SPF check.
     comment: >-
-      We don't check whether an implementation counts mechanisms before
+      We do not check whether an implementation counts mechanisms before
       or after evaluation.  The RFC is not clear on this.
     spec: 10.1/6
     helo: mail.example.com

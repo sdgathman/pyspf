@@ -86,8 +86,8 @@ tests:
     result: pass
 zonedata:
   example3.com:
-  - SPF: v=spf1mx
-  - SPF: v=spf1 mx
+  - SPF: [ 'v=spf1','mx' ]
+  - SPF: [ 'v=spf1 ', 'mx' ]
   - MX: [0, mail.example1.com]
   example1.com:
   - SPF: v=spf1
