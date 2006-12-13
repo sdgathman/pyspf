@@ -1,4 +1,11 @@
+Version 2.0.2 
+  * Update openspf URLs
+Version 2.0.1 - December 08, 2006 
+  * Prevent cache poisoning attack
+  * Prevent malformed RR attack
+  * Update license on a few files we missed last time
 Version 2.0 - November 20, 2006
+  * Full IP6 support
   * Fedora Core compatible RPM spec file
   * Update README, licenses
 Version 1.8 - July 26, 2006
