@@ -1,9 +1,10 @@
-# This is the openspf.org test suite based on RFC 4408.
+# This is the openspf.org test suite (version 2006.11) based on RFC 4408.
 # $Id$
 # vim:sw=2 sts=2
 #
 # Contributors:
 #   Stuart D Gathman	everything so far
+#   Julian Mehnle       proofread YAML syntax, spelling, formal schema
 # Informal contributors (suggestions but no code):
 #   Craig Whitmore
 #   Frank Ellermann
@@ -11,7 +12,6 @@
 #   Scott Kitterman
 #   Norman Maurer
 #   Mark Shewmaker
-#   Julian Mehnle
 #
 ---
 description: Initial processing
@@ -101,6 +101,15 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@txttimeout.example.net
     result: [fail, temperror]
+  nospftxttimeout:
+    description: >-
+      No SPF record present, and TXT lookup times out.
+      If only TXT records are checked, result is temperror.
+    spec: 4.4/1
+    helo: mail.example.net
+    host: 1.2.3.4
+    mailfrom: foo@nospftxttimeout.example.net
+    result: [none, temperror]
   alltimeout:
     description: Both TXT and SPF queries time out
     spec: 4.4/2
@@ -122,6 +131,10 @@ zonedata:
     - TIMEOUT
   txttimeout.example.net:
     - SPF:  v=spf1 -all
+    - TXT:  NONE
+    - TIMEOUT
+  nospftxttimeout.example.net:
+    - SPF:  foobar
     - TXT:  NONE
     - TIMEOUT
   alltimeout.example.net:
@@ -1133,20 +1146,34 @@ tests:
   cidr6-0-ip4:
     description: >-
       IP4 connections do not match ip6.
+    comment: >-
+      There is controversy over ip4 mapped connections.  RFC4408 clearly
+      requires such connections to be considered as ip4.  However,
+      some interpret the RFC to mean that such connections should *also*
+      match appropriate ip6 mechanisms (but not, inexplicably, A or MX
+      mechanisms).  Until there is consensus, both
+      results are acceptable.
     spec: 5/9/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e2.example.com
-    result: neutral
+    result: [neutral, pass]
   cidr6-ip4:
     description: >-
       Even if the SMTP connection is via IPv6, an IPv4-mapped IPv6 IP address
       (see RFC 3513, Section 2.5.5) MUST still be considered an IPv4 address.
+    comment: >-
+      There is controversy over ip4 mapped connections.  RFC4408 clearly
+      requires such connections to be considered as ip4.  However,
+      some interpret the RFC to mean that such connections should *also*
+      match appropriate ip6 mechanisms (but not, inexplicably, A or MX
+      mechanisms).  Until there is consensus, both
+      results are acceptable.
     spec: 5/9/2
     helo: mail.example.com
     host: ::FFFF:1.2.3.4
     mailfrom: foo@e2.example.com
-    result: neutral
+    result: [neutral, pass]
   cidr6-0:
     description: >-
       Match any IP6
