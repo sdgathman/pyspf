@@ -1,0 +1,11 @@
+type99.py should be able to handle multi-line TXT RRs (and output
+multi-line type99 RRs as needed).
+
+Provide pluggable DNS driver.
+
+problem keyword in Received-SPF should not have list brackets.
+
+Improve permerror diagnostic:
+
+email.teamfanshop.com:
+  - TXT: "v=spf1 mx a:smtp1.email.teamfanshop.com ip4:12.111.131.193 /26 ~all"

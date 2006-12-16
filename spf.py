@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.108  2006/11/08 01:27:00  customdesigned
+# Return all key-value-pairs in Received-SPF header for all results.
+#
 # Revision 1.107  2006/11/04 21:58:12  customdesigned
 # Prevent cache poisoning by bogus additional RRs in PTR DNS response.
 #
@@ -201,27 +204,12 @@ import struct  # for pack() and unpack()
 import time    # for time()
 import urllib  # for quote()
 
-import DNS    # http://pydns.sourceforge.net
-if not hasattr(DNS.Type, 'SPF'):
-    # patch in type99 support
-    DNS.Type.SPF = 99
-    DNS.Type.typemap[99] = 'SPF'
-    DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
-
 def DNSLookup(name, qtype, strict=True):
     try:
-        req = DNS.DnsRequest(name, qtype=qtype)
-        resp = req.req()
-	#resp.show()
-        # key k: ('wayforward.net', 'A'), value v
-	# FIXME: pydns returns AAAA RR as 16 byte binary string, but
-	# A RR as dotted quad.  For consistency, this driver should
-	# return both as binary string.
-        return [((a['name'], a['typename']), a['data']) for a in resp.answers]
-    except IOError, x:
-        raise TempError, 'DNS ' + str(x)
-    except DNS.DNSError, x:
-        raise TempError, 'DNS ' + str(x)
+        from SPF.pydns import DNSLookup
+    except:
+        from SPF.dnspython import DNSLookup
+    return DNSLookup(name, qtype, strict)
 
 RE_SPF = re.compile(r'^v=spf1$|^v=spf1 ',re.IGNORECASE)
 
@@ -1615,8 +1603,6 @@ def insert_libspf_local_policy(spftxt, local=None):
 def _test():
     import doctest, spf
     return doctest.testmod(spf)
-
-DNS.DiscoverNameServers() # Fails on Mac OS X? Add domain to /etc/resolv.conf
 
 if __name__ == '__main__':
     import sys

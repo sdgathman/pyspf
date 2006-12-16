@@ -6,8 +6,13 @@
 # in a zonefile until Bind is patched/upgraded to recognize
 # the SPF RR.  After adding/changing/deleting TXT RRs,
 # filtering through this script will refresh the TYPE99 RRs.
+#
+# BUGS: multiline TXT RRs are not supported.
 # 
 # $Log$
+# Revision 1.4  2005/08/26 20:53:38  kitterma
+# Fixed typo in type99 script
+#
 # Revision 1.3  2005/08/19 19:06:49  customdesigned
 # use note_error method for consistent extended processing.
 # Return extended result, strict result in self.perm_error
