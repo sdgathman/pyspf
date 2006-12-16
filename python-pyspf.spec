@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.1
+Version:        2.1
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -13,7 +13,8 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
 #BuildRequires:  python-setuptools
-Requires:       python-pydns
+# Both python-pydns and python-dnspython should provide python-dns capability
+Requires:       python-dns
 
 %description
 SPF does email sender validation.  For more information about SPF,
@@ -48,9 +49,16 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %doc CHANGELOG PKG-INFO README test
 %{python_sitelib}/spf.py*
+%{python_sitelib}/SPF
 /usr/bin/type99
 /usr/bin/spfquery
 
 %changelog
+* Sat Dec 16 2006 Stuart Gathman <stuart@bmsi.com> 2.1-1
+- Provide driver package and dnspython support.
+* Wed Nov  8 2006 Stuart Gathman <stuart@bmsi.com> 2.0.1-1
+- Fix cache poisoning attack
+* Mon Oct 16 2006 Stuart Gathman <stuart@bmsi.com> 2.0-1
+- Provide full IP6 support.
 * Tue Aug 29 2006 Sean Reifschneider <jafo@tummy.com> 1.7-1
 - Initial RPM spec file.

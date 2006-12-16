@@ -8,4 +8,5 @@ include setup.py
 include setup.cfg
 include test/*.yml
 include test/testspf.py
+include SPF/*.py
 include python-pyspf.spec

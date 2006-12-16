@@ -5,7 +5,7 @@ from distutils.core import setup
 DESC = """SPF (Sender Policy Framework) implemented in Python."""
 
 setup(name='pyspf',
-      version='2.0.1',
+      version='2.1',
       description=DESC,
       author='Terence Way',
       author_email='terry@wayforward.net',
@@ -13,7 +13,7 @@ setup(name='pyspf',
       maintainer_email="stuart@bmsi.com",
       url='http://pymilter.sourceforge.net/',
       license='Python Software Foundation License',
-      py_modules=['spf'],
+      py_modules=['spf'], packages = ['SPF'],
       keywords = ['spf','email','forgery'],
       install_dir = '/usr/lib/pyspf',
       scripts = ['type99.py','spfquery.py'],
