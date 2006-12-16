@@ -1,7 +1,7 @@
 type99.py should be able to handle multi-line TXT RRs (and output
 multi-line type99 RRs as needed).
 
-Provide pluggable DNS driver.
+DONE Provide pluggable DNS drivers.
 
 problem keyword in Received-SPF should not have list brackets.
 

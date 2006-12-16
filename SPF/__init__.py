@@ -1,1 +1,1 @@
-__all__ = ['pydns','dnspython']
+__all__ = ['pydns','dnspython','pyip6']
