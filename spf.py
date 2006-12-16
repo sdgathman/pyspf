@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.109  2006/12/16 20:45:23  customdesigned
+# Move dns drivers to package directory.
+#
 # Revision 1.108  2006/11/08 01:27:00  customdesigned
 # Return all key-value-pairs in Received-SPF header for all results.
 #
@@ -179,7 +182,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "1.7: July 22, 2005"
+__version__ = "2.1: July 22, 2005"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
