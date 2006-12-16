@@ -5,6 +5,8 @@ Version 2.0.1 - December 08, 2006
   * Prevent malformed RR attack
   * Update license on a few files we missed last time
 Version 2.0 - November 20, 2006
+  * Completed RFC 4408 compliance
+  * Added spf.check2 for RFC 4408 compatible result codes
   * Full IP6 support
   * Fedora Core compatible RPM spec file
   * Update README, licenses
