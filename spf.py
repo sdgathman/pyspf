@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.111  2006/12/16 21:01:47  customdesigned
+# Move pure python ip6 support to driver package.
+#
 # Revision 1.110  2006/12/16 20:45:58  customdesigned
 # Update version.
 #
@@ -680,7 +683,13 @@ class query(object):
 
     >>> q.validate_mechanism('a:mail.example.com.')
     ('a:mail.example.com.', 'a', 'mail.example.com', 32, 'pass')
-        """
+
+    >>> try: q.validate_mechanism('a:mail.example.com,')
+    ... except PermError,x: print x
+    Do not separate mechnisms with commas: a:mail.example.com,
+    """
+        if mech.endswith( "," ):
+            raise PermError('Do not separate mechnisms with commas', mech)
         # a mechanism
         m, arg, cidrlength, cidr6length = parse_mechanism(mech, self.d)
         # map '?' '+' or '-' to 'neutral' 'pass' or 'fail'
