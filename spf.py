@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.112  2006/12/18 16:58:11  kitterma
+# Added specific error message for mechanisms separated by a comma.
+#
 # Revision 1.111  2006/12/16 21:01:47  customdesigned
 # Move pure python ip6 support to driver package.
 #

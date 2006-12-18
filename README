@@ -6,9 +6,11 @@ Quick Start
 
 Installation
 ------------
-This package requires PyDNS, available at http://pydns.sourceforge.net.
-Binary and source RPMs for PyDNS are also available from
-http://pymilter.sourceforge.net.
+This package requires PyDNS or dnspython.  PyDNS is available at 
+http://pydns.sourceforge.net.  Binary and source RPMs for PyDNS are also 
+available from http://pymilter.sourceforge.net.  PyDNS is packaged for Debian
+as python-dns.  Dnspython is available from http://www.dnspython.org/.
+Dnspython is packaged for Debian as python-dnspython.
 
 After unpacking the source distribution, install this in your site-
 specific Python extension directory::
