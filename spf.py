@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.113  2006/12/18 21:34:37  kitterma
+# Updated README to include dnspython. Fixed typo in last commit message.
+#
 # Revision 1.112  2006/12/18 16:58:11  kitterma
 # Added specific error message for mechanisms separated by a comma.
 #
@@ -692,7 +695,8 @@ class query(object):
     Do not separate mechnisms with commas: a:mail.example.com,
     """
         if mech.endswith( "," ):
-            raise PermError('Do not separate mechnisms with commas', mech)
+            self.note_error('Do not separate mechnisms with commas', mech)
+	    mech = mech[:-1]
         # a mechanism
         m, arg, cidrlength, cidr6length = parse_mechanism(mech, self.d)
         # map '?' '+' or '-' to 'neutral' 'pass' or 'fail'
@@ -1255,7 +1259,7 @@ class query(object):
 	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
 	    	   'receiver=%s; identity=%s; problem=%s;' % (
 		tag, receiver, self.get_header_comment(res), self.c,
-		self.l + '@' + self.o, self.h, receiver, self.ident, self.mech)
+		self.l + '@' + self.o, self.h, receiver, self.ident, self.mech[0])
 	return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
 		'receiver=%s; identity=%s;' % (
 	    res, receiver, self.get_header_comment(res), self.c,

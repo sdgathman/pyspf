@@ -1,3 +1,5 @@
+Received-SPF header doesn't quote key-value-pairs where needed.
+
 type99.py should be able to handle multi-line TXT RRs (and output
 multi-line type99 RRs as needed).
 
