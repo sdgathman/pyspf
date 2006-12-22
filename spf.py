@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.108  2006/11/08 01:27:00  customdesigned
+# Return all key-value-pairs in Received-SPF header for all results.
+#
 # Revision 1.107  2006/11/04 21:58:12  customdesigned
 # Prevent cache poisoning by bogus additional RRs in PTR DNS response.
 #
@@ -686,7 +689,14 @@ class query(object):
 
     >>> q.validate_mechanism('a:mail.example.com.')
     ('a:mail.example.com.', 'a', 'mail.example.com', 32, 'pass')
-        """
+
+    >>> try: q.validate_mechanism('a:mail.example.com,')
+    ... except PermError,x: print x
+    Do not separate mechnisms with commas: a:mail.example.com,
+    """
+        if mech.endswith( "," ):
+            self.note_error('Do not separate mechnisms with commas', mech)
+	    mech = mech[:-1]
         # a mechanism
         m, arg, cidrlength, cidr6length = parse_mechanism(mech, self.d)
         # map '?' '+' or '-' to 'neutral' 'pass' or 'fail'
@@ -1249,7 +1259,7 @@ class query(object):
 	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
 	    	   'receiver=%s; identity=%s; problem=%s;' % (
 		tag, receiver, self.get_header_comment(res), self.c,
-		self.l + '@' + self.o, self.h, receiver, self.ident, self.mech)
+		self.l + '@' + self.o, self.h, receiver, self.ident, self.mech[0])
 	return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
 		'receiver=%s; identity=%s;' % (
 	    res, receiver, self.get_header_comment(res), self.c,
