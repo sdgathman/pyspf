@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.114  2006/12/19 02:09:55  customdesigned
+# Remove trailing comma in lax mode.
+#
 # Revision 1.113  2006/12/18 21:34:37  kitterma
 # Updated README to include dnspython. Fixed typo in last commit message.
 #
@@ -1254,12 +1257,13 @@ class query(object):
     def get_header(self, res, receiver=None):
         if not receiver:
             receiver = self.r
-        if res == 'permerror':
+        if res == 'permerror' and self.mech:
             tag = ' '.join([res] + self.mech)
 	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
 	    	   'receiver=%s; identity=%s; problem=%s;' % (
 		tag, receiver, self.get_header_comment(res), self.c,
-		self.l + '@' + self.o, self.h, receiver, self.ident, self.mech[0])
+		self.l + '@' + self.o, self.h, receiver, self.ident,
+		' '.join(self.mech))
 	return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
 		'receiver=%s; identity=%s;' % (
 	    res, receiver, self.get_header_comment(res), self.c,
