@@ -66,6 +66,8 @@ class SPFTest(object):
     self.scenario = scenario
     self.explanation = None
     self.spec = None
+    self.header = None
+    self.receiver = None
     self.comment = []
     if 'result' not in data:
       print testid,'missing result'
@@ -87,7 +89,10 @@ def getrdata(r):
 	elif t == 'SPF' and gen:
 	  txt.append(('TXT',v))
 	if v != 'NONE':
-	  yield i
+	  if t in ('TXT','SPF') and type(v) == str:
+	    yield (t,(v,))
+	  else:
+	    yield i
     except:
       yield m
   if gen:
@@ -128,63 +133,6 @@ def loadYAML(fname):
       tests[k] = v
   return tests
 
-def loadBind(fname):
-  "Load testcases in BIND format.  Return list of SPFTest"
-  tests = {}
-  scenario = SPFScenario(fname)
-  comments = []
-  lastdomain = None
-  fp = open(fname,'rb')
-  for a in csv.reader(fp,delimiter=' ',skipinitialspace=True):
-    if not a:
-      scenario = SPFScenario(fname)
-      continue
-    name = a[0].strip()
-    if name.startswith('#') or name.startswith(';'):
-      cmt = ' '.join(a)[1:].strip()
-      comments.append(cmt)
-      continue
-    cmd = a[1].upper()
-    if cmd == 'IN':
-#example.com IN SPF "v=spf1 mx/26 exists:%{l}.%{d}.%{i}.spf.example.net -all"
-      t = a[2].upper()
-      if not name:
-        name = lastdomain
-      elif name.endswith('.'):
-	name = name[:-1]
-      lastdomain = name
-      if t == 'MX':
-	v = t,(int(a[3]),a[4].rstrip('.'))
-      else:
-	v = t,a[3]
-      scenario.addDNS(name,v)
-      if comments:
-	scenario.comment += comments
-	comments = []
-    elif cmd == 'TEST':
-      if not name:
-        name = lastdomain
-      else:
-	lastdomain = name
-      if name not in tests:
-	tests[name] = test = SPFTest(name,scenario)
-      else:
-	test = tests[name]
-      scenario.addTest(test)
-      if comments:
-	test.comment += comments
-	comments = []
-      t = a[2].lower()
-      if RE_IP4.match(t):
-        # fail TEST 1.2.3.4 lyme.eater@example.co.uk mail.example.net
-	test.host,test.mailfrom,test.helo,test.result = a[2:6]
-      elif t == 'mail-from':
-        test.mailfrom = a[3]
-      else:
-        setattr(test,t,a[3])
-  fp.close()
-  return tests.values()
-
 oldresults = { 'unknown': 'permerror', 'error': 'temperror' }
 
 verbose = 0
@@ -211,6 +159,8 @@ class SPFTestCase(unittest.TestCase):
       if t.explanation is not None and t.explanation != exp:
         if verbose: print t.explanation,'!=',exp
         ok = False
+      if t.header:
+        self.assertEqual(t.header,q.get_header(res,receiver=t.receiver))
       if ok:
 	passed += 1
       else:
@@ -220,12 +170,6 @@ class SPFTestCase(unittest.TestCase):
 	if verbose > 1: print t.scenario.zonedata
     if failed:
       print "%d passed" % passed,"%d failed" % failed
-
-  #def testMacro(self):
-  #  self.runTests(loadBind('test/macro.dat'))
-
-  #def testMailzone(self):
-  #  self.runTests(loadBind('otest.dat'))
 
   def testYAML(self):
     self.runTest(loadYAML('test.yml').values())

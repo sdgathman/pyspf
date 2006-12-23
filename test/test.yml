@@ -4,6 +4,11 @@
 # that reflects RFC 4408.  However, this should help get things started
 # by serving as a example of what tests look like.  Also, any implementation
 # that flunks this, should flunk the minimal elegant suite as well.
+#
+# We extended the test attributes with 'receiver' and 'header' to test
+# our implementation of the Received-SPF header.  This cannot easily
+# be part of the RFC test suite because of wide latitude in formatting.
+#
 ---
 comment: |
   check basic exists with macros
@@ -13,6 +18,12 @@ tests:
     host: 1.2.3.5
     mailfrom: lyme.eater@example.co.uk
     result: pass
+    receiver: receiver.com
+    header: >-
+      pass (receiver.com: domain of example.co.uk designates 1.2.3.5 as
+      permitted sender) client-ip=1.2.3.5;
+      envelope-from="lyme.eater@example.co.uk"; helo="mail.example.net";
+      receiver=receiver.com; identity=mailfrom;
   exists-fail:
     helo: mail.example.net
     host: 1.2.3.4
@@ -45,6 +56,24 @@ tests:
     host: 66.150.186.79
     mailfrom: chuckvsr@exampled.com
     result: permerror
+    receiver: receiver.com
+    header: >-
+      permerror examplea.com:8080 (receiver.com: permanent error in processing
+      domain of exampled.com: Invalid domain found (use FQDN))
+      client-ip=66.150.186.79; envelope-from="chuckvsr@exampled.com";
+      helo="mail.example.com"; receiver=receiver.com; identity=mailfrom;
+      problem="examplea.com:8080";
+  tworecs:
+    helo: mail.example.com
+    host: 66.150.186.79
+    mailfrom: chuckvsr@examplef.com
+    result: permerror
+    receiver: receiver.com
+    header: >-
+      permerror (receiver.com: permanent error in processing domain of
+      examplef.com: Two or more type TXT spf records found.)
+      client-ip=66.150.186.79; envelope-from="chuckvsr@examplef.com";
+      helo="mail.example.com"; receiver=receiver.com; identity=mailfrom;
   badip:
     helo: mail.example.com
     host: 66.150.186.79
@@ -61,6 +90,9 @@ zonedata:
   - SPF: v=spf1 a:examplea.com:8080
   examplee.com:
   - SPF: v=spf1 ip4:1.2.3.4:8080
+  examplef.com:
+  - SPF: v=spf1 -all
+  - SPF: v=spf1 +all
 
 ---
 tests:
@@ -86,8 +118,8 @@ tests:
     result: pass
 zonedata:
   example3.com:
-  - SPF: v=spf1mx
-  - SPF: v=spf1 mx
+  - SPF: [ 'v=spf1','mx' ]
+  - SPF: [ 'v=spf1 ', 'mx' ]
   - MX: [0, mail.example1.com]
   example1.com:
   - SPF: v=spf1
