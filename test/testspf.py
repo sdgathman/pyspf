@@ -66,6 +66,8 @@ class SPFTest(object):
     self.scenario = scenario
     self.explanation = None
     self.spec = None
+    self.header = None
+    self.receiver = None
     self.comment = []
     if 'result' not in data:
       print testid,'missing result'
@@ -157,6 +159,8 @@ class SPFTestCase(unittest.TestCase):
       if t.explanation is not None and t.explanation != exp:
         if verbose: print t.explanation,'!=',exp
         ok = False
+      if t.header:
+        self.assertEqual(t.header,q.get_header(res,receiver=t.receiver))
       if ok:
 	passed += 1
       else:
@@ -172,6 +176,10 @@ class SPFTestCase(unittest.TestCase):
 
   def testRFC(self):
     self.runTest(loadYAML('rfc4408-tests.yml').values())
+
+  def testIP6(self):
+    import doctest, SPF.pyip6
+    doctest.testmod(SPF.pyip6)
 
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
