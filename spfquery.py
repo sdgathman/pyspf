@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/env python
 
 # Author: Stuart D. Gathman <stuart@bmsi.com>
 # Copyright 2004 Business Management Systems, Inc.
@@ -10,6 +10,9 @@
 # Emulate the spfquery command line tool used by Wayne Schlitt's SPF test suite
 
 # $Log$
+# Revision 1.4  2006/11/20 18:39:41  customdesigned
+# Change license on spfquery.py.  Update README.  Move tests to test directory.
+#
 # Revision 1.3  2005/07/22 02:11:57  customdesigned
 # Use dictionary to check for CNAME loops.  Check limit independently for
 # each top level name, just like for PTR.

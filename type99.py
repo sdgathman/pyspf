@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/env python
 #
 # Copy Bind zonefiles to stdout, removing TYPE99 RRs and
 # adding a TYPE99 RR for each TXT RR encountered.
@@ -8,6 +8,9 @@
 # filtering through this script will refresh the TYPE99 RRs.
 # 
 # $Log$
+# Revision 1.4  2005/08/26 20:53:38  kitterma
+# Fixed typo in type99 script
+#
 # Revision 1.3  2005/08/19 19:06:49  customdesigned
 # use note_error method for consistent extended processing.
 # Return extended result, strict result in self.perm_error

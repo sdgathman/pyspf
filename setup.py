@@ -15,7 +15,6 @@ setup(name='pyspf',
       license='Python Software Foundation License',
       py_modules=['spf'],
       keywords = ['spf','email','forgery'],
-      install_dir = '/usr/lib/pyspf',
       scripts = ['type99.py','spfquery.py'],
       classifiers = [
 	'Development Status :: 5 - Production/Stable',
