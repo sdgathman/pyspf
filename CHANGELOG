@@ -1,5 +1,6 @@
 Version 2.0.2 
   * Update openspf URLs
+  * Fix key-value quoting in get_header
 Version 2.0.1 - December 08, 2006 
   * Prevent cache poisoning attack
   * Prevent malformed RR attack

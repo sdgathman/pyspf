@@ -24,7 +24,7 @@ def inet_ntop(s):
   if a == n: return '::'
   # check for ip4 mapped
   if a[:5] == (0,0,0,0,0) and a[5] in (0,0xFFFF):
-    ip4 = '.'.join([str(i) for i in struct.unpack("!HHHHHHBBBB",s)[6:]])
+    ip4 = '.'.join([str(i) for i in struct.unpack("!BBBB",s[12:])])
     if a[5]:
       return "::FFFF:" + ip4
     return "::" + ip4
