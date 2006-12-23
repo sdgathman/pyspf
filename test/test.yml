@@ -22,7 +22,7 @@ tests:
     header: >-
       pass (receiver.com: domain of example.co.uk designates 1.2.3.5 as
       permitted sender) client-ip=1.2.3.5;
-      envelope-from="lyme.eater@example.co.uk"; helo="mail.example.net";
+      envelope-from="lyme.eater@example.co.uk"; helo=mail.example.net;
       receiver=receiver.com; identity=mailfrom;
   exists-fail:
     helo: mail.example.net
@@ -61,7 +61,7 @@ tests:
       permerror examplea.com:8080 (receiver.com: permanent error in processing
       domain of exampled.com: Invalid domain found (use FQDN))
       client-ip=66.150.186.79; envelope-from="chuckvsr@exampled.com";
-      helo="mail.example.com"; receiver=receiver.com; identity=mailfrom;
+      helo=mail.example.com; receiver=receiver.com; identity=mailfrom;
       problem="examplea.com:8080";
   tworecs:
     helo: mail.example.com
@@ -73,7 +73,7 @@ tests:
       permerror (receiver.com: permanent error in processing domain of
       examplef.com: Two or more type TXT spf records found.)
       client-ip=66.150.186.79; envelope-from="chuckvsr@examplef.com";
-      helo="mail.example.com"; receiver=receiver.com; identity=mailfrom;
+      helo=mail.example.com; receiver=receiver.com; identity=mailfrom;
   badip:
     helo: mail.example.com
     host: 66.150.186.79

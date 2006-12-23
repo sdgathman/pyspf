@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.108.2.3  2006/12/23 04:44:05  customdesigned
+# Fix key-value quoting in get_header.
+#
 # Revision 1.108.2.2  2006/12/22 20:27:24  customdesigned
 # Index error reporting non-mech permerror.
 #
@@ -253,6 +256,9 @@ RE_IP4 = re.compile(PAT_IP4+'$')
 RE_TOPLAB = re.compile(
     r'\.(?:[0-9a-z]*[a-z][0-9a-z]*|[0-9a-z]+-[0-9a-z-]*[0-9a-z])\.?$|%s'
     	% PAT_CHAR, re.IGNORECASE)
+
+RE_DOT_ATOM = re.compile(r'%(atext)s+([.]%(atext)s+)*$' % {
+    'atext': r"[0-9a-z!#$%&'*+/=?^_`{}|~-]" }, re.IGNORECASE)
 
 RE_IP6 = re.compile(                 '(?:%(hex4)s:){6}%(ls32)s$'
                    '|::(?:%(hex4)s:){5}%(ls32)s$'
@@ -1262,15 +1268,15 @@ class query(object):
             receiver = self.r
         if res == 'permerror' and self.mech:
             tag = ' '.join([res] + self.mech)
-	    return '%s (%s: %s) client-ip=%s; envelope-from="%s"; helo="%s"; ' \
-	    	   'receiver=%s; identity=%s; problem="%s";' % (
+	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
+	    	   'receiver=%s; identity=%s; problem=%s;' % (
 		tag, receiver, self.get_header_comment(res), self.c,
-		self.l + '@' + self.o, self.h, receiver, self.ident,
-		' '.join(self.mech))
-	return '%s (%s: %s) client-ip=%s; envelope-from="%s"; helo="%s"; ' \
+		quote_value(self.s), quote_value(self.h), receiver, self.ident,
+		quote_value(' '.join(self.mech)))
+	return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
 		'receiver=%s; identity=%s;' % (
 	    res, receiver, self.get_header_comment(res), self.c,
-	    self.l + '@' + self.o, self.h, receiver, self.ident)
+	    quote_value(self.s), quote_value(self.h), receiver, self.ident)
 
     def get_header_comment(self, res):
         """Return comment for Received-SPF header.
@@ -1325,6 +1331,33 @@ def split_email(s, h):
         else:
             return 'postmaster', s
 
+def quote_value(s):
+    """Quote the value for a key-value pair in Received-SPF header field
+    if needed.  No quoting needed for a dot-atom value.
+
+    Examples:
+    >>> quote_value('foo@bar.com')
+    '"foo@bar.com"'
+    
+    >>> quote_value('mail.example.com')
+    'mail.example.com'
+
+    >>> quote_value('A:1.2.3.4')
+    '"A:1.2.3.4"'
+
+    >>> quote_value('abc"def')
+    '"abc\\\\"def"'
+
+    >>> quote_value(r'abc\def')
+    '"abc\\\\\\\\def"'
+
+    >>> quote_value('abc..def')
+    '"abc..def"'
+    """
+    if RE_DOT_ATOM.match(s):
+      return s
+    return '"' + s.replace('\\',r'\\').replace('"',r'\"') + '"'
+
 def parse_mechanism(str, d):
     """Breaks A, MX, IP4, and PTR mechanisms into a (name, domain,
     cidr,cidr6) tuple.  The domain portion defaults to d if not present,
@@ -1340,8 +1373,8 @@ def parse_mechanism(str, d):
     >>> parse_mechanism('a/24', 'foo.com')
     ('a', 'foo.com', 24, None)
 
-    >>> parse_mechanism('A:foo:bar.com/16', 'foo.com')
-    ('a', 'foo:bar.com', 16, None)
+    >>> parse_mechanism('A:foo:bar.com/16//48', 'foo.com')
+    ('a', 'foo:bar.com', 16, 48)
 
     >>> parse_mechanism('-exists:%{i}.%{s1}.100/86400.rate.%{d}','foo.com')
     ('-exists', '%{i}.%{s1}.100/86400.rate.%{d}', None, None)
@@ -1349,8 +1382,8 @@ def parse_mechanism(str, d):
     >>> parse_mechanism('mx:%%%_/.Claranet.de/27','foo.com')
     ('mx', '%%%_/.Claranet.de', 27, None)
 
-    >>> parse_mechanism('mx:%{d}/27','foo.com')
-    ('mx', '%{d}', 27, None)
+    >>> parse_mechanism('mx:%{d}//97','foo.com')
+    ('mx', '%{d}', None, 97)
 
     >>> parse_mechanism('iP4:192.0.0.0/8','foo.com')
     ('ip4', '192.0.0.0', 8, None)
