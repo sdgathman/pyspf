@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.108.2.2  2006/12/22 20:27:24  customdesigned
+# Index error reporting non-mech permerror.
+#
 # Revision 1.108.2.1  2006/12/22 04:59:40  customdesigned
 # Merge comma heuristic.
 #
@@ -1259,12 +1262,12 @@ class query(object):
             receiver = self.r
         if res == 'permerror' and self.mech:
             tag = ' '.join([res] + self.mech)
-	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
-	    	   'receiver=%s; identity=%s; problem=%s;' % (
+	    return '%s (%s: %s) client-ip=%s; envelope-from="%s"; helo="%s"; ' \
+	    	   'receiver=%s; identity=%s; problem="%s";' % (
 		tag, receiver, self.get_header_comment(res), self.c,
 		self.l + '@' + self.o, self.h, receiver, self.ident,
 		' '.join(self.mech))
-	return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
+	return '%s (%s: %s) client-ip=%s; envelope-from="%s"; helo="%s"; ' \
 		'receiver=%s; identity=%s;' % (
 	    res, receiver, self.get_header_comment(res), self.c,
 	    self.l + '@' + self.o, self.h, receiver, self.ident)
