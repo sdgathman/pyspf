@@ -51,7 +51,7 @@ domain name.  For some reason, OS X writes out resolv.conf with a single
 Description
 ===========
 SPF does email sender validation.  For more information about SPF,
-please see http://new.openspf.org
+please see http://www.openspf.org/
 
 One incompatible change was introduced in version 1.7.  Prior to version 1.7,
 connections from a local IP address (127...) would always return a Pass 
@@ -78,6 +78,9 @@ Then the following command line would check if this is a valid sender:
 	% ./spf.py 69.55.226.139 terry@wayforward.net mx1.wayforward.net
 	('pass', 250, 'sender SPF authorized')
 
+Command line calls return RFC 4408 result codes, i.e. 'pass', 'fail', 'neutral', 
+'softfail, 'permerror', or 'temperror'.
+
 The second way is via the module's APIs.
 
 The legacy (pySPF 1.6) API:
@@ -87,9 +90,13 @@ The legacy (pySPF 1.6) API:
 	...           h='mx1.wayforward.net')
 	('pass', 250, 'sender SPF authorized')
 
-The first element in the tuple is one of 'pass', 'fail', 'unknown', or
-'error'.  The second is the SMTP response status code: 550 for 'deny',
-450 for 'error' and 250 for all else.  The third is an explanation.
+The first element in the tuple is one of 'pass', 'fail', 'netural', 'softfail',
+'unknown', or 'error'.  The second is the SMTP response status code: 550 for 
+'fail', 450 for 'error' and 250 for all else.  The third is an explanation.
+
+Note: SPF results alone are never sufficient to decide that a message should be
+accepted.  Accept, reject, or defer decisions are a function of local reciever
+policy.
 
 The RFC 4408 compliant API:
         >>> import spf
@@ -98,8 +105,19 @@ The RFC 4408 compliant API:
         ...           h='mx1.wayforward.net')
         ('pass', 'sender SPF verified')
 
-The first element in the tuple is one of 'pass', 'fail', 'permerror', or
-'temperror'.  The second is an explanation.
+The first element in the tuple is one of 'pass', 'fail', 'neutral', 'softfail,
+'permerror', or 'temperror'.  The second is an explanation.
+
+This package also provides two additional helper scripts; type99.py and 
+spfquery.py.  The type99.py script will convert DNS TXT strings to a binary 
+equivalent suitable for use in a BIND zone file.  The spfquery.py script is a
+Python reimplementination of Wayne Schlitt's spfquery command line tool.
+
+The type99.py script is called from the command line as follows:
+
+python type99.py "v=spf1 -all" {Note: Use your desired SPF record instead.}
+\# 12 0b763d73706631202d616c6c {This is the correct result for "v=spf1 -all"}
+
 
 License: Python Software Foundation License
 

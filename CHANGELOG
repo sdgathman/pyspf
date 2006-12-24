@@ -1,5 +1,9 @@
 Version 2.0.2 
   * Update openspf URLs
+  * Update Readme to better describe available pyspf interfaces
+  * Add basic description of type99.py and spfquery.py scripts
+  * Add usage instructions for type99.py DNS RR type conversion script
+  * Incorporate downstream feedback from Debian packager
   * Fix key-value quoting in get_header
 Version 2.0.1 - December 08, 2006 
   * Prevent cache poisoning attack
