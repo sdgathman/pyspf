@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.117  2006/12/23 06:31:16  customdesigned
+# Fully quote values in key-value pairs.
+#
 # Revision 1.116  2006/12/23 01:54:54  customdesigned
 # Properly quote key-value pairs in Received-SPF header.  Add test
 # case extension to test it.  Test python IP6 parsing.
@@ -1267,17 +1270,26 @@ class query(object):
     def get_header(self, res, receiver=None):
         if not receiver:
             receiver = self.r
+	client_ip = self.c
+	identity = self.ident
+	helo = quote_value(self.h)
+	if identity == 'helo':
+	    envelope_from = None
+	else:
+	    envelope_from = quote_value(self.s)
         if res == 'permerror' and self.mech:
             tag = ' '.join([res] + self.mech)
-	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
-	    	   'receiver=%s; identity=%s; problem=%s;' % (
-		tag, receiver, self.get_header_comment(res), self.c,
-		quote_value(self.s), quote_value(self.h), receiver, self.ident,
-		quote_value(' '.join(self.mech)))
-	return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
-		'receiver=%s; identity=%s;' % (
-	    res, receiver, self.get_header_comment(res), self.c,
-	    quote_value(self.s), quote_value(self.h), receiver, self.ident)
+	    problem = quote_value(' '.join(self.mech))
+	else:
+	    tag = res
+	    problem = None
+	res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
+	for k in (
+	  'client_ip','envelope_from','helo','receiver','identity','problem'):
+	    v = locals()[k]
+	    if v:
+	        res.append('%s=%s'%(k,v))
+	return ' '.join(res)
 
     def get_header_comment(self, res):
         """Return comment for Received-SPF header.
