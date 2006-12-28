@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.119  2006/12/28 04:37:12  customdesigned
+# Forgot semicolons.
+#
 # Revision 1.118  2006/12/28 04:04:27  customdesigned
 # Optimize get_header to remove useless key-value pairs.
 #
@@ -1274,7 +1277,6 @@ class query(object):
         if not receiver:
             receiver = self.r
 	client_ip = self.c
-	identity = self.ident
 	helo = quote_value(self.h)
 	if identity == 'helo':
 	    envelope_from = None
@@ -1287,11 +1289,10 @@ class query(object):
 	    tag = res
 	    problem = None
 	res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
-	for k in (
-	  'client_ip','envelope_from','helo','receiver','identity','problem'):
+	for k in ('client_ip','envelope_from','helo','receiver','problem'):
 	    v = locals()[k]
-	    if v:
-	        res.append('%s=%s;'%(k,v))
+	    if v: res.append('%s=%s;'%(k,v))
+	res.append('identity=%s'%self.ident)
 	return ' '.join(res)
 
     def get_header_comment(self, res):
