@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.118  2006/12/28 04:04:27  customdesigned
+# Optimize get_header to remove useless key-value pairs.
+#
 # Revision 1.117  2006/12/23 06:31:16  customdesigned
 # Fully quote values in key-value pairs.
 #
@@ -1288,7 +1291,7 @@ class query(object):
 	  'client_ip','envelope_from','helo','receiver','identity','problem'):
 	    v = locals()[k]
 	    if v:
-	        res.append('%s=%s'%(k,v))
+	        res.append('%s=%s;'%(k,v))
 	return ' '.join(res)
 
     def get_header_comment(self, res):
