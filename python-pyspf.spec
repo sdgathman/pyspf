@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.1
+Version:        2.0.2
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -52,5 +52,26 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/spfquery
 
 %changelog
+* Sat Dec 30 2006 Stuart Gathman <stuart@bmsi.com> 2.0.2-1
+- Update openspf URLs
+- Update Readme to better describe available pyspf interfaces
+- Add basic description of type99.py and spfquery.py scripts
+- Add usage instructions for type99.py DNS RR type conversion script
+- Add spfquery.py usage instructions
+- Incorporate downstream feedback from Debian packager
+- Fix key-value quoting in get_header
+* Fri Dec 08 2006 Stuart Gathman <stuart@bmsi.com> 2.0.1-1
+- Prevent cache poisoning attack
+- Prevent malformed RR attack
+- Update license on a few files we missed last time
+* Mon Nov 20 2006 Stuart Gathman <stuart@bmsi.com> 2.0-1
+- Completed RFC 4408 compliance
+- Added spf.check2 for RFC 4408 compatible result codes
+- Full IP6 support
+- Fedora Core compatible RPM spec file
+- Update README, licenses
+* Wed Jul 26 2006 Stuart Gathman <stuart@bmsi.com> 1.8-1
+- YAML test suite syntax
+- trailing dot support (RFC4408 8.1)
 * Tue Aug 29 2006 Sean Reifschneider <jafo@tummy.com> 1.7-1
 - Initial RPM spec file.
