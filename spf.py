@@ -30,11 +30,28 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.1):
 # $Log$
+# Revision 1.108.2.5  2006/12/24 19:10:38  kitterma
+# Move spf.py changelog to CHANGELOG. Move spf.py cvs commits from previous
+# releases to py_spfchangelog.txt. Update README to describe provided scripts.
+# Add to README discussion of spf module interface.
+#
 # Revision 1.108.2.4  2006/12/23 06:35:37  customdesigned
 # Fully quote structured values in Received-SPF.
 #
 # Revision 1.108.2.3  2006/12/23 04:44:05  customdesigned
 # Fix key-value quoting in get_header.
+#
+# Revision 1.121  2006/12/30 17:01:52  customdesigned
+# Missed a spot for new result names.
+#
+# Revision 1.120  2006/12/28 04:54:21  customdesigned
+# Skip optional trailing ";" in Received-SPF
+#
+# Revision 1.118  2006/12/28 04:04:27  customdesigned
+# Optimize get_header to remove useless key-value pairs.
+#
+# Revision 1.117  2006/12/23 06:31:16  customdesigned
+# Fully quote values in key-value pairs.
 #
 # Revision 1.108.2.2  2006/12/22 20:27:24  customdesigned
 # Index error reporting non-mech permerror.
@@ -139,9 +156,9 @@ JOINERS = {'l': '.', 's': '.'}
 
 RESULTS = {'+': 'pass', '-': 'fail', '?': 'neutral', '~': 'softfail',
            'pass': 'pass', 'fail': 'fail', 'permerror': 'permerror',
-       'error': 'error', 'neutral': 'neutral', 'softfail': 'softfail',
+       'error': 'temperror', 'neutral': 'neutral', 'softfail': 'softfail',
        'none': 'none', 'local': 'local', 'trusted': 'trusted',
-           'ambiguous': 'ambiguous'}
+           'ambiguous': 'ambiguous', 'unknown': 'permerror' }
 
 EXPLANATIONS = {'pass': 'sender SPF authorized',
                 'fail': 'SPF fail - not authorized',
@@ -1124,17 +1141,24 @@ class query(object):
     def get_header(self, res, receiver=None):
         if not receiver:
             receiver = self.r
+	client_ip = self.c
+	helo = quote_value(self.h)
+	if self.ident == 'helo':
+	    envelope_from = None
+	else:
+	    envelope_from = quote_value(self.s)
         if res == 'permerror' and self.mech:
             tag = ' '.join([res] + self.mech)
-	    return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
-	    	   'receiver=%s; identity=%s; problem=%s;' % (
-		tag, receiver, self.get_header_comment(res), self.c,
-		quote_value(self.s), quote_value(self.h), receiver, self.ident,
-		quote_value(' '.join(self.mech)))
-	return '%s (%s: %s) client-ip=%s; envelope-from=%s; helo=%s; ' \
-		'receiver=%s; identity=%s;' % (
-	    res, receiver, self.get_header_comment(res), self.c,
-	    quote_value(self.s), quote_value(self.h), receiver, self.ident)
+	    problem = quote_value(' '.join(self.mech))
+	else:
+	    tag = res
+	    problem = None
+	res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
+	for k in ('client_ip','envelope_from','helo','receiver','problem'):
+	    v = locals()[k]
+	    if v: res.append('%s=%s;'%(k,v))
+	res.append('identity=%s'%self.ident)
+	return ' '.join(res)
 
     def get_header_comment(self, res):
         """Return comment for Received-SPF header.
@@ -1157,7 +1181,7 @@ class query(object):
         elif res == 'permerror': return \
             "permanent error in processing domain of %s: %s" \
                   % (sender, self.prob)
-        elif res == 'error': return \
+        elif res == 'temperror': return \
               "temporary error in processing during lookup of %s" % sender
         elif res == 'fail': return \
               "domain of %s does not designate %s as permitted sender" \
