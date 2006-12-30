@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.120  2006/12/28 04:54:21  customdesigned
+# Skip optional trailing ";" in Received-SPF
+#
 # Revision 1.119  2006/12/28 04:37:12  customdesigned
 # Forgot semicolons.
 #
@@ -291,9 +294,9 @@ JOINERS = {'l': '.', 's': '.'}
 
 RESULTS = {'+': 'pass', '-': 'fail', '?': 'neutral', '~': 'softfail',
            'pass': 'pass', 'fail': 'fail', 'permerror': 'permerror',
-       'error': 'error', 'neutral': 'neutral', 'softfail': 'softfail',
+       'error': 'temperror', 'neutral': 'neutral', 'softfail': 'softfail',
        'none': 'none', 'local': 'local', 'trusted': 'trusted',
-           'ambiguous': 'ambiguous'}
+           'ambiguous': 'ambiguous', 'unknown': 'permerror' }
 
 EXPLANATIONS = {'pass': 'sender SPF authorized',
                 'fail': 'SPF fail - not authorized',
@@ -1278,7 +1281,7 @@ class query(object):
             receiver = self.r
 	client_ip = self.c
 	helo = quote_value(self.h)
-	if identity == 'helo':
+	if self.ident == 'helo':
 	    envelope_from = None
 	else:
 	    envelope_from = quote_value(self.s)
@@ -1316,7 +1319,7 @@ class query(object):
         elif res == 'permerror': return \
             "permanent error in processing domain of %s: %s" \
                   % (sender, self.prob)
-        elif res == 'error': return \
+        elif res == 'temperror': return \
               "temporary error in processing during lookup of %s" % sender
         elif res == 'fail': return \
               "domain of %s does not designate %s as permitted sender" \
