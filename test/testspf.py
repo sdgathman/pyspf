@@ -11,7 +11,6 @@ import unittest
 import socket
 import sys
 import spf
-import csv
 import re
 try:
   import yaml

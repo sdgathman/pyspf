@@ -13,7 +13,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
 #BuildRequires:  python-setuptools
-Requires:       python-pydns
+Requires:       python-pydns python
 
 %description
 SPF does email sender validation.  For more information about SPF,
@@ -70,7 +70,7 @@ rm -rf $RPM_BUILD_ROOT
 - Full IP6 support
 - Fedora Core compatible RPM spec file
 - Update README, licenses
-* Wed Jul 26 2006 Stuart Gathman <stuart@bmsi.com> 1.8-1
+* Wed Sep 26 2006 Stuart Gathman <stuart@bmsi.com> 1.8-1
 - YAML test suite syntax
 - trailing dot support (RFC4408 8.1)
 * Tue Aug 29 2006 Sean Reifschneider <jafo@tummy.com> 1.7-1

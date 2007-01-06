@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.1):
 # $Log$
+# Revision 1.108.2.6  2006/12/30 17:12:50  customdesigned
+# Merge fixes from CVS HEAD.
+#
 # Revision 1.108.2.5  2006/12/24 19:10:38  kitterma
 # Move spf.py changelog to CHANGELOG. Move spf.py cvs commits from previous
 # releases to py_spfchangelog.txt. Update README to describe provided scripts.
@@ -1359,7 +1362,7 @@ def bin2long6(str):
     h, l = struct.unpack("!QQ", str)
     return h << 64 | l
 
-if socket.has_ipv6:
+if hasattr(socket,'has_ipv6') and socket.has_ipv6:
     def inet_ntop(s):
         return socket.inet_ntop(socket.AF_INET6,s)
     def inet_pton(s):
