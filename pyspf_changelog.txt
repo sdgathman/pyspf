@@ -1,3 +1,35 @@
+# Revision 1.108.2.6  2006/12/30 17:12:50  customdesigned
+# Merge fixes from CVS HEAD.
+#
+# Revision 1.108.2.5  2006/12/24 19:10:38  kitterma
+# Move spf.py changelog to CHANGELOG. Move spf.py cvs commits from previous
+# releases to py_spfchangelog.txt. Update README to describe provided scripts.
+# Add to README discussion of spf module interface.
+#
+# Revision 1.108.2.4  2006/12/23 06:35:37  customdesigned
+# Fully quote structured values in Received-SPF.
+#
+# Revision 1.108.2.3  2006/12/23 04:44:05  customdesigned
+# Fix key-value quoting in get_header.
+#
+# Revision 1.121  2006/12/30 17:01:52  customdesigned
+# Missed a spot for new result names.
+#
+# Revision 1.120  2006/12/28 04:54:21  customdesigned
+# Skip optional trailing ";" in Received-SPF
+#
+# Revision 1.118  2006/12/28 04:04:27  customdesigned
+# Optimize get_header to remove useless key-value pairs.
+#
+# Revision 1.117  2006/12/23 06:31:16  customdesigned
+# Fully quote values in key-value pairs.
+#
+# Revision 1.108.2.2  2006/12/22 20:27:24  customdesigned
+# Index error reporting non-mech permerror.
+#
+# Revision 1.108.2.1  2006/12/22 04:59:40  customdesigned
+# Merge comma heuristic.
+
 # Revision 1.108  2006/11/08 01:27:00  customdesigned
 # Return all key-value-pairs in Received-SPF header for all results.
 #

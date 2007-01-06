@@ -28,45 +28,16 @@ For news, bugfixes, etc. visit the home page for this implementation at
     http://www.wayforward.net/spf/
 """
 
-# CVS Commits since last release (2.0.1):
+# CVS Commits since last release (2.0.2):
 # $Log$
-# Revision 1.108.2.6  2006/12/30 17:12:50  customdesigned
-# Merge fixes from CVS HEAD.
-#
-# Revision 1.108.2.5  2006/12/24 19:10:38  kitterma
-# Move spf.py changelog to CHANGELOG. Move spf.py cvs commits from previous
-# releases to py_spfchangelog.txt. Update README to describe provided scripts.
-# Add to README discussion of spf module interface.
-#
-# Revision 1.108.2.4  2006/12/23 06:35:37  customdesigned
-# Fully quote structured values in Received-SPF.
-#
-# Revision 1.108.2.3  2006/12/23 04:44:05  customdesigned
-# Fix key-value quoting in get_header.
-#
-# Revision 1.121  2006/12/30 17:01:52  customdesigned
-# Missed a spot for new result names.
-#
-# Revision 1.120  2006/12/28 04:54:21  customdesigned
-# Skip optional trailing ";" in Received-SPF
-#
-# Revision 1.118  2006/12/28 04:04:27  customdesigned
-# Optimize get_header to remove useless key-value pairs.
-#
-# Revision 1.117  2006/12/23 06:31:16  customdesigned
-# Fully quote values in key-value pairs.
-#
-# Revision 1.108.2.2  2006/12/22 20:27:24  customdesigned
-# Index error reporting non-mech permerror.
-#
-# Revision 1.108.2.1  2006/12/22 04:59:40  customdesigned
-# Merge comma heuristic.
+# Revision 1.108.2.7  2007/01/06 21:03:15  customdesigned
+# Tested spf.py in python2.2.
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.2: December 23, 2006"
+__version__ = "2.0.3: January 6, 2007"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
