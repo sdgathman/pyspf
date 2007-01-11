@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.121  2006/12/30 17:01:52  customdesigned
+# Missed a spot for new result names.
+#
 # Revision 1.120  2006/12/28 04:54:21  customdesigned
 # Skip optional trailing ";" in Received-SPF
 #
@@ -933,9 +936,11 @@ class query(object):
                         redirect)
                 self.exps = dict(self.defexps)
                 return self.check1(redirect_record, redirect, recursion)
-            else:
-                result = default
+	    result = default
+	    mech = None
 
+	if not recursion:	# record matching mechanism at base level
+	    self.mechanism = mech
         if result == 'fail':
             return (result, 550, exps[result])
         else:
@@ -1497,7 +1502,7 @@ def bin2long6(str):
     h, l = struct.unpack("!QQ", str)
     return h << 64 | l
 
-if socket.has_ipv6:
+if hasattr(socket,'has_ipv6') and socket.has_ipv6:
     def inet_ntop(s):
         return socket.inet_ntop(socket.AF_INET6,s)
     def inet_pton(s):
@@ -1616,7 +1621,7 @@ if __name__ == '__main__':
         i, s, h = sys.argv[2:]
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
             strict=False)
-        print q.check(sys.argv[1])
+        print q.check(sys.argv[1]),q.mechanism
         if q.perm_error and q.perm_error.ext:
             print q.perm_error.ext
     else:
