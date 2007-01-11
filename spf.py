@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.122  2007/01/11 18:25:54  customdesigned
+# Record matching mechanism.
+#
 # Revision 1.121  2006/12/30 17:01:52  customdesigned
 # Missed a spot for new result names.
 #
@@ -599,6 +602,7 @@ class query(object):
         # will continue processing.  However, the exception
         # that strict processing would raise is saved here
         self.perm_error = None
+	self.mechanism = None
 
         try:
             self.lookups = 0
@@ -1296,8 +1300,10 @@ class query(object):
 	else:
 	    tag = res
 	    problem = None
+	mechanism = quote_value(self.mechanism)
 	res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
-	for k in ('client_ip','envelope_from','helo','receiver','problem'):
+	for k in ('client_ip','envelope_from','helo','receiver',
+	  'problem','mechanism'):
 	    v = locals()[k]
 	    if v: res.append('%s=%s;'%(k,v))
 	res.append('identity=%s'%self.ident)
@@ -1378,8 +1384,13 @@ def quote_value(s):
 
     >>> quote_value('abc..def')
     '"abc..def"'
+
+    >>> quote_value('')
+    '""'
+
+    >>> quote_value(None)
     """
-    if RE_DOT_ATOM.match(s):
+    if s is None or RE_DOT_ATOM.match(s):
       return s
     return '"' + s.replace('\\',r'\\').replace('"',r'\"') + '"'
 
