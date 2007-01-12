@@ -2,7 +2,7 @@
 """SPF (Sender Policy Framework) implementation.
 
 Copyright (c) 2003, Terence Way
-Portions Copyright (c) 2004,2005,2006 Stuart Gathman <stuart@bmsi.com>
+Portions Copyright (c) 2004,2005,2006,2007 Stuart Gathman <stuart@bmsi.com>
 Portions Copyright (c) 2005,2006 Scott Kitterman <scott@kitterman.com>
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.2):
 # $Log$
+# Revision 1.108.2.8  2007/01/06 22:58:21  kitterma
+# Update changelogs and version to reflect 2.0.2 released and 2.0.3 started.
+#
 # Revision 1.108.2.7  2007/01/06 21:03:15  customdesigned
 # Tested spf.py in python2.2.
 #
@@ -37,7 +40,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.3: January 6, 2007"
+__version__ = "2.0.3: January 12, 2007"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -946,21 +949,22 @@ class query(object):
         if len(a) == 1 and self.strict < 2:
             return a[0]               
         # check official SPF type first when it becomes more popular
-        try:
-            b = [t for t in self.dns_99(domain) if RE_SPF.match(t)]
-        except TempError,x:
-            # some braindead DNS servers hang on type 99 query
-            if self.strict > 1: raise TempError(x)
-            b = []
-
-        if len(b) > 1:
-            raise PermError('Two or more type SPF spf records found.')
-        if len(b) == 1:
-            if self.strict > 1 and len(a) == 1 and a[0] != b[0]:
-            #Changed from permerror to warning based on RFC 4408 Auth 48 change
-                raise AmbiguityWarning(
+        if self.strict > 1:
+            #Only check for Type SPF in harsh mode until it is more popular.
+            try:
+                b = [t for t in self.dns_99(domain) if RE_SPF.match(t)]
+            except TempError,x:
+                # some braindead DNS servers hang on type 99 query
+                if self.strict > 1: raise TempError(x)
+                b = []
+            if len(b) > 1:
+                raise PermError('Two or more type SPF spf records found.')
+            if len(b) == 1:
+                if self.strict > 1 and len(a) == 1 and a[0] != b[0]:
+                #Changed from permerror to warning based on RFC 4408 Auth 48 change
+                    raise AmbiguityWarning(
 'v=spf1 records of both type TXT and SPF (type 99) present, but not identical')
-            return b[0]
+                return b[0]
         if len(a) == 1:
             return a[0]    # return TXT if SPF wasn't found
         if DELEGATE:    # use local record if neither found
