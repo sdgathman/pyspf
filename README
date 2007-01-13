@@ -103,6 +103,44 @@ The RFC 4408 compliant API:
 The first element in the tuple is one of 'pass', 'fail', 'permerror', or
 'temperror'.  The second is an explanation.
 
+The type99.py script is called from the command line as follows:
+
+python type99.py "v=spf1 -all" {Note: Use your desired SPF record instead.}
+\# 12 0b763d73706631202d616c6c {This is the correct result for "v=spf1 -all"}
+
+The spfquery.py script is called with a number of possible options.  Options can
+either use standard '-' prefix or be PERL style long options, '--'.  Supported
+options are:
+
+"--file" or "-file" {filename}: Read the query (or queries) from the designated 
+    file.  If {filename} is '0', then query inputs are read from STDIN.
+
+ "--ip" or "-ip" {address}: Client IP address to use for SPF check.
+
+
+"--sender" or "-sender" {Mail From address}: Envelope sender from which mail was
+    received.
+
+"--helo" or "-helo" {client hostname}: HELO/EHLO name used by SMTP client.
+
+"--local" or "-local" {local policy SPF string}: Additional SPF mechanisms to be
+    checked on the basis of local policy.  Note that local policy matches are 
+    not strictly SPF results.  Local policy processing is not defined in RFC 
+    4408.  Result may vary among SPF implementations.
+
+"--rcpt-to" or "rcpt-to" {rcpt-to address - if available}: Receipt to address is
+    not used for actual SPF processing, but if available it can be useful for 
+    logging, spf-received header construction, and providing useful rejection
+    messages when messages are rejected due to SPF.
+
+--default-explanation" or "-default-explanation" {explanation string}: Default
+    Fail explanation string to be used.
+
+"--sanitize" or "-sanitize" and "--debug" or "-debug": These options are no-op
+    in the Python implementation, but are valid inputs to provide compatibliity
+    with input files developed to work with the original PERL and C spfquery
+    implementations.
+
 License: Python Software Foundation License
 
 Author:
