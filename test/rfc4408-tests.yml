@@ -1331,6 +1331,34 @@ tests:
     mailfrom: foo@e11.example.com
     result: fail
     explanation: DEFAULT
+  exp-empty-domain:
+    description: |
+      Ignore exp if empty domain-spec.
+    comment: >-
+      If domain-spec is empty, or there are any DNS processing errors (any
+      RCODE other than 0), or if no records are returned, or if more than one
+      record is returned, or if there are syntax errors in the explanation
+      string, then proceed as if no exp modifier was given.
+    spec: 6.2/4
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e12.example.com
+    result: fail
+    explanation: DEFAULT
+  exp-syntax-error:
+    description: |
+      Ignore exp if syntax error.
+    comment: >-
+      If domain-spec is empty, or there are any DNS processing errors (any
+      RCODE other than 0), or if no records are returned, or if more than one
+      record is returned, or if there are syntax errors in the explanation
+      string, then proceed as if no exp modifier was given.
+    spec: 6.2/4
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e13.example.com
+    result: fail
+    explanation: DEFAULT
   unknown-modifier-syntax:
     description: |
       unknown-modifier = name "=" macro-string
@@ -1377,6 +1405,12 @@ zonedata:
   e11msg.example.com:
     - TXT: Answer a fool according to his folly.
     - TXT: Do not answer a fool according to his folly.
+  e12.example.com:
+    - SPF: v=spf1 exp= -all
+  e13.example.com:
+    - SPF: v=spf1 exp=e13msg.example.com -all
+  e13msg.example.com:
+    - TXT: The %{x}-files.
 ---
 description: Macro expansion rules
 tests:
