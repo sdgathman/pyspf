@@ -30,6 +30,15 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.2):
 # $Log$
+# Revision 1.108.2.11  2007/01/13 18:21:41  customdesigned
+# Test for RFC4408 6.2/4, and fix spf.py to comply.
+#
+# Revision 1.123  2007/01/11 18:49:37  customdesigned
+# Add mechanism to Received-SPF header.
+#
+# Revision 1.122  2007/01/11 18:25:54  customdesigned
+# Record matching mechanism.
+#
 # Revision 1.108.2.10  2007/01/13 00:46:35  kitterma
 # Update copyright statements for new year.
 #
@@ -441,6 +450,7 @@ class query(object):
         # will continue processing.  However, the exception
         # that strict processing would raise is saved here
         self.perm_error = None
+	self.mechanism = None
 
         try:
             self.lookups = 0
@@ -778,9 +788,11 @@ class query(object):
                         redirect)
                 self.exps = dict(self.defexps)
                 return self.check1(redirect_record, redirect, recursion)
-            else:
-                result = default
+	    result = default
+	    mech = None
 
+	if not recursion:	# record matching mechanism at base level
+	    self.mechanism = mech
         if result == 'fail':
             return (result, 550, exps[result])
         else:
@@ -1141,8 +1153,10 @@ class query(object):
 	else:
 	    tag = res
 	    problem = None
+	mechanism = quote_value(self.mechanism)
 	res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
-	for k in ('client_ip','envelope_from','helo','receiver','problem'):
+	for k in ('client_ip','envelope_from','helo','receiver',
+	  'problem','mechanism'):
 	    v = locals()[k]
 	    if v: res.append('%s=%s;'%(k,v))
 	res.append('identity=%s'%self.ident)
@@ -1223,8 +1237,13 @@ def quote_value(s):
 
     >>> quote_value('abc..def')
     '"abc..def"'
+
+    >>> quote_value('')
+    '""'
+
+    >>> quote_value(None)
     """
-    if RE_DOT_ATOM.match(s):
+    if s is None or RE_DOT_ATOM.match(s):
       return s
     return '"' + s.replace('\\',r'\\').replace('"',r'\"') + '"'
 
@@ -1554,7 +1573,7 @@ if __name__ == '__main__':
         i, s, h = sys.argv[2:]
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
             strict=False)
-        print q.check(sys.argv[1])
+        print q.check(sys.argv[1]),q.mechanism
         if q.perm_error and q.perm_error.ext:
             print q.perm_error.ext
     else:
