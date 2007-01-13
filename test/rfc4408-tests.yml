@@ -105,11 +105,15 @@ tests:
     description: >-
       No SPF record present, and TXT lookup times out.
       If only TXT records are checked, result is temperror.
+    comment: >-
+      Because TXT records is where v=spf1 records will likely be, returning
+      temperror will try again later.  A timeout due to a braindead server
+      is unlikely in the case of TXT, as opposed to the newer SPF RR.
     spec: 4.4/1
     helo: mail.example.net
     host: 1.2.3.4
     mailfrom: foo@nospftxttimeout.example.net
-    result: [none, temperror]
+    result: [temperror, none]
   alltimeout:
     description: Both TXT and SPF queries time out
     spec: 4.4/2
@@ -134,7 +138,7 @@ zonedata:
     - TXT:  NONE
     - TIMEOUT
   nospftxttimeout.example.net:
-    - SPF:  foobar
+    - SPF:  "v=spf3 !a:yahoo.com -all"
     - TXT:  NONE
     - TIMEOUT
   alltimeout.example.net:
