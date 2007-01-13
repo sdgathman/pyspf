@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.123  2007/01/11 18:49:37  customdesigned
+# Add mechanism to Received-SPF header.
+#
 # Revision 1.122  2007/01/11 18:25:54  customdesigned
 # Record matching mechanism.
 #
@@ -856,7 +859,7 @@ class query(object):
             if m[0] == 'exp':
 	        # always fetch explanation to check permerrors
 	        exp = self.get_explanation(m[1])
-	        if not recursion:
+	        if exp and not recursion:
 		    # only set explanation in base recursion level
 		    self.set_explanation(exp)
             elif m[0] == 'redirect':
@@ -960,10 +963,14 @@ class query(object):
     def get_explanation(self, spec):
         """Expand an explanation."""
         if spec:
-            txt = ''.join(self.dns_txt(self.expand(spec)))
-            return self.expand(txt, stripdot=False)
-        else:
-            return 'explanation : Required option is missing'
+            a = self.dns_txt(self.expand(spec))
+	    if len(a) == 1:
+	    	try:
+		    return self.expand(a[0], stripdot=False)
+		except PermError:
+		    # RFC4408 6.2/4 syntax errors cause exp= to be ignored
+		    pass
+	return None
 
     def expand(self, str, stripdot=True): # macros='slodipvh'
         """Do SPF RFC macro expansion.
