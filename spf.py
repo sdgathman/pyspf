@@ -3,7 +3,7 @@
 
 Copyright (c) 2003, Terence Way
 Portions Copyright (c) 2004,2005,2006,2007 Stuart Gathman <stuart@bmsi.com>
-Portions Copyright (c) 2005,2006 Scott Kitterman <scott@kitterman.com>
+Portions Copyright (c) 2005,2006,2007 Scott Kitterman <scott@kitterman.com>
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
 and disclaimer are retained in their original form.
@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.2):
 # $Log$
+# Revision 1.108.2.9  2007/01/12 22:14:56  kitterma
+# Change DNS queries to only check Type SPF in Harsh mode
+#
 # Revision 1.108.2.8  2007/01/06 22:58:21  kitterma
 # Update changelogs and version to reflect 2.0.2 released and 2.0.3 started.
 #
