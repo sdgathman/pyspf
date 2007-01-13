@@ -1317,6 +1317,20 @@ tests:
     mailfrom: "Macro Error@e8.example.com"
     result: fail
     explanation: Macro Error in implementation
+  exp-multiple-txt:
+    description: |
+      Ignore exp if multiple TXT records.
+    comment: >-
+      If domain-spec is empty, or there are any DNS processing errors (any
+      RCODE other than 0), or if no records are returned, or if more than one
+      record is returned, or if there are syntax errors in the explanation
+      string, then proceed as if no exp modifier was given.
+    spec: 6.2/4
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e11.example.com
+    result: fail
+    explanation: DEFAULT
   unknown-modifier-syntax:
     description: |
       unknown-modifier = name "=" macro-string
@@ -1358,6 +1372,11 @@ zonedata:
     - SPF: v=spf1 -all foo=%abc
   e10.example.com:
     - SPF: v=spf1 redirect=erehwon.example.com
+  e11.example.com:
+    - SPF: v=spf1 -all exp=e11msg.example.com
+  e11msg.example.com:
+    - TXT: Answer a fool according to his folly.
+    - TXT: Do not answer a fool according to his folly.
 ---
 description: Macro expansion rules
 tests:
@@ -1567,12 +1586,14 @@ zonedata:
   somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.somewhat.long.exp.example.com.example.com:
     - TXT: Congratulations!  That was tricky.
   e4.example.com:
-    - SPF: v=spf1 -all exp=e4.example.com
+    - SPF: v=spf1 -all exp=e4msg.example.com
+  e4msg.example.com:
     - TXT: "%{c} is queried as %{ir}.%{v}.arpa"
   e5.example.com:
     - SPF: v=spf1 a:%{a}.example.com -all
   e6.example.com:
-    - SPF: v=spf1 -all exp=e6.example.com
+    - SPF: v=spf1 -all exp=e6msg.example.com
+  e6msg.example.com:
     - TXT: "connect from %{p}"
   mx.example.com:
     - A: 192.168.218.41
