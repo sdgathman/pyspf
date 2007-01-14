@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.124  2007/01/13 20:08:54  customdesigned
+# Make exp= compliant with 6.2/4
+#
 # Revision 1.123  2007/01/11 18:49:37  customdesigned
 # Add mechanism to Received-SPF header.
 #
@@ -606,6 +609,7 @@ class query(object):
         # that strict processing would raise is saved here
         self.perm_error = None
 	self.mechanism = None
+	self.options = {}
 
         try:
             self.lookups = 0
@@ -856,23 +860,27 @@ class query(object):
                 mechs.append(self.validate_mechanism(mech))
                 continue
 
-            if m[0] == 'exp':
+	    mod,arg = m
+            if mod == 'exp':
 	        # always fetch explanation to check permerrors
-	        exp = self.get_explanation(m[1])
+	        exp = self.get_explanation(arg)
 	        if exp and not recursion:
 		    # only set explanation in base recursion level
 		    self.set_explanation(exp)
-            elif m[0] == 'redirect':
+            elif mod == 'redirect':
                 self.check_lookups()
-                redirect = self.expand(m[1])
-            elif m[0] == 'default':
-		arg = self.expand(m[1])
+                redirect = self.expand(arg)
+            elif mod == 'default':
+		arg = self.expand(arg)
                 # default=- is the same as default=fail
                 default = RESULTS.get(arg, default)
+	    elif mod == 'op':
+	    	if not recursion:
+		    for v in arg.split(','):
+		      self.options[v] = v
 	    else:
 		# spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
-		self.expand(m[1])	# syntax error on invalid macro
-
+		self.expand(arg)	# syntax error on invalid macro
 
         # Evaluate mechanisms
         #

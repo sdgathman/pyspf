@@ -1,3 +1,5 @@
+Collect op= modifiers as a dict of keywords.
+
 "Compile" SPF records to IP sets, and cache the compiled records.
 
 Support TCP DNS (already supported with dnspython, I believe).
