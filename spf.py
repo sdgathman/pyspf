@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.128  2007/01/14 22:56:56  customdesigned
+# op= draft actually uses '.' for separator.
+#
 # Revision 1.127  2007/01/14 05:07:16  customdesigned
 # PermError for duplicate redirect even in lax mode.
 #
@@ -871,20 +874,19 @@ class query(object):
                 continue
 
 	    mod,arg = m
+	    if mod in modifiers:
+	    	if mod == 'redirect':
+		    raise PermError('redirect= MUST appear at most once',mech)
+		self.note_error('%s= MUST appear at most once'%mod,mech)
+		# just use last one in lax mode
+	    modifiers.append(mod)
             if mod == 'exp':
-	        if mod in modifiers:
-                    self.note_error('exp= MUST appear at most once',mech)
-		    # just use last one in lax mode
-		modifiers.append(mod)
 	        # always fetch explanation to check permerrors
 	        exp = self.get_explanation(arg)
 	        if exp and not recursion:
 		    # only set explanation in base recursion level
 		    self.set_explanation(exp)
             elif mod == 'redirect':
-	        if mod in modifiers:
-		    raise PermError('redirect= MUST appear at most once',mech)
-		modifiers.append(mod)
                 self.check_lookups()
                 redirect = self.expand(arg)
             elif mod == 'default':
@@ -892,10 +894,6 @@ class query(object):
                 # default=- is the same as default=fail
                 default = RESULTS.get(arg, default)
 	    elif mod == 'op':
-	        if mod in modifiers:
-                    self.note_error('op= MUST appear at most once',mech)
-		    # just accumulate them in lax mode
-		modifiers.append(mod)
 	    	if not recursion:
 		    for v in arg.split('.'):
 		        if v: self.options[v] = True
