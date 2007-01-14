@@ -1,5 +1,3 @@
-Collect op= modifiers as a dict of keywords.
-
 "Compile" SPF records to IP sets, and cache the compiled records.
 
 Support TCP DNS (already supported with dnspython, I believe).
@@ -14,6 +12,7 @@ Improve permerror diagnostic:
 email.teamfanshop.com:
   - TXT: "v=spf1 mx a:smtp1.email.teamfanshop.com ip4:12.111.131.193 /26 ~all"
 
+DONE Collect op= modifiers as a dict of keywords.
 DONE Provide 'mechanism' key-value pair in Received-SPF.
 DONE Received-SPF header doesn't quote key-value-pairs where needed.
 DONE Provide pluggable DNS drivers.

@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.125  2007/01/14 04:56:25  customdesigned
+# Parse op= to create a dictionary of option keywords.
+#
 # Revision 1.124  2007/01/13 20:08:54  customdesigned
 # Make exp= compliant with 6.2/4
 #
@@ -852,6 +855,7 @@ class query(object):
         default = 'neutral'
         mechs = []
 
+	modifiers = []
         # Look for modifiers
         #
         for mech in spf:
@@ -862,12 +866,20 @@ class query(object):
 
 	    mod,arg = m
             if mod == 'exp':
+	        if mod in modifiers:
+                    self.note_error(
+                        'exp= MUST appear at most once',mech)
+		modifiers.append(mod)
 	        # always fetch explanation to check permerrors
 	        exp = self.get_explanation(arg)
 	        if exp and not recursion:
 		    # only set explanation in base recursion level
 		    self.set_explanation(exp)
             elif mod == 'redirect':
+	        if mod in modifiers:
+                    self.note_error(
+                        'redirect= MUST appear at most once',mech)
+		modifiers.append(mod)
                 self.check_lookups()
                 redirect = self.expand(arg)
             elif mod == 'default':
@@ -877,7 +889,7 @@ class query(object):
 	    elif mod == 'op':
 	    	if not recursion:
 		    for v in arg.split(','):
-		      self.options[v] = v
+		      self.options[v] = True
 	    else:
 		# spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
 		self.expand(arg)	# syntax error on invalid macro
@@ -1650,5 +1662,6 @@ if __name__ == '__main__':
         print q.check(sys.argv[1]),q.mechanism
         if q.perm_error and q.perm_error.ext:
             print q.perm_error.ext
+	if q.options: print q.options
     else:
         print USAGE
