@@ -1363,6 +1363,30 @@ tests:
     mailfrom: foo@e13.example.com
     result: fail
     explanation: DEFAULT
+  exp-twice:
+    description: |
+      exp= appears twice.
+    comment: >-
+      These two modifiers (exp,redirect) MUST NOT appear in a record more than
+      once each. If they do, then check_host() exits with a result of
+      "PermError".
+    spec: 6/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e14.example.com
+    result: permerror
+  redirect-twice:
+    description: |
+      redirect= appears twice.
+    comment: >-
+      These two modifiers (exp,redirect) MUST NOT appear in a record more than
+      once each. If they do, then check_host() exits with a result of
+      "PermError".
+    spec: 6/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e15.example.com
+    result: permerror
   unknown-modifier-syntax:
     description: |
       unknown-modifier = name "=" macro-string
@@ -1415,6 +1439,10 @@ zonedata:
     - SPF: v=spf1 exp=e13msg.example.com -all
   e13msg.example.com:
     - TXT: The %{x}-files.
+  e14.example.com:
+    - SPF: v=spf1 exp=e13msg.example.com -all exp=e11msg.example.com
+  e15.example.com:
+    - SPF: v=spf1 redirect=e12.example.com -all redirect=e12.example.com
 ---
 description: Macro expansion rules
 tests:
