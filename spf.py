@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.127  2007/01/14 05:07:16  customdesigned
+# PermError for duplicate redirect even in lax mode.
+#
 # Revision 1.126  2007/01/14 05:05:25  customdesigned
 # Permerror for duplicate exp= or redirect=
 #
@@ -870,8 +873,7 @@ class query(object):
 	    mod,arg = m
             if mod == 'exp':
 	        if mod in modifiers:
-                    self.note_error(
-                        'exp= MUST appear at most once',mech)
+                    self.note_error('exp= MUST appear at most once',mech)
 		    # just use last one in lax mode
 		modifiers.append(mod)
 	        # always fetch explanation to check permerrors
@@ -890,9 +892,13 @@ class query(object):
                 # default=- is the same as default=fail
                 default = RESULTS.get(arg, default)
 	    elif mod == 'op':
+	        if mod in modifiers:
+                    self.note_error('op= MUST appear at most once',mech)
+		    # just accumulate them in lax mode
+		modifiers.append(mod)
 	    	if not recursion:
-		    for v in arg.split(','):
-		      self.options[v] = True
+		    for v in arg.split('.'):
+		        if v: self.options[v] = True
 	    else:
 		# spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
 		self.expand(arg)	# syntax error on invalid macro
