@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.126  2007/01/14 05:05:25  customdesigned
+# Permerror for duplicate exp= or redirect=
+#
 # Revision 1.125  2007/01/14 04:56:25  customdesigned
 # Parse op= to create a dictionary of option keywords.
 #
@@ -869,6 +872,7 @@ class query(object):
 	        if mod in modifiers:
                     self.note_error(
                         'exp= MUST appear at most once',mech)
+		    # just use last one in lax mode
 		modifiers.append(mod)
 	        # always fetch explanation to check permerrors
 	        exp = self.get_explanation(arg)
@@ -877,8 +881,7 @@ class query(object):
 		    self.set_explanation(exp)
             elif mod == 'redirect':
 	        if mod in modifiers:
-                    self.note_error(
-                        'redirect= MUST appear at most once',mech)
+		    raise PermError('redirect= MUST appear at most once',mech)
 		modifiers.append(mod)
                 self.check_lookups()
                 redirect = self.expand(arg)
