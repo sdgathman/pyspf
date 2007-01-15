@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.129  2007/01/14 23:01:58  customdesigned
+# Consolidate duplicate modifier handling.
+#
 # Revision 1.128  2007/01/14 22:56:56  customdesigned
 # op= draft actually uses '.' for separator.
 #
@@ -968,7 +971,10 @@ class query(object):
                 if not redirect_record:
                     raise PermError('redirect domain has no SPF record',
                         redirect)
-                self.exps = dict(self.defexps)
+		# forget modifiers on redirect
+		if not recursion:
+		  self.exps = dict(self.defexps)
+		  self.options = {}
                 return self.check1(redirect_record, redirect, recursion)
 	    result = default
 	    mech = None
