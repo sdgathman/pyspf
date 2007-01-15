@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.2
+Version:        2.0.3
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -52,6 +52,10 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/spfquery
 
 %changelog
+* Mon Jan 15 2007 Stuart Gathman <stuart@bmsi.com> 2.0.3-1
+- Record matching mechanism and add to Received-SPF header.
+- Test for RFC4408 6.2/4, and fix spf.py to comply.
+- Test for type SPF (type 99) by default in harsh mode only
 * Sat Dec 30 2006 Stuart Gathman <stuart@bmsi.com> 2.0.2-1
 - Update openspf URLs
 - Update Readme to better describe available pyspf interfaces

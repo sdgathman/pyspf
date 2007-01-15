@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.2):
 # $Log$
+# Revision 1.108.2.12  2007/01/13 18:45:33  customdesigned
+# Record matching mechanism.
+#
 # Revision 1.108.2.11  2007/01/13 18:21:41  customdesigned
 # Test for RFC4408 6.2/4, and fix spf.py to comply.
 #
@@ -451,6 +454,7 @@ class query(object):
         # that strict processing would raise is saved here
         self.perm_error = None
 	self.mechanism = None
+	self.options = {}
 
         try:
             self.lookups = 0
@@ -693,6 +697,7 @@ class query(object):
         default = 'neutral'
         mechs = []
 
+	modifiers = []
         # Look for modifiers
         #
         for mech in spf:
@@ -701,6 +706,13 @@ class query(object):
                 mechs.append(self.validate_mechanism(mech))
                 continue
 
+	    mod,arg = m
+	    if mod in modifiers:
+	    	if mod == 'redirect':
+		    raise PermError('redirect= MUST appear at most once',mech)
+		self.note_error('%s= MUST appear at most once'%mod,mech)
+		# just use last one in lax mode
+	    modifiers.append(mod)
             if m[0] == 'exp':
 	        # always fetch explanation to check permerrors
 	        exp = self.get_explanation(m[1])
@@ -714,6 +726,10 @@ class query(object):
 		arg = self.expand(m[1])
                 # default=- is the same as default=fail
                 default = RESULTS.get(arg, default)
+	    elif mod == 'op':
+	    	if not recursion:
+		    for v in arg.split('.'):
+		        if v: self.options[v] = True
 	    else:
 		# spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
 		self.expand(m[1])	# syntax error on invalid macro
@@ -786,7 +802,10 @@ class query(object):
                 if not redirect_record:
                     raise PermError('redirect domain has no SPF record',
                         redirect)
-                self.exps = dict(self.defexps)
+		# forget modifiers on redirect
+		if not recursion:
+		  self.exps = dict(self.defexps)
+		  self.options = {}
                 return self.check1(redirect_record, redirect, recursion)
 	    result = default
 	    mech = None
