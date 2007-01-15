@@ -1,6 +1,11 @@
-Version 2.0.3 - January 12, 2007
+Version 2.0.3 - January 15, 2007
   * IPv6 compatibility test fix to support Python 2.2
   * Change DNS queries to only check Type SPF in Harsh mode
+  * pyspf requires pydns, python-pyspf requires python-pydns
+  * Record matching mechanism and add to Received-SPF header.
+  * Test for RFC4408 6.2/4, and fix spf.py to comply.
+  * Permerror for more than one exp or redirect modifier.
+  * Parse op= modifier
 
 Version 2.0.2 - January 4, 2007
   * Update openspf URLs

@@ -53,9 +53,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Mon Jan 15 2007 Stuart Gathman <stuart@bmsi.com> 2.0.3-1
+- pyspf requires pydns, python-pyspf requires python-pydns
 - Record matching mechanism and add to Received-SPF header.
 - Test for RFC4408 6.2/4, and fix spf.py to comply.
-- Test for type SPF (type 99) by default in harsh mode only
+- Test for type SPF (type 99) by default in harsh mode only.
+- Permerror for more than one exp or redirect modifier.
 * Sat Dec 30 2006 Stuart Gathman <stuart@bmsi.com> 2.0.2-1
 - Update openspf URLs
 - Update Readme to better describe available pyspf interfaces
