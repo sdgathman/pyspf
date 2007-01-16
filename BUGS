@@ -1,3 +1,6 @@
+Make type SPF queries optional.  Perhaps order= option, with
+order=TXT / order=SPF / order=TXT,SPF / order=SPF,TXT
+
 "Compile" SPF records to IP sets, and cache the compiled records.
 
 Support TCP DNS (already supported with dnspython, I believe).

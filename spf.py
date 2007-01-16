@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.130  2007/01/15 02:21:10  customdesigned
+# Forget op= on redirect.
+#
 # Revision 1.129  2007/01/14 23:01:58  customdesigned
 # Consolidate duplicate modifier handling.
 #
@@ -693,6 +696,13 @@ class query(object):
                 self.perm_error = x
         return self.perm_error
 
+    def expand_domain(self,arg):
+        "validate and expand domain-spec"
+	# any trailing dot was removed by expand()
+	if RE_TOPLAB.split(arg)[-1]:
+	    raise PermError('Invalid domain found (use FQDN)', arg)
+	return self.expand(arg)
+
     def validate_mechanism(self, mech):
         """Parse and validate a mechanism.
     Returns mech,m,arg,cidrlength,result
@@ -807,12 +817,8 @@ class query(object):
                 raise PermError('CIDR not allowed', mech)
 	    cidrlength = self.cidrmax
 
-        # validate domain-spec
         if m in ('a', 'mx', 'ptr', 'exists', 'include'):
-            # any trailing dot was removed by expand()
-            if RE_TOPLAB.split(arg)[-1]:
-                raise PermError('Invalid domain found (use FQDN)', arg)
-            arg = self.expand(arg)
+            arg = self.expand_domain(arg)
             if m == 'include':
                 if arg == self.d:
                     if mech != 'include':
@@ -885,13 +891,14 @@ class query(object):
 	    modifiers.append(mod)
             if mod == 'exp':
 	        # always fetch explanation to check permerrors
+		arg = self.expand_domain(arg)
 	        exp = self.get_explanation(arg)
 	        if exp and not recursion:
 		    # only set explanation in base recursion level
 		    self.set_explanation(exp)
             elif mod == 'redirect':
                 self.check_lookups()
-                redirect = self.expand(arg)
+                redirect = self.expand_domain(arg)
             elif mod == 'default':
 		arg = self.expand(arg)
                 # default=- is the same as default=fail
@@ -996,13 +1003,17 @@ class query(object):
     def get_explanation(self, spec):
         """Expand an explanation."""
         if spec:
-            a = self.dns_txt(self.expand(spec))
+            a = self.dns_txt(spec)
 	    if len(a) == 1:
 	    	try:
 		    return self.expand(a[0], stripdot=False)
 		except PermError:
 		    # RFC4408 6.2/4 syntax errors cause exp= to be ignored
 		    pass
+	if self.strict > 1:
+	    raise PermError('Empty domain-spec on exp=')
+	# RFC4408 6.2/4 empty domain spec is ignored
+	# (unless you give precedence to the grammar).
 	return None
 
     def expand(self, str, stripdot=True): # macros='slodipvh'

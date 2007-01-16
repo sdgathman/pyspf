@@ -1,6 +1,13 @@
-# This is the openspf.org test suite (version 2006.11) based on RFC 4408.
+# This is the openspf.org test suite (version 2007.01) based on RFC 4408.
 # $Id$
 # vim:sw=2 sts=2
+#
+# Changes:
+#  - The exp-empty-domain test case is subject to controversy, because
+#    the grammar does not allow domain-spec to be empty, so both results
+#    are allowed for now.
+#  - There was a bug in 2006.11 that caused TXT ONLY implementations to fail.
+#    Added additional exp= and redirect= tests.
 #
 # Contributors:
 #   Stuart D Gathman	everything so far
@@ -1270,6 +1277,16 @@ tests:
     mailfrom: foo@e1.example.com
     result: fail
     explanation: DEFAULT
+  redirect-syntax-error:
+    description: |
+      Permerror if redirect= syntax error.
+    comment: >-
+      redirect      = "redirect" "=" domain-spec
+    spec: 6.1/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e17.example.com
+    result: permerror
   include-ignores-exp:
     description: >-
       when executing "include", exp= from the target domain MUST NOT be used.
@@ -1337,21 +1354,24 @@ tests:
     explanation: DEFAULT
   exp-empty-domain:
     description: |
-      Ignore exp if empty domain-spec.
+      Ignore exp if domain-spec is empty.
     comment: >-
-      If domain-spec is empty, or there are any DNS processing errors (any
-      RCODE other than 0), or if no records are returned, or if more than one
-      record is returned, or if there are syntax errors in the explanation
-      string, then proceed as if no exp modifier was given.
+      Section 6.2/4 says, "If domain-spec is empty, or there are any DNS
+      processing errors (any RCODE other than 0), or if no records are
+      returned, or if more than one record is returned, or if there are syntax
+      errors in the explanation string, then proceed as if no exp modifier was
+      given."  However, "if domain-spec is empty" conflicts with the grammar
+      given for the exp modifier.  If you fix the grammar to make
+      domain-spec optional, result is fail.  Otherwise, result is Permerror.
     spec: 6.2/4
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e12.example.com
-    result: fail
+    result: [ fail, permerror ]
     explanation: DEFAULT
-  exp-syntax-error:
+  explanation-syntax-error:
     description: |
-      Ignore exp if syntax error.
+      Ignore exp if the explanation string has a syntax error.
     comment: >-
       If domain-spec is empty, or there are any DNS processing errors (any
       RCODE other than 0), or if no records are returned, or if more than one
@@ -1363,6 +1383,16 @@ tests:
     mailfrom: foo@e13.example.com
     result: fail
     explanation: DEFAULT
+  exp-syntax-error:
+    description: |
+      Permerror if exp= syntax error.
+    comment: >-
+      explanation      = "exp" "=" domain-spec
+    spec: 6.2/1
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e16.example.com
+    result: permerror
   exp-twice:
     description: |
       exp= appears twice.
@@ -1443,6 +1473,10 @@ zonedata:
     - SPF: v=spf1 exp=e13msg.example.com -all exp=e11msg.example.com
   e15.example.com:
     - SPF: v=spf1 redirect=e12.example.com -all redirect=e12.example.com
+  e16.example.com:
+    - SPF: v=spf1 exp=-all
+  e17.example.com:
+    - SPF: v=spf1 redirect=-all ?all
 ---
 description: Macro expansion rules
 tests:
