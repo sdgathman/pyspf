@@ -30,6 +30,19 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.2):
 # $Log$
+#
+# Revision 1.108.2.13  2007/01/15 19:14:27  customdesigned
+# Permerror for more than one exp= or redirect=
+#
+# Revision 1.132  2007/01/17 00:47:17  customdesigned
+# Test for and fix illegal implicit mechanisms.
+#
+# Revision 1.131  2007/01/16 23:54:58  customdesigned
+# Test and fix for invalid domain-spec.
+#
+# Revision 1.130  2007/01/15 02:21:10  customdesigned
+# Forget op= on redirect.
+#
 # Revision 1.108.2.12  2007/01/13 18:45:33  customdesigned
 # Record matching mechanism.
 #
@@ -523,6 +536,13 @@ class query(object):
                 self.perm_error = x
         return self.perm_error
 
+    def expand_domain(self,arg):
+        "validate and expand domain-spec"
+	# any trailing dot was removed by expand()
+	if RE_TOPLAB.split(arg)[-1]:
+	    raise PermError('Invalid domain found (use FQDN)', arg)
+	return self.expand(arg)
+
     def validate_mechanism(self, mech):
         """Parse and validate a mechanism.
     Returns mech,m,arg,cidrlength,result
@@ -637,12 +657,12 @@ class query(object):
                 raise PermError('CIDR not allowed', mech)
 	    cidrlength = self.cidrmax
 
-        # validate domain-spec
         if m in ('a', 'mx', 'ptr', 'exists', 'include'):
-            # any trailing dot was removed by expand()
-            if RE_TOPLAB.split(arg)[-1]:
-                raise PermError('Invalid domain found (use FQDN)', arg)
-            arg = self.expand(arg)
+	    if m == 'exists' and not arg:
+	        raise PermError('implicit exists not allowed', mech)
+            arg = self.expand_domain(arg)
+	    if not arg:
+		raise PermError('empty domain:',mech)
             if m == 'include':
                 if arg == self.d:
                     if mech != 'include':
@@ -713,17 +733,20 @@ class query(object):
 		self.note_error('%s= MUST appear at most once'%mod,mech)
 		# just use last one in lax mode
 	    modifiers.append(mod)
-            if m[0] == 'exp':
+            if mod == 'exp':
 	        # always fetch explanation to check permerrors
-	        exp = self.get_explanation(m[1])
+		arg = self.expand_domain(arg)
+	        exp = self.get_explanation(arg)
 	        if exp and not recursion:
 		    # only set explanation in base recursion level
 		    self.set_explanation(exp)
-            elif m[0] == 'redirect':
+            elif mod == 'redirect':
                 self.check_lookups()
-                redirect = self.expand(m[1])
-            elif m[0] == 'default':
-		arg = self.expand(m[1])
+                redirect = self.expand_domain(arg)
+		if not redirect:
+		    raise PermError('redirect has empty domain:',arg)
+            elif mod == 'default':
+		arg = self.expand(arg)
                 # default=- is the same as default=fail
                 default = RESULTS.get(arg, default)
 	    elif mod == 'op':
@@ -827,13 +850,17 @@ class query(object):
     def get_explanation(self, spec):
         """Expand an explanation."""
         if spec:
-            a = self.dns_txt(self.expand(spec))
+            a = self.dns_txt(spec)
 	    if len(a) == 1:
 	    	try:
 		    return self.expand(a[0], stripdot=False)
 		except PermError:
 		    # RFC4408 6.2/4 syntax errors cause exp= to be ignored
 		    pass
+	if self.strict > 1:
+	    raise PermError('Empty domain-spec on exp=')
+	# RFC4408 6.2/4 empty domain spec is ignored
+	# (unless you give precedence to the grammar).
 	return None
 
     def expand(self, str, stripdot=True): # macros='slodipvh'
@@ -1275,6 +1302,9 @@ def parse_mechanism(str, d):
     >>> parse_mechanism('a', 'foo.com')
     ('a', 'foo.com', None, None)
 
+    >>> parse_mechanism('exists','foo.com')
+    ('exists', None, None, None)
+
     >>> parse_mechanism('a:bar.com', 'foo.com')
     ('a', 'bar.com', None, None)
 
@@ -1310,7 +1340,9 @@ def parse_mechanism(str, d):
 
     a = str.split(':', 1)
     if len(a) < 2:
-        return str.lower(), d, cidr, cidr6
+        str = str.lower()
+	if str == 'exists': d = None
+        return str, d, cidr, cidr6
     return a[0].lower(), a[1], cidr, cidr6
 
 def reverse_dots(name):

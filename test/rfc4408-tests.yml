@@ -1,6 +1,13 @@
-# This is the openspf.org test suite (version 2006.11) based on RFC 4408.
+# This is the openspf.org test suite (version 2007.01) based on RFC 4408.
 # $Id$
 # vim:sw=2 sts=2
+#
+# Changes:
+#  - The exp-empty-domain test case is subject to controversy, because
+#    the grammar does not allow domain-spec to be empty, so both results
+#    are allowed for now.
+#  - There was a bug in 2006.11 that caused TXT ONLY implementations to fail.
+#    Added additional exp= and redirect= tests.
 #
 # Contributors:
 #   Stuart D Gathman	everything so far
@@ -493,6 +500,14 @@ tests:
     host: CAFE:BABE::1
     mailfrom: foo@e3.example.com
     result: pass
+  ptr-empty-domain:
+    description: >-
+      domain-spec cannot be empty.
+    spec: 5.5/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e5.example.com
+    result: permerror
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -512,6 +527,8 @@ zonedata:
     - AAAA: CAFE:BABE::1
   e4.example.com:
     - SPF: v=spf1 ptr -all
+  e5.example.com:
+    - SPF: "v=spf1 ptr:"
 ---
 description: A mechanism syntax
 tests:
@@ -677,6 +694,14 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e12.example.com
     result: permerror
+  a-empty-domain:
+    description: >-
+      domain-spec cannot be empty.
+    spec: 5.3/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e13.example.com
+    result: permerror
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -717,6 +742,8 @@ zonedata:
     - A: 1.2.3.4
   e12.example.com:
     - SPF: v=spf1 a:example.-com
+  e13.example.com:
+    - SPF: "v=spf1 a:"
 ---
 description: Include mechanism semantics and syntax
 tests:
@@ -768,6 +795,14 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e6.example.com
     result: permerror
+  include-cidr:
+    description: >-
+      include          = "include"  ":" domain-spec
+    spec: 5.2/1
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e9.example.com
+    result: permerror
   include-none:
     description: >-
       recursive check_host() result of none causes include to permerror
@@ -775,6 +810,14 @@ tests:
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e7.example.com
+    result: permerror
+  include-empty-domain:
+    description: >-
+      domain-spec cannot be empty.
+    spec: 5.2/1
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e8.example.com
     result: permerror
 zonedata:
   mail.example.com:
@@ -803,6 +846,10 @@ zonedata:
     - SPF: v=spf1 include +all
   e7.example.com:
     - SPF: v=spf1 include:erehwon.example.com -all
+  e8.example.com:
+    - SPF: "v=spf1 include: -all"
+  e9.example.com:
+    - SPF: "v=spf1 include:ip5.example.com/24 -all"
 ---
 description: MX mechanism syntax
 tests:
@@ -977,6 +1024,14 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e4.example.com
     result: neutral
+  mx-empty-domain:
+    description: >-
+      domain-spec cannot be empty.
+    spec: 5.2/1
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e13.example.com
+    result: permerror
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -1027,6 +1082,44 @@ zonedata:
     - A: 1.2.3.4
   e12.example.com:
     - SPF: v=spf1 mx:example.-com
+  e13.example.com:
+    - SPF: "v=spf1 mx: -all"
+---
+description: EXISTS mechanism syntax
+tests:
+  exists-empty-domain:
+    description: >-
+      domain-spec cannot be empty.
+    spec: 5.7/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e1.example.com
+    result: permerror
+  exists-implicit:
+    description: >-
+      exists           = "exists"   ":" domain-spec
+    spec: 5.7/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e2.example.com
+    result: permerror
+  exists-cidr:
+    description: >-
+      exists           = "exists"   ":" domain-spec
+    spec: 5.7/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e3.example.com
+    result: permerror
+zonedata:
+  mail.example.com:
+    - A: 1.2.3.4
+  e1.example.com:
+    - SPF: "v=spf1 exists:"
+  e2.example.com:
+    - SPF: "v=spf1 exists"
+  e3.example.com:
+    - SPF: "v=spf1 exists:mail.example.com/24"
 ---
 description: IP4 mechanism syntax
 tests:
@@ -1270,6 +1363,16 @@ tests:
     mailfrom: foo@e1.example.com
     result: fail
     explanation: DEFAULT
+  redirect-syntax-error:
+    description: |
+      Permerror if redirect= syntax error.
+    comment: >-
+      redirect      = "redirect" "=" domain-spec
+    spec: 6.1/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e17.example.com
+    result: permerror
   include-ignores-exp:
     description: >-
       when executing "include", exp= from the target domain MUST NOT be used.
@@ -1337,21 +1440,24 @@ tests:
     explanation: DEFAULT
   exp-empty-domain:
     description: |
-      Ignore exp if empty domain-spec.
+      Ignore exp if domain-spec is empty.
     comment: >-
-      If domain-spec is empty, or there are any DNS processing errors (any
-      RCODE other than 0), or if no records are returned, or if more than one
-      record is returned, or if there are syntax errors in the explanation
-      string, then proceed as if no exp modifier was given.
+      Section 6.2/4 says, "If domain-spec is empty, or there are any DNS
+      processing errors (any RCODE other than 0), or if no records are
+      returned, or if more than one record is returned, or if there are syntax
+      errors in the explanation string, then proceed as if no exp modifier was
+      given."  However, "if domain-spec is empty" conflicts with the grammar
+      given for the exp modifier.  If you fix the grammar to make
+      domain-spec optional, result is fail.  Otherwise, result is Permerror.
     spec: 6.2/4
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e12.example.com
-    result: fail
+    result: [ fail, permerror ]
     explanation: DEFAULT
-  exp-syntax-error:
+  explanation-syntax-error:
     description: |
-      Ignore exp if syntax error.
+      Ignore exp if the explanation string has a syntax error.
     comment: >-
       If domain-spec is empty, or there are any DNS processing errors (any
       RCODE other than 0), or if no records are returned, or if more than one
@@ -1363,6 +1469,16 @@ tests:
     mailfrom: foo@e13.example.com
     result: fail
     explanation: DEFAULT
+  exp-syntax-error:
+    description: |
+      Permerror if exp= syntax error.
+    comment: >-
+      explanation      = "exp" "=" domain-spec
+    spec: 6.2/1
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e16.example.com
+    result: permerror
   exp-twice:
     description: |
       exp= appears twice.
@@ -1374,6 +1490,17 @@ tests:
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e14.example.com
+    result: permerror
+  redirect-empty-domain:
+    description: |
+      redirect = "redirect" "=" domain-spec
+    comment: >-
+      Unlike for exp, there is no instruction to override the permerror
+      for an empty domain-spec (which is invalid syntax).
+    spec: 6.2/4
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e18.example.com
     result: permerror
   redirect-twice:
     description: |
@@ -1443,6 +1570,12 @@ zonedata:
     - SPF: v=spf1 exp=e13msg.example.com -all exp=e11msg.example.com
   e15.example.com:
     - SPF: v=spf1 redirect=e12.example.com -all redirect=e12.example.com
+  e16.example.com:
+    - SPF: v=spf1 exp=-all
+  e17.example.com:
+    - SPF: v=spf1 redirect=-all ?all
+  e18.example.com:
+    - SPF: v=spf1 ?all redirect=
 ---
 description: Macro expansion rules
 tests:
