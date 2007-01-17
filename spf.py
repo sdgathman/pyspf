@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.131  2007/01/16 23:54:58  customdesigned
+# Test and fix for invalid domain-spec.
+#
 # Revision 1.130  2007/01/15 02:21:10  customdesigned
 # Forget op= on redirect.
 #
@@ -818,7 +821,11 @@ class query(object):
 	    cidrlength = self.cidrmax
 
         if m in ('a', 'mx', 'ptr', 'exists', 'include'):
+	    if m == 'exists' and not arg:
+	        raise PermError('implicit exists not allowed', mech)
             arg = self.expand_domain(arg)
+	    if not arg:
+		raise PermError('empty domain:',mech)
             if m == 'include':
                 if arg == self.d:
                     if mech != 'include':
@@ -899,6 +906,8 @@ class query(object):
             elif mod == 'redirect':
                 self.check_lookups()
                 redirect = self.expand_domain(arg)
+		if not redirect:
+		    raise PermError('redirect has empty domain:',arg)
             elif mod == 'default':
 		arg = self.expand(arg)
                 # default=- is the same as default=fail
@@ -1454,6 +1463,9 @@ def parse_mechanism(str, d):
     >>> parse_mechanism('a', 'foo.com')
     ('a', 'foo.com', None, None)
 
+    >>> parse_mechanism('exists','foo.com')
+    ('exists', None, None, None)
+
     >>> parse_mechanism('a:bar.com', 'foo.com')
     ('a', 'bar.com', None, None)
 
@@ -1489,7 +1501,9 @@ def parse_mechanism(str, d):
 
     a = str.split(':', 1)
     if len(a) < 2:
-        return str.lower(), d, cidr, cidr6
+        str = str.lower()
+	if str == 'exists': d = None
+        return str, d, cidr, cidr6
     return a[0].lower(), a[1], cidr, cidr6
 
 def reverse_dots(name):
