@@ -118,6 +118,13 @@ The type99.py script is called from the command line as follows:
 python type99.py "v=spf1 -all" {Note: Use your desired SPF record instead.}
 \# 12 0b763d73706631202d616c6c {This is the correct result for "v=spf1 -all"}
 
+or 
+
+python type99 - {File name}
+
+The input file format is a standard BIND Zone file.  The type99 script will add
+a Type99 record for each TXT record found in the file.
+
 The spfquery.py script is called with a number of possible options.  Options can
 either use standard '-' prefix or be PERL style long options, '--'.  Supported
 options are:
