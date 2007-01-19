@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.2):
 # $Log$
+# Revision 1.108.2.14  2007/01/17 01:01:00  customdesigned
+# Merge latest test suite fixes.
+#
 #
 # Revision 1.108.2.13  2007/01/15 19:14:27  customdesigned
 # Permerror for more than one exp= or redirect=
@@ -395,9 +398,14 @@ class query(object):
         return self.p
 
     def best_guess(self, spf=DEFAULT_SPF):
-        """Return a best guess based on a default SPF record"""
+        """Return a best guess based on a default SPF record.
+    >>> q = query('1.2.3.4','','SUPERVISION1',receiver='example.com')
+    >>> q.best_guess()[0]
+    'none'
+	"""
+	if RE_TOPLAB.split(self.d)[-1]:
+	    return ('none', 250, '')
         return self.check(spf)
-
 
     def check(self, spf=None):
         """
@@ -1098,14 +1106,14 @@ class query(object):
                     ptrnames = self.dns_ptr(self.i)
                     if len(ptrnames) > max:
                         warning = 'More than %d PTR records returned' % max
-                        raise AmbiguityWarning(warning, i)
+                        raise AmbiguityWarning(warning, self.i)
                     else:
                         if len(ptrnames) == 0:
                             raise AmbiguityWarning(
                                 'No PTR records found for ptr mechanism', self.c)
                 except:
                     raise AmbiguityWarning(
-                      'No PTR records found for ptr mechanism', i)
+                      'No PTR records found for ptr mechanism', self.i)
         else:
             max = MAX_PTR * 4
 	cidrlength = self.cidrmax
