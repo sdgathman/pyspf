@@ -47,6 +47,12 @@ tests:
     host: 1.2.3.5
     mailfrom: lyme.eater@A...example.com
     result: none
+  not-fqdn:
+    spec: 4.3/1
+    helo: A2345678
+    host: 1.2.3.5
+    mailfrom: ''
+    result: none
   nolocalpart:
     spec: 4.3/2
     helo: mail.example.net

@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.132  2007/01/17 00:47:17  customdesigned
+# Test for and fix illegal implicit mechanisms.
+#
 # Revision 1.131  2007/01/16 23:54:58  customdesigned
 # Test and fix for invalid domain-spec.
 #
@@ -558,7 +561,13 @@ class query(object):
         return self.p
 
     def best_guess(self, spf=DEFAULT_SPF):
-        """Return a best guess based on a default SPF record"""
+        """Return a best guess based on a default SPF record.
+    >>> q = query('1.2.3.4','','SUPERVISION1',receiver='example.com')
+    >>> q.best_guess()[0]
+    'none'
+	"""
+	if RE_TOPLAB.split(self.d)[-1]:
+	    return ('none', 250, '')
         return self.check(spf)
 
 
@@ -1259,14 +1268,14 @@ class query(object):
                     ptrnames = self.dns_ptr(self.i)
                     if len(ptrnames) > max:
                         warning = 'More than %d PTR records returned' % max
-                        raise AmbiguityWarning(warning, i)
+                        raise AmbiguityWarning(warning, self.i)
                     else:
                         if len(ptrnames) == 0:
                             raise AmbiguityWarning(
                                 'No PTR records found for ptr mechanism', self.c)
                 except:
                     raise AmbiguityWarning(
-                      'No PTR records found for ptr mechanism', i)
+                      'No PTR records found for ptr mechanism', self.i)
         else:
             max = MAX_PTR * 4
 	cidrlength = self.cidrmax
