@@ -10,6 +10,9 @@
 # BUGS: multiline TXT RRs are not supported.
 # 
 # $Log$
+# Revision 1.5  2006/12/16 20:45:23  customdesigned
+# Move dns drivers to package directory.
+#
 # Revision 1.4  2005/08/26 20:53:38  kitterma
 # Fixed typo in type99 script
 #
@@ -44,7 +47,7 @@ if len(sys.argv) < 2:
     sys.stderr.write(USAGE % (sys.argv[0],sys.argv[0]))
     sys.exit(1)
 
-if sys.argv[1] == '-' or len(sys.argv) > 2:
+if sys.argv[1] == '-':
   RE_TXT = re.compile(r'^(?P<rr>.*\s)TXT\s"(?P<str>v=spf1.*)"')
   RE_TYPE99 = re.compile(r'\sTYPE99\s')
   for line in fileinput.input():
@@ -53,8 +56,17 @@ if sys.argv[1] == '-' or len(sys.argv) > 2:
     m = RE_TXT.match(line)
     if m:
       phrase = dnstxt(m.group('str'))
+      dns_string = ''
+      list = m.group('str')
+      for st in list:
+        dns_string += st
+      phrase = dnstxt(dns_string)
       s = m.group('rr') + 'TYPE99 \# %i'%len(phrase)
       print s,''.join(["%02x"%ord(c) for c in phrase])
 else:
-  phrase = dnstxt(sys.argv[1])
+  dns_string = ''
+  list = sys.argv[1:]
+  for st in list:
+    dns_string += st
+  phrase = dnstxt(dns_string)
   print "\# %i"%len(phrase),''.join(["%02x"%ord(c) for c in phrase])
