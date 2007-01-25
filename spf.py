@@ -28,53 +28,14 @@ For news, bugfixes, etc. visit the home page for this implementation at
     http://www.wayforward.net/spf/
 """
 
-# CVS Commits since last release (2.0.2):
+# CVS Commits since last release (2.0.3):
 # $Log$
-# Revision 1.108.2.14  2007/01/17 01:01:00  customdesigned
-# Merge latest test suite fixes.
-#
-#
-# Revision 1.108.2.13  2007/01/15 19:14:27  customdesigned
-# Permerror for more than one exp= or redirect=
-#
-# Revision 1.132  2007/01/17 00:47:17  customdesigned
-# Test for and fix illegal implicit mechanisms.
-#
-# Revision 1.131  2007/01/16 23:54:58  customdesigned
-# Test and fix for invalid domain-spec.
-#
-# Revision 1.130  2007/01/15 02:21:10  customdesigned
-# Forget op= on redirect.
-#
-# Revision 1.108.2.12  2007/01/13 18:45:33  customdesigned
-# Record matching mechanism.
-#
-# Revision 1.108.2.11  2007/01/13 18:21:41  customdesigned
-# Test for RFC4408 6.2/4, and fix spf.py to comply.
-#
-# Revision 1.123  2007/01/11 18:49:37  customdesigned
-# Add mechanism to Received-SPF header.
-#
-# Revision 1.122  2007/01/11 18:25:54  customdesigned
-# Record matching mechanism.
-#
-# Revision 1.108.2.10  2007/01/13 00:46:35  kitterma
-# Update copyright statements for new year.
-#
-# Revision 1.108.2.9  2007/01/12 22:14:56  kitterma
-# Change DNS queries to only check Type SPF in Harsh mode
-#
-# Revision 1.108.2.8  2007/01/06 22:58:21  kitterma
-# Update changelogs and version to reflect 2.0.2 released and 2.0.3 started.
-#
-# Revision 1.108.2.7  2007/01/06 21:03:15  customdesigned
-# Tested spf.py in python2.2.
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.3: January 12, 2007"
+__version__ = "2.0.4: January 24, 2007"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
