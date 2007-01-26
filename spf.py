@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.133  2007/01/19 23:25:33  customdesigned
+# Fix validated_ptrs and best_guess.
+#
 # Revision 1.132  2007/01/17 00:47:17  customdesigned
 # Test for and fix illegal implicit mechanisms.
 #
@@ -252,7 +255,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.1: July 22, 2005"
+__version__ = "2.1: January 22, 2007"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -455,20 +458,19 @@ def check(i, s, h, local=None, receiver=None):
     return res, code, exp
 
 class query(object):
-    """A query object keeps the relevant information about a single SPF
-    query:
+    """A query object keeps the relevant information about a single SPF query:
 
-    i: ip address of SMTP client in dotted notation
-    s: sender declared in MAIL FROM:<>
-    l: local part of sender s
-    d: current domain, initially domain part of sender s
-    h: EHLO/HELO domain
-    v: 'in-addr' for IPv4 clients and 'ip6' for IPv6 clients
-    t: current timestamp
-    p: SMTP client domain name
-    o: domain part of sender s
-    r: receiver
-    c: pretty ip address (different from i for IPv6)
+     - i: ip address of SMTP client in dotted notation
+     - s: sender declared in MAIL FROM:<>
+     - l: local part of sender s
+     - d: current domain, initially domain part of sender s
+     - h: EHLO/HELO domain
+     - v: 'in-addr' for IPv4 clients and 'ip6' for IPv6 clients
+     - t: current timestamp
+     - p: SMTP client domain name
+     - o: domain part of sender s
+     - r: receiver
+     - c: pretty ip address (different from i for IPv6)
 
     This is also, by design, the same variables used in SPF macro
     expansion.
@@ -1410,7 +1412,6 @@ def split_email(s, h):
     """Given a sender email s and a HELO domain h, create a valid tuple
     (l, d) local-part and domain-part.
 
-    Examples:
     >>> split_email('', 'wayforward.net')
     ('postmaster', 'wayforward.net')
 
@@ -1435,33 +1436,26 @@ def quote_value(s):
     """Quote the value for a key-value pair in Received-SPF header field
     if needed.  No quoting needed for a dot-atom value.
 
-    Examples:
     >>> quote_value('foo@bar.com')
     '"foo@bar.com"'
-    
     >>> quote_value('mail.example.com')
     'mail.example.com'
-
     >>> quote_value('A:1.2.3.4')
     '"A:1.2.3.4"'
-
     >>> quote_value('abc"def')
     '"abc\\\\"def"'
-
     >>> quote_value(r'abc\def')
     '"abc\\\\\\\\def"'
-
     >>> quote_value('abc..def')
     '"abc..def"'
-
     >>> quote_value('')
     '""'
-
     >>> quote_value(None)
     """
     if s is None or RE_DOT_ATOM.match(s):
       return s
-    return '"' + s.replace('\\',r'\\').replace('"',r'\"') + '"'
+    return '"' + s.replace('\\',r'\\').replace('"',r'\"'
+    		).replace('\x00',r'\x00') + '"'
 
 def parse_mechanism(str, d):
     """Breaks A, MX, IP4, and PTR mechanisms into a (name, domain,
@@ -1469,30 +1463,23 @@ def parse_mechanism(str, d):
     the cidr defaults to 32 if not present.
 
     Examples:
+
     >>> parse_mechanism('a', 'foo.com')
     ('a', 'foo.com', None, None)
-
     >>> parse_mechanism('exists','foo.com')
     ('exists', None, None, None)
-
     >>> parse_mechanism('a:bar.com', 'foo.com')
     ('a', 'bar.com', None, None)
-
     >>> parse_mechanism('a/24', 'foo.com')
     ('a', 'foo.com', 24, None)
-
     >>> parse_mechanism('A:foo:bar.com/16//48', 'foo.com')
     ('a', 'foo:bar.com', 16, 48)
-
     >>> parse_mechanism('-exists:%{i}.%{s1}.100/86400.rate.%{d}','foo.com')
     ('-exists', '%{i}.%{s1}.100/86400.rate.%{d}', None, None)
-
     >>> parse_mechanism('mx:%%%_/.Claranet.de/27','foo.com')
     ('mx', '%%%_/.Claranet.de', 27, None)
-
     >>> parse_mechanism('mx:%{d}//97','foo.com')
     ('mx', '%{d}', None, 97)
-
     >>> parse_mechanism('iP4:192.0.0.0/8','foo.com')
     ('ip4', '192.0.0.0', 8, None)
     """
@@ -1518,10 +1505,10 @@ def parse_mechanism(str, d):
 def reverse_dots(name):
     """Reverse dotted IP addresses or domain names.
 
-    Example:
+    Examples:
+
     >>> reverse_dots('192.168.0.145')
     '145.0.168.192'
-
     >>> reverse_dots('email.example.com')
     'com.example.email'
     """
@@ -1534,15 +1521,13 @@ def domainmatch(ptrs, domainsuffix):
     domain names.
 
     Examples:
+
     >>> domainmatch(['FOO.COM'], 'foo.com')
     1
-
     >>> domainmatch(['moo.foo.com'], 'FOO.COM')
     1
-
     >>> domainmatch(['moo.bar.com'], 'foo.com')
     0
-
     """
     domainsuffix = domainsuffix.lower()
     for ptr in ptrs:
@@ -1556,26 +1541,24 @@ def domainmatch(ptrs, domainsuffix):
 def addr2bin(str):
     """Convert a string IPv4 address into an unsigned integer.
 
-    Examples::
+    Examples:
+
     >>> addr2bin('127.0.0.1')
     2130706433L
-
     >>> addr2bin('127.0.0.1') == socket.INADDR_LOOPBACK
     1
-
     >>> addr2bin('255.255.255.254')
     4294967294L
-
     >>> addr2bin('192.168.0.1')
     3232235521L
 
     Unlike DNS.addr2bin, the n, n.n, and n.n.n forms for IP addresses
-    are handled as well::
+    are handled as well:
+
     >>> addr2bin('10.65536')
     167837696L
     >>> 10 * (2 ** 24) + 65536
     167837696
-
     >>> addr2bin('10.93.512')
     173867520L
     >>> 10 * (2 ** 24) + 93 * (2 ** 16) + 512
@@ -1584,6 +1567,7 @@ def addr2bin(str):
     return struct.unpack("!L", socket.inet_aton(str))[0]
 
 def bin2long6(str):
+    """Convert binary IP6 address into an unsigned Python long integer."""
     h, l = struct.unpack("!QQ", str)
     return h << 64 | l
 
@@ -1612,12 +1596,11 @@ def split(str, delimiters, joiner=None):
     joiner is not specified.
 
     Examples:
+
     >>> split('192.168.0.45', '.')
     ['192', '.', '168', '.', '0', '.', '45']
-
     >>> split('terry@wayforward.net', '@.')
     ['terry', '@', 'wayforward', '.', 'net']
-
     >>> split('terry@wayforward.net', '@.', '.')
     ['terry', '.', 'wayforward', '.', 'net']
     """
@@ -1640,6 +1623,7 @@ def insert_libspf_local_policy(spftxt, local=None):
     mechanism.  This is how the libspf{2} libraries handle "local-policy".
     
     Examples:
+
     >>> insert_libspf_local_policy('v=spf1 -all')
     'v=spf1 -all'
     >>> insert_libspf_local_policy('v=spf1 -all','mx')

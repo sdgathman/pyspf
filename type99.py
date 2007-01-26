@@ -29,6 +29,9 @@ For more information about SPF, a tool against email forgery, see
 # filtering through this script will refresh the TYPE99 RRs.
 # 
 # $Log$
+# Revision 1.7  2007/01/25 21:59:29  kitterma
+# Update comments to match bug fix.  Include copyright statements.  Update sheband.
+#
 # Revision 1.6  2007/01/25 21:51:45  kitterma
 # Fix type99 script for multi-line support (Fixes sourceforge #1257140)
 #
@@ -60,21 +63,15 @@ def dnstxt(txt):
     s,txt = txt[:255],txt[255:]
     r.append(chr(len(s))+s)
   return ''.join(r)
-    
-USAGE="""Usage:\t%s phrase
-	%s - <zoneinfo
-"""
 
-if len(sys.argv) < 2:
-    sys.stderr.write(USAGE % (sys.argv[0],sys.argv[0]))
-    sys.exit(1)
+RE_TXT = re.compile(r'^(?P<rr>.*\s)TXT\s"(?P<str>v=spf1.*)"(?P<eol>.*)',
+	re.DOTALL)
+RE_TYPE99 = re.compile(r'\sTYPE99\s')
 
-if sys.argv[1] == '-':
-  RE_TXT = re.compile(r'^(?P<rr>.*\s)TXT\s"(?P<str>v=spf1.*)"')
-  RE_TYPE99 = re.compile(r'\sTYPE99\s')
-  for line in fileinput.input():
+def filter(fin):
+  for line in fin:
     if not RE_TYPE99.search(line):
-      sys.stdout.write(line)
+      yield line
     m = RE_TXT.match(line)
     if m:
       phrase = dnstxt(m.group('str'))
@@ -83,12 +80,24 @@ if sys.argv[1] == '-':
       for st in list:
         dns_string += st
       phrase = dnstxt(dns_string)
-      s = m.group('rr') + 'TYPE99 \# %i'%len(phrase)
-      print s,''.join(["%02x"%ord(c) for c in phrase])
-else:
-  dns_string = ''
-  list = sys.argv[1:]
-  for st in list:
-    dns_string += st
-  phrase = dnstxt(dns_string)
-  print "\# %i"%len(phrase),''.join(["%02x"%ord(c) for c in phrase])
+      s = m.group('rr') + 'TYPE99 \# %i '%len(phrase)
+      yield s+''.join(["%02x"%ord(c) for c in phrase])+m.group('eol')
+    
+USAGE="""Usage:\t%s phrase
+	%s - <zoneinfo
+"""
+
+if __name__ == '__main__':
+  if len(sys.argv) < 2:
+      sys.stderr.write(USAGE % (sys.argv[0],sys.argv[0]))
+      sys.exit(1)
+
+  if sys.argv[1] == '-':
+    sys.stdout.writelines(filter(fileinput.input()))
+  else:
+    dns_string = ''
+    list = sys.argv[1:]
+    for st in list:
+      dns_string += st
+    phrase = dnstxt(dns_string)
+    print "\# %i"%len(phrase),''.join(["%02x"%ord(c) for c in phrase])

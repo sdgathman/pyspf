@@ -10,7 +10,7 @@
 #    Added additional exp= and redirect= tests.
 #
 # Contributors:
-#   Stuart D Gathman	everything so far
+#   Stuart D Gathman    everything so far
 #   Julian Mehnle       proofread YAML syntax, spelling, formal schema
 # Informal contributors (suggestions but no code):
 #   Craig Whitmore
@@ -47,7 +47,7 @@ tests:
     host: 1.2.3.5
     mailfrom: lyme.eater@A...example.com
     result: none
-  not-fqdn:
+  helo-not-fqdn:
     spec: 4.3/1
     helo: A2345678
     host: 1.2.3.5
@@ -1371,9 +1371,17 @@ tests:
     explanation: DEFAULT
   redirect-syntax-error:
     description: |
-      Permerror if redirect= syntax error.
-    comment: >-
       redirect      = "redirect" "=" domain-spec
+    comment: >-
+      A literal application of the grammar causes modifier syntax
+      errors (except for macro syntax) to become unknown-modifier.
+
+        modifier = explanation | redirect | unknown-modifier
+
+      However, it is generally agreed, with precedent in other RFCs,
+      that unknown-modifier should not be "greedy", and should not
+      match known modifier names.  There should have been explicit
+      prose to this effect, and some has been proposed as an errata.
     spec: 6.1/2
     helo: mail.example.com
     host: 1.2.3.4
@@ -1477,9 +1485,17 @@ tests:
     explanation: DEFAULT
   exp-syntax-error:
     description: |
-      Permerror if exp= syntax error.
-    comment: >-
       explanation      = "exp" "=" domain-spec
+    comment: >-
+      A literal application of the grammar causes modifier syntax
+      errors (except for macro syntax) to become unknown-modifier.
+
+        modifier = explanation | redirect | unknown-modifier
+
+      However, it is generally agreed, with precedent in other RFCs,
+      that unknown-modifier should not be "greedy", and should not
+      match known modifier names.  There should have been explicit
+      prose to this effect, and some has been proposed as an errata.
     spec: 6.2/1
     helo: mail.example.com
     host: 1.2.3.4
@@ -1648,7 +1664,7 @@ tests:
   v-macro-ip4:
     spec: 8.1/6
     description: |-
-      v	= the string "in-addr" if <ip> is ipv4, or "ip6" if <ip> is ipv6
+      v = the string "in-addr" if <ip> is ipv4, or "ip6" if <ip> is ipv6
     helo: msgbas2x.cos.example.com
     host: 192.168.218.40
     mailfrom: test@e4.example.com
@@ -1657,7 +1673,7 @@ tests:
   v-macro-ip6:
     spec: 8.1/6
     description: |-
-      v	= the string "in-addr" if <ip> is ipv4, or "ip6" if <ip> is ipv6
+      v = the string "in-addr" if <ip> is ipv4, or "ip6" if <ip> is ipv6
     helo: msgbas2x.cos.example.com
     host: CAFE:BABE::1
     mailfrom: test@e4.example.com
@@ -1674,7 +1690,7 @@ tests:
   p-macro-ip4-novalid:
     spec: 8.1/22
     description: |-
-      p	= the validated domain name of <ip>
+      p = the validated domain name of <ip>
     comment: >-
       The PTR in this example does not validate.
     helo: msgbas2x.cos.example.com
@@ -1685,7 +1701,7 @@ tests:
   p-macro-ip4-valid:
     spec: 8.1/22
     description: |-
-      p	= the validated domain name of <ip>
+      p = the validated domain name of <ip>
     comment: >-
       If a subdomain of the <domain> is present, it SHOULD be used.
     helo: msgbas2x.cos.example.com
@@ -1696,7 +1712,7 @@ tests:
   p-macro-ip6-novalid:
     spec: 8.1/22
     description: |-
-      p	= the validated domain name of <ip>
+      p = the validated domain name of <ip>
     comment: >-
       The PTR in this example does not validate.
     helo: msgbas2x.cos.example.com
@@ -1707,7 +1723,7 @@ tests:
   p-macro-ip6-valid:
     spec: 8.1/22
     description: |-
-      p	= the validated domain name of <ip>
+      p = the validated domain name of <ip>
     comment: >-
       If a subdomain of the <domain> is present, it SHOULD be used.  
     helo: msgbas2x.cos.example.com
@@ -1718,7 +1734,7 @@ tests:
   p-macro-multiple:
     spec: 8.1/22
     description: |-
-      p	= the validated domain name of <ip>
+      p = the validated domain name of <ip>
     comment: >-
       If a subdomain of the <domain> is present, it SHOULD be used.  
     helo: msgbas2x.cos.example.com
@@ -1738,7 +1754,7 @@ tests:
   hello-macro:
     spec: 8.1/6
     description: |-
-      h	= HELO/EHLO domain
+      h = HELO/EHLO domain
     helo: msgbas2x.cos.example.com
     host: 192.168.218.40
     mailfrom: test@e9.example.com
@@ -1746,7 +1762,7 @@ tests:
   invalid-hello-macro:
     spec: 8.1/2
     description: |-
-      h	= HELO/EHLO domain, but HELO is invalid
+      h = HELO/EHLO domain, but HELO is invalid
     comment: >-
       Domain-spec must end in either a macro, or a valid toplabel.
       It is not correct to check syntax after macro expansion.

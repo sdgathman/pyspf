@@ -181,6 +181,27 @@ class SPFTestCase(unittest.TestCase):
     import doctest, SPF.pyip6
     doctest.testmod(SPF.pyip6)
 
+  def testQuoteValue(self):
+    s = spf.quote_value('-all\x00')
+    self.assertEqual('"-all\\x00"',s)
+
+  def testType99(self):
+    import type99
+    t = ('foo.com IN TXT "v=spf1"\n',)
+    a = list(type99.filter(t))
+    self.assertEqual(2,len(a))
+    self.assertEqual(t[0].rstrip(),a[0])
+    self.assertEqual(r'foo.com IN TYPE99 \# 7 06763d73706631',a[1])
+    t = ('foo.com IN TXT ( "v=spf" "1" )\n',)
+    a = list(type99.filter(t))
+    self.assertEqual(2,len(a))
+    self.assertEqual(t[0].rstrip(),a[0])
+    self.assertEqual(r'foo.com IN TYPE99 \# 7 06763d73706631',a[1])
+    t = ('foo.com IN TXT ( "v=spf"\n',' "1" )\n',)
+    a = list(type99.filter(t))
+    self.assertEqual(3,len(a))
+    self.assertEqual(r'foo.com IN TYPE99 \# 7 06763d73706631',a[2])
+
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
 if __name__ == '__main__':

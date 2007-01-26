@@ -1,3 +1,11 @@
+"""Pure Python IP6 parsing and formatting
+
+Copyright (c) 2006 Stuart Gathman <stuart@bmsi.com>
+
+This module is free software, and you may redistribute it and/or modify
+it under the same terms as Python itself, so long as this copyright message
+and disclaimer are retained in their original form.
+"""
 import struct
 #from spf import RE_IP4 
 import re
@@ -5,16 +13,23 @@ PAT_IP4 = r'\.'.join([r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)
 RE_IP4 = re.compile(PAT_IP4+'$')
 
 def inet_ntop(s):
-  """Convert ip6 address to standard hex notation.
+  """
+  Convert ip6 address to standard hex notation.
+
   Examples:
+
   >>> inet_ntop(struct.pack("!HHHHHHHH",0,0,0,0,0,0xFFFF,0x0102,0x0304))
   '::FFFF:1.2.3.4'
+
   >>> inet_ntop(struct.pack("!HHHHHHHH",0x1234,0x5678,0,0,0,0,0x0102,0x0304))
   '1234:5678::102:304'
+
   >>> inet_ntop(struct.pack("!HHHHHHHH",0,0,0,0x1234,0x5678,0,0x0102,0x0304))
   '::1234:5678:0:102:304'
+
   >>> inet_ntop(struct.pack("!HHHHHHHH",0x1234,0x5678,0,0x0102,0x0304,0,0,0))
   '1234:5678:0:102:304::'
+
   >>> inet_ntop(struct.pack("!HHHHHHHH",0,0,0,0,0,0,0,0))
   '::'
   """
@@ -41,20 +56,29 @@ def inet_ntop(s):
   return "%x:%x:%x:%x:%x:%x:%x:%x" % a
 
 def inet_pton(p):
-  """Convert ip6 standard hex notation to ip6 address.
+  """
+  Convert ip6 standard hex notation to ip6 address.
+
   Examples:
+
   >>> struct.unpack('!HHHHHHHH',inet_pton('::'))
   (0, 0, 0, 0, 0, 0, 0, 0)
+
   >>> struct.unpack('!HHHHHHHH',inet_pton('::1234'))
   (0, 0, 0, 0, 0, 0, 0, 4660)
+
   >>> struct.unpack('!HHHHHHHH',inet_pton('1234::'))
   (4660, 0, 0, 0, 0, 0, 0, 0)
+
   >>> struct.unpack('!HHHHHHHH',inet_pton('1234::5678'))
   (4660, 0, 0, 0, 0, 0, 0, 22136)
+
   >>> struct.unpack('!HHHHHHHH',inet_pton('::FFFF:1.2.3.4'))
   (0, 0, 0, 0, 0, 65535, 258, 772)
+
   >>> struct.unpack('!HHHHHHHH',inet_pton('1.2.3.4'))
   (0, 0, 0, 0, 0, 65535, 258, 772)
+
   >>> try: inet_pton('::1.2.3.4.5')
   ... except ValueError,x: print x
   ::1.2.3.4.5
