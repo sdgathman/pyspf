@@ -181,10 +181,6 @@ class SPFTestCase(unittest.TestCase):
     import doctest, SPF.pyip6
     doctest.testmod(SPF.pyip6)
 
-  def testQuoteValue(self):
-    s = spf.quote_value('-all\x00')
-    self.assertEqual('"-all\\x00"',s)
-
   def testType99(self):
     import type99
     t = ('foo.com IN TXT "v=spf1"\n',)

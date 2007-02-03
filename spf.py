@@ -47,6 +47,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.134  2007/01/26 05:06:41  customdesigned
+# Tweaks for epydoc.
+# Design for test in type99.py, test cases.
+# Null byte test case for quote_value.
+#
 # Revision 1.133  2007/01/19 23:25:33  customdesigned
 # Fix validated_ptrs and best_guess.
 #
@@ -1433,7 +1438,7 @@ def split_email(s, h):
             return 'postmaster', s
 
 def quote_value(s):
-    """Quote the value for a key-value pair in Received-SPF header field
+    r"""Quote the value for a key-value pair in Received-SPF header field
     if needed.  No quoting needed for a dot-atom value.
 
     >>> quote_value('foo@bar.com')
@@ -1443,13 +1448,15 @@ def quote_value(s):
     >>> quote_value('A:1.2.3.4')
     '"A:1.2.3.4"'
     >>> quote_value('abc"def')
-    '"abc\\\\"def"'
+    '"abc\\"def"'
     >>> quote_value(r'abc\def')
-    '"abc\\\\\\\\def"'
+    '"abc\\\\def"'
     >>> quote_value('abc..def')
     '"abc..def"'
     >>> quote_value('')
     '""'
+    >>> quote_value('-all\x00')
+    '"-all\\x00"'
     >>> quote_value(None)
     """
     if s is None or RE_DOT_ATOM.match(s):
