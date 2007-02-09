@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.135  2007/02/03 23:13:30  customdesigned
+# Use raw docstring to simplify quoting.
+#
 # Revision 1.134  2007/01/26 05:06:41  customdesigned
 # Tweaks for epydoc.
 # Design for test in type99.py, test cases.
@@ -1276,13 +1279,8 @@ class query(object):
                     if len(ptrnames) > max:
                         warning = 'More than %d PTR records returned' % max
                         raise AmbiguityWarning(warning, self.i)
-                    else:
-                        if len(ptrnames) == 0:
-                            raise AmbiguityWarning(
-                                'No PTR records found for ptr mechanism', self.c)
                 except:
-                    raise AmbiguityWarning(
-                      'No PTR records found for ptr mechanism', self.i)
+                    pass
         else:
             max = MAX_PTR * 4
 	cidrlength = self.cidrmax
