@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.3):
 # $Log$
+# Revision 1.108.2.16  2007/01/25 20:50:13  kitterma
+# Update versions to reflect working on 2.0.4 now.
+#
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
@@ -812,7 +815,7 @@ class query(object):
     def check_lookups(self):
         self.lookups = self.lookups + 1
         if self.lookups > MAX_LOOKUP*4:
-            raise PermError('More than %d DNS lookups'%MAX_LOOKUP*4)
+            raise PermError('More than %d DNS lookups'%(MAX_LOOKUP*4))
         if self.lookups > MAX_LOOKUP:
             self.note_error('Too many DNS lookups')
 
