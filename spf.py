@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.136  2007/02/09 04:44:00  kitterma
+# Get rid of problematic PTR ambiguity warning.
+#
 # Revision 1.135  2007/02/03 23:13:30  customdesigned
 # Use raw docstring to simplify quoting.
 #
@@ -1024,7 +1027,7 @@ class query(object):
     def check_lookups(self):
         self.lookups = self.lookups + 1
         if self.lookups > MAX_LOOKUP*4:
-            raise PermError('More than %d DNS lookups'%MAX_LOOKUP*4)
+            raise PermError('More than %d DNS lookups'%(MAX_LOOKUP*4))
         if self.lookups > MAX_LOOKUP:
             self.note_error('Too many DNS lookups')
 
