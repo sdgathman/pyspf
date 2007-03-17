@@ -138,16 +138,26 @@ tests:
       test empty MX
     helo: mail.example.com
     host: 1.2.3.4
-    mailfrom: ''
+    mailfrom: ""
     result: neutral
   localhost:
     helo: mail.example.com
     host: 127.0.0.1
     mailfrom: root@example.com
     result: fail
+  default-modifier:
+    comment: |
+      default modifier implemented in lax mode for compatibility
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: root@e1.example.com
+    result: fail
+    strict: 0
 zonedata:
   mail.example.com:
   - MX: [0, '']
   - SPF: v=spf1 mx
   example.com:
   - SPF: v=spf1 -all
+  e1.example.com:
+  - SPF: v=spf1 default=-

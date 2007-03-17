@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.138  2007/03/17 18:20:00  customdesigned
+# Default modifier is obsolete.  Retab (expandtab) spf.py
+#
 # Revision 1.137  2007/03/13 20:14:10  customdesigned
 # Missing parentheses.
 #
@@ -518,6 +521,7 @@ class query(object):
         self.strict = strict
         if i:
             self.set_ip(i)
+        self.default_modifier = True    # follow default= in lax mode
 
     def set_ip(self, i):
         "Set connect ip, and ip6 or ip4 mode."
@@ -933,6 +937,15 @@ class query(object):
                 redirect = self.expand_domain(arg)
                 if not redirect:
                     raise PermError('redirect has empty domain:',arg)
+            elif mod == 'default':
+                # default modifier is obsolete
+                if self.strict > 1:
+                    raise AmbiguityWarning('The default= modifier is obsolete.')
+                if not self.strict and self.default_modifier:
+                    # might be an old policy, so do it anyway
+                    arg = self.expand(arg)
+                    # default=- is the same as default=fail
+                    default = RESULTS.get(arg, default)
             elif mod == 'op':
                 if not recursion:
                     for v in arg.split('.'):

@@ -67,6 +67,7 @@ class SPFTest(object):
     self.explanation = None
     self.spec = None
     self.header = None
+    self.strict = True
     self.receiver = None
     self.comment = []
     if 'result' not in data:
@@ -144,7 +145,7 @@ class SPFTestCase(unittest.TestCase):
     passed,failed = 0,0
     for t in tests:
       zonedata = t.scenario.zonedata
-      q = spf.query(i=t.host, s=t.mailfrom, h=t.helo)
+      q = spf.query(i=t.host, s=t.mailfrom, h=t.helo, strict=t.strict)
       q.set_default_explanation('DEFAULT')
       res,code,exp = q.check()
       if res in oldresults:
@@ -186,8 +187,8 @@ class SPFTestCase(unittest.TestCase):
     t = ('foo.com IN TXT "v=spf1"\n',)
     a = list(type99.filter(t))
     self.assertEqual(2,len(a))
-    self.assertEqual(t[0].rstrip(),a[0])
-    self.assertEqual(r'foo.com IN TYPE99 \# 7 06763d73706631',a[1])
+    self.assertEqual(t[0],a[0])
+    self.assertEqual(r'foo.com IN TYPE99 \# 7 06763d73706631',a[1].rstrip())
     t = ('foo.com IN TXT ( "v=spf" "1" )\n',)
     a = list(type99.filter(t))
     self.assertEqual(2,len(a))
