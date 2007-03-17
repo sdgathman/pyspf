@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.3):
 # $Log$
+# Revision 1.108.2.17  2007/03/13 20:13:16  customdesigned
+# Missing parentheses.
+#
 # Revision 1.108.2.16  2007/01/25 20:50:13  kitterma
 # Update versions to reflect working on 2.0.4 now.
 #
@@ -74,11 +77,11 @@ def DNSLookup(name, qtype, strict=True):
     try:
         req = DNS.DnsRequest(name, qtype=qtype)
         resp = req.req()
-	#resp.show()
+        #resp.show()
         # key k: ('wayforward.net', 'A'), value v
-	# FIXME: pydns returns AAAA RR as 16 byte binary string, but
-	# A RR as dotted quad.  For consistency, this driver should
-	# return both as binary string.
+        # FIXME: pydns returns AAAA RR as 16 byte binary string, but
+        # A RR as dotted quad.  For consistency, this driver should
+        # return both as binary string.
         return [((a['name'], a['typename']), a['data']) for a in resp.answers]
     except IOError, x:
         raise TempError, 'DNS ' + str(x)
@@ -105,7 +108,7 @@ RE_IP4 = re.compile(PAT_IP4+'$')
 
 RE_TOPLAB = re.compile(
     r'\.(?:[0-9a-z]*[a-z][0-9a-z]*|[0-9a-z]+-[0-9a-z-]*[0-9a-z])\.?$|%s'
-    	% PAT_CHAR, re.IGNORECASE)
+        % PAT_CHAR, re.IGNORECASE)
 
 RE_DOT_ATOM = re.compile(r'%(atext)s+([.]%(atext)s+)*$' % {
     'atext': r"[0-9a-z!#$%&'*+/=?^_`{}|~-]" }, re.IGNORECASE)
@@ -280,13 +283,13 @@ class query(object):
         self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
-	    self.ident = 'helo'
-	else:
-	    self.ident = 'mailfrom'
+            self.ident = 'helo'
+        else:
+            self.ident = 'mailfrom'
         self.l, self.o = split_email(s, h)
         self.t = str(int(time.time()))
         self.d = self.o
-        self.p = None	# lazy evaluation
+        self.p = None   # lazy evaluation
         if receiver:
             self.r = receiver
         else:
@@ -301,35 +304,36 @@ class query(object):
         self.lookups = 0
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
-	if i:
-	    self.set_ip(i)
+        if i:
+            self.set_ip(i)
+        self.default_modifier = False
 
     def set_ip(self, i):
         "Set connect ip, and ip6 or ip4 mode."
-	if RE_IP4.match(i):
-	    self.ip = addr2bin(i)
-	    ip6 = False
-	else:
-	    self.ip = bin2long6(inet_pton(i))
-	    if (self.ip >> 32) == 0xFFFF:	# IP4 mapped address
-		self.ip = self.ip & 0xFFFFFFFFL
-		ip6 = False
-	    else:
-		ip6 = True
-	# NOTE: self.A is not lowercase, so isn't a macro.  See query.expand()
-	if ip6:
-	    self.c = inet_ntop(
-	    	struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFFL))
-	    self.i = '.'.join(list('%032X'%self.ip))
-	    self.A = 'AAAA'
-	    self.v = 'ip6'
-	    self.cidrmax = 128
-	else:
-	    self.c = socket.inet_ntoa(struct.pack("!L", self.ip))
-	    self.i = self.c
-	    self.A = 'A'
-	    self.v = 'in-addr'
-	    self.cidrmax = 32
+        if RE_IP4.match(i):
+            self.ip = addr2bin(i)
+            ip6 = False
+        else:
+            self.ip = bin2long6(inet_pton(i))
+            if (self.ip >> 32) == 0xFFFF:       # IP4 mapped address
+                self.ip = self.ip & 0xFFFFFFFFL
+                ip6 = False
+            else:
+                ip6 = True
+        # NOTE: self.A is not lowercase, so isn't a macro.  See query.expand()
+        if ip6:
+            self.c = inet_ntop(
+                struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFFL))
+            self.i = '.'.join(list('%032X'%self.ip))
+            self.A = 'AAAA'
+            self.v = 'ip6'
+            self.cidrmax = 128
+        else:
+            self.c = socket.inet_ntoa(struct.pack("!L", self.ip))
+            self.i = self.c
+            self.A = 'A'
+            self.v = 'in-addr'
+            self.cidrmax = 32
 
     def set_default_explanation(self, exp):
         exps = self.exps
@@ -349,16 +353,16 @@ class query(object):
             p = self.validated_ptrs()
             if not p:
                 self.p = "unknown"
-	    elif self.d in p:
-	        self.p = self.d
-	    else:
-	        sfx = '.' + self.d
-	        for d in p:
-		    if d.endswith(sfx):
-		        self.p = d
-			break
-		else:
-		    self.p = p[0]
+            elif self.d in p:
+                self.p = self.d
+            else:
+                sfx = '.' + self.d
+                for d in p:
+                    if d.endswith(sfx):
+                        self.p = d
+                        break
+                else:
+                    self.p = p[0]
         return self.p
 
     def best_guess(self, spf=DEFAULT_SPF):
@@ -366,9 +370,9 @@ class query(object):
     >>> q = query('1.2.3.4','','SUPERVISION1',receiver='example.com')
     >>> q.best_guess()[0]
     'none'
-	"""
-	if RE_TOPLAB.split(self.d)[-1]:
-	    return ('none', 250, '')
+        """
+        if RE_TOPLAB.split(self.d)[-1]:
+            return ('none', 250, '')
         return self.check(spf)
 
     def check(self, spf=None):
@@ -438,8 +442,8 @@ class query(object):
         # will continue processing.  However, the exception
         # that strict processing would raise is saved here
         self.perm_error = None
-	self.mechanism = None
-	self.options = {}
+        self.mechanism = None
+        self.options = {}
 
         try:
             self.lookups = 0
@@ -449,12 +453,12 @@ class query(object):
                 spf = insert_libspf_local_policy(
                     spf, self.libspf_local)
             rc = self.check1(spf, self.d, 0)
-	    if self.perm_error:
-		# lax processing encountered a permerror, but continued
-		self.perm_error.ext = rc
-		raise self.perm_error
-	    return rc
-	        
+            if self.perm_error:
+                # lax processing encountered a permerror, but continued
+                self.perm_error.ext = rc
+                raise self.perm_error
+            return rc
+                
         except TempError, x:
             self.prob = x.msg
             if x.mech:
@@ -510,10 +514,10 @@ class query(object):
 
     def expand_domain(self,arg):
         "validate and expand domain-spec"
-	# any trailing dot was removed by expand()
-	if RE_TOPLAB.split(arg)[-1]:
-	    raise PermError('Invalid domain found (use FQDN)', arg)
-	return self.expand(arg)
+        # any trailing dot was removed by expand()
+        if RE_TOPLAB.split(arg)[-1]:
+            raise PermError('Invalid domain found (use FQDN)', arg)
+        return self.expand(arg)
 
     def validate_mechanism(self, mech):
         """Parse and validate a mechanism.
@@ -572,7 +576,7 @@ class query(object):
     """
         if mech.endswith( "," ):
             self.note_error('Do not separate mechnisms with commas', mech)
-	    mech = mech[:-1]
+            mech = mech[:-1]
         # a mechanism
         m, arg, cidrlength, cidr6length = parse_mechanism(mech, self.d)
         # map '?' '+' or '-' to 'neutral' 'pass' or 'fail'
@@ -604,8 +608,8 @@ class query(object):
                 cidr6length = 128
             elif cidr6length > 128:
                 raise PermError('Invalid IP6 CIDR length', mech)
-	    if self.v == 'ip6':
-	    	cidrlength = cidr6length
+            if self.v == 'ip6':
+                cidrlength = cidr6length
         elif m == 'ip4':
             if cidr6length is not None:
                 raise PermError('Dual CIDR not allowed', mech)
@@ -627,14 +631,14 @@ class query(object):
         else:
             if cidrlength is not None or cidr6length is not None:
                 raise PermError('CIDR not allowed', mech)
-	    cidrlength = self.cidrmax
+            cidrlength = self.cidrmax
 
         if m in ('a', 'mx', 'ptr', 'exists', 'include'):
-	    if m == 'exists' and not arg:
-	        raise PermError('implicit exists not allowed', mech)
+            if m == 'exists' and not arg:
+                raise PermError('implicit exists not allowed', mech)
             arg = self.expand_domain(arg)
-	    if not arg:
-		raise PermError('empty domain:',mech)
+            if not arg:
+                raise PermError('empty domain:',mech)
             if m == 'include':
                 if arg == self.d:
                     if mech != 'include':
@@ -675,8 +679,8 @@ class query(object):
         # for common mistakes like IN TXT "v=spf1" "mx" "-all"
         # in relaxed mode.
         if spf[0].lower() != 'v=spf1':
-	    assert strict > 1
-	    raise AmbiguityWarning('Invalid SPF record in', self.d)
+            assert strict > 1
+            raise AmbiguityWarning('Invalid SPF record in', self.d)
         spf = spf[1:]
 
         # copy of explanations to be modified by exp=
@@ -689,7 +693,7 @@ class query(object):
         default = 'neutral'
         mechs = []
 
-	modifiers = []
+        modifiers = []
         # Look for modifiers
         #
         for mech in spf:
@@ -698,37 +702,37 @@ class query(object):
                 mechs.append(self.validate_mechanism(mech))
                 continue
 
-	    mod,arg = m
-	    if mod in modifiers:
-	    	if mod == 'redirect':
-		    raise PermError('redirect= MUST appear at most once',mech)
-		self.note_error('%s= MUST appear at most once'%mod,mech)
-		# just use last one in lax mode
-	    modifiers.append(mod)
+            mod,arg = m
+            if mod in modifiers:
+                if mod == 'redirect':
+                    raise PermError('redirect= MUST appear at most once',mech)
+                self.note_error('%s= MUST appear at most once'%mod,mech)
+                # just use last one in lax mode
+            modifiers.append(mod)
             if mod == 'exp':
-	        # always fetch explanation to check permerrors
-		arg = self.expand_domain(arg)
-	        exp = self.get_explanation(arg)
-	        if exp and not recursion:
-		    # only set explanation in base recursion level
-		    self.set_explanation(exp)
+                # always fetch explanation to check permerrors
+                arg = self.expand_domain(arg)
+                exp = self.get_explanation(arg)
+                if exp and not recursion:
+                    # only set explanation in base recursion level
+                    self.set_explanation(exp)
             elif mod == 'redirect':
                 self.check_lookups()
                 redirect = self.expand_domain(arg)
-		if not redirect:
-		    raise PermError('redirect has empty domain:',arg)
-            elif mod == 'default':
-		arg = self.expand(arg)
+                if not redirect:
+                    raise PermError('redirect has empty domain:',arg)
+            elif mod == 'default' and self.default_modifier:
+                # default modifier is obsolete
+                arg = self.expand(arg)
                 # default=- is the same as default=fail
                 default = RESULTS.get(arg, default)
-	    elif mod == 'op':
-	    	if not recursion:
-		    for v in arg.split('.'):
-		        if v: self.options[v] = True
-	    else:
-		# spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
-		self.expand(m[1])	# syntax error on invalid macro
-
+            elif mod == 'op':
+                if not recursion:
+                    for v in arg.split('.'):
+                        if v: self.options[v] = True
+            else:
+                # spf rfc: 3.6 Unrecognized Mechanisms and Modifiers
+                self.expand(m[1])       # syntax error on invalid macro
 
         # Evaluate mechanisms
         #
@@ -761,8 +765,8 @@ class query(object):
 
             elif m == 'a':
                 self.check_lookups()
-		if self.cidrmatch(self.dns_a(arg,self.A), cidrlength):
-		    break
+                if self.cidrmatch(self.dns_a(arg,self.A), cidrlength):
+                    break
 
             elif m == 'mx':
                 self.check_lookups()
@@ -770,19 +774,19 @@ class query(object):
                     break
 
             elif m == 'ip4':
-	        if self.v == 'in-addr': # match own connection type only
-		    try:
-			if self.cidrmatch([arg], cidrlength): break
-		    except socket.error:
-			raise PermError('syntax error', mech)
+                if self.v == 'in-addr': # match own connection type only
+                    try:
+                        if self.cidrmatch([arg], cidrlength): break
+                    except socket.error:
+                        raise PermError('syntax error', mech)
 
             elif m == 'ip6':
-	        if self.v == 'ip6': # match own connection type only
-		    try:
-			arg = inet_pton(arg)
-			if self.cidrmatch([arg], cidrlength): break
-		    except socket.error:
-			raise PermError('syntax error', mech)
+                if self.v == 'ip6': # match own connection type only
+                    try:
+                        arg = inet_pton(arg)
+                        if self.cidrmatch([arg], cidrlength): break
+                    except socket.error:
+                        raise PermError('syntax error', mech)
 
             elif m == 'ptr':
                 self.check_lookups()
@@ -797,16 +801,16 @@ class query(object):
                 if not redirect_record:
                     raise PermError('redirect domain has no SPF record',
                         redirect)
-		# forget modifiers on redirect
-		if not recursion:
-		  self.exps = dict(self.defexps)
-		  self.options = {}
+                # forget modifiers on redirect
+                if not recursion:
+                  self.exps = dict(self.defexps)
+                  self.options = {}
                 return self.check1(redirect_record, redirect, recursion)
-	    result = default
-	    mech = None
+            result = default
+            mech = None
 
-	if not recursion:	# record matching mechanism at base level
-	    self.mechanism = mech
+        if not recursion:       # record matching mechanism at base level
+            self.mechanism = mech
         if result == 'fail':
             return (result, 550, exps[result])
         else:
@@ -823,17 +827,17 @@ class query(object):
         """Expand an explanation."""
         if spec:
             a = self.dns_txt(spec)
-	    if len(a) == 1:
-	    	try:
-		    return self.expand(a[0], stripdot=False)
-		except PermError:
-		    # RFC4408 6.2/4 syntax errors cause exp= to be ignored
-		    pass
-	if self.strict > 1:
-	    raise PermError('Empty domain-spec on exp=')
-	# RFC4408 6.2/4 empty domain spec is ignored
-	# (unless you give precedence to the grammar).
-	return None
+            if len(a) == 1:
+                try:
+                    return self.expand(a[0], stripdot=False)
+                except PermError:
+                    # RFC4408 6.2/4 syntax errors cause exp= to be ignored
+                    pass
+        if self.strict > 1:
+            raise PermError('Empty domain-spec on exp=')
+        # RFC4408 6.2/4 empty domain spec is ignored
+        # (unless you give precedence to the grammar).
+        return None
 
     def expand(self, str, stripdot=True): # macros='slodipvh'
         """Do SPF RFC macro expansion.
@@ -951,16 +955,16 @@ class query(object):
 #                print letter
                 if letter == 'p':
                     self.getp()
-		elif letter in 'crt' and stripdot:
-		    raise PermError(
-		        'c,r,t macros allowed in exp= text only', macro)
+                elif letter in 'crt' and stripdot:
+                    raise PermError(
+                        'c,r,t macros allowed in exp= text only', macro)
                 expansion = getattr(self, letter, self)
                 if expansion:
                     if expansion == self:
                         raise PermError('Unknown Macro Encountered', macro) 
-		    e = expand_one(expansion, macro[3:-1], JOINERS.get(letter))
-		    if letter != macro[2]:
-		        e = urllib.quote(e)
+                    e = expand_one(expansion, macro[3:-1], JOINERS.get(letter))
+                    if letter != macro[2]:
+                        e = urllib.quote(e)
                     result += e
 
             end = i.end()
@@ -977,11 +981,11 @@ class query(object):
         name.  Returns None if not found, or if more than one record
         is found.
         """
-	# Per RFC 4.3/1, check for malformed domain.  This produces
-	# no results as a special case.
-	for label in domain.split('.'):
-	  if not label or len(label) > 63:
-	    return None
+        # Per RFC 4.3/1, check for malformed domain.  This produces
+        # no results as a special case.
+        for label in domain.split('.'):
+          if not label or len(label) > 63:
+            return None
         # for performance, check for most common case of TXT first
         a = [t for t in self.dns_txt(domain) if RE_SPF.match(t)]
         if len(a) > 1:
@@ -1048,13 +1052,13 @@ class query(object):
 
     def dns_a(self, domainname, A='A'):
         """Get a list of IP addresses for a domainname.
-	"""
+        """
         if not domainname: return []
         if self.strict > 1:
             alist = self.dns(domainname, A)
             if len(alist) == 0:
                 raise AmbiguityWarning(
-			'No %s records found for'%A, domainname)
+                        'No %s records found for'%A, domainname)
             else:
                 return alist
         return self.dns(domainname, A)
@@ -1080,9 +1084,9 @@ class query(object):
                       'No PTR records found for ptr mechanism', self.i)
         else:
             max = MAX_PTR * 4
-	cidrlength = self.cidrmax
+        cidrlength = self.cidrmax
         return [p for p in self.dns_ptr(self.i)[:max]
-	    if self.cidrmatch(self.dns_a(p,self.A),cidrlength)]
+            if self.cidrmatch(self.dns_a(p,self.A),cidrlength)]
 
     def dns_ptr(self, i):
         """Get a list of domain names for an IP address."""
@@ -1122,12 +1126,12 @@ class query(object):
         cname = None
 
         if not result:
-	    safe2cache = query.SAFE2CACHE
+            safe2cache = query.SAFE2CACHE
             for k, v in DNSLookup(name, qtype, self.strict):
                 if k == (name, 'CNAME'):
                     cname = v
-		if (qtype,k[1]) in safe2cache:
-		    self.cache.setdefault(k, []).append(v)
+                if (qtype,k[1]) in safe2cache:
+                    self.cache.setdefault(k, []).append(v)
             result = self.cache.get( (name, qtype), [])
         if not result and cname:
             if not cnames:
@@ -1142,43 +1146,43 @@ class query(object):
         return result
 
     def cidrmatch(self, ipaddrs, n):
-	"""Match connect IP against a list of other IP addresses."""
-	try:
-	    if self.v == 'ip6':
-	        MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
-		bin = bin2long6
-	    else:
-	        MASK = 0xFFFFFFFFL
-		bin = addr2bin
-	    c = ~(MASK >> n) & MASK & self.ip
-	    for ip in [bin(ip) for ip in ipaddrs]:
-		if c == ~(MASK >> n) & MASK & ip: return True
-	except socket.error: pass
-	return False
+        """Match connect IP against a list of other IP addresses."""
+        try:
+            if self.v == 'ip6':
+                MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
+                bin = bin2long6
+            else:
+                MASK = 0xFFFFFFFFL
+                bin = addr2bin
+            c = ~(MASK >> n) & MASK & self.ip
+            for ip in [bin(ip) for ip in ipaddrs]:
+                if c == ~(MASK >> n) & MASK & ip: return True
+        except socket.error: pass
+        return False
 
     def get_header(self, res, receiver=None):
         if not receiver:
             receiver = self.r
-	client_ip = self.c
-	helo = quote_value(self.h)
-	if self.ident == 'helo':
-	    envelope_from = None
-	else:
-	    envelope_from = quote_value(self.s)
+        client_ip = self.c
+        helo = quote_value(self.h)
+        if self.ident == 'helo':
+            envelope_from = None
+        else:
+            envelope_from = quote_value(self.s)
         if res == 'permerror' and self.mech:
             tag = ' '.join([res] + self.mech)
-	    problem = quote_value(' '.join(self.mech))
-	else:
-	    tag = res
-	    problem = None
-	mechanism = quote_value(self.mechanism)
-	res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
-	for k in ('client_ip','envelope_from','helo','receiver',
-	  'problem','mechanism'):
-	    v = locals()[k]
-	    if v: res.append('%s=%s;'%(k,v))
-	res.append('identity=%s'%self.ident)
-	return ' '.join(res)
+            problem = quote_value(' '.join(self.mech))
+        else:
+            tag = res
+            problem = None
+        mechanism = quote_value(self.mechanism)
+        res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
+        for k in ('client_ip','envelope_from','helo','receiver',
+          'problem','mechanism'):
+            v = locals()[k]
+            if v: res.append('%s=%s;'%(k,v))
+        res.append('identity=%s'%self.ident)
+        return ' '.join(res)
 
     def get_header_comment(self, res):
         """Return comment for Received-SPF header.
@@ -1313,7 +1317,7 @@ def parse_mechanism(str, d):
     a = str.split(':', 1)
     if len(a) < 2:
         str = str.lower()
-	if str == 'exists': d = None
+        if str == 'exists': d = None
         return str, d, cidr, cidr6
     return a[0].lower(), a[1], cidr, cidr6
 
@@ -1411,24 +1415,24 @@ else:
       """
       # convert to 8 words
       a = struct.unpack("!HHHHHHHH",s)
-      n = (0,0,0,0,0,0,0,0)	# null ip6
+      n = (0,0,0,0,0,0,0,0)     # null ip6
       if a == n: return '::'
       # check for ip4 mapped
       if a[:5] == (0,0,0,0,0) and a[5] in (0,0xFFFF):
-	ip4 = '.'.join([str(i) for i in struct.unpack("!HHHHHHBBBB",s)[6:]])
-	if a[5]:
-	  return "::FFFF:" + ip4
-	return "::" + ip4
+        ip4 = '.'.join([str(i) for i in struct.unpack("!HHHHHHBBBB",s)[6:]])
+        if a[5]:
+          return "::FFFF:" + ip4
+        return "::" + ip4
       # find index of longest sequence of 0
       for l in (7,6,5,4,3,2,1):
-	e = n[:l]
-	for i in range(9-l):
-	  if a[i:i+l] == e:
-	    if i == 0:
-	      return ':'+':%x'*(8-l) % a[l:]
-	    if i == 8 - l:
-	      return '%x:'*(8-l) % a[:-l] + ':'
-	    return '%x:'*i % a[:i] + ':%x'*(8-l-i) % a[i+l:]
+        e = n[:l]
+        for i in range(9-l):
+          if a[i:i+l] == e:
+            if i == 0:
+              return ':'+':%x'*(8-l) % a[l:]
+            if i == 8 - l:
+              return '%x:'*(8-l) % a[:-l] + ':'
+            return '%x:'*i % a[:i] + ':%x'*(8-l-i) % a[i+l:]
       return "%x:%x:%x:%x:%x:%x:%x:%x" % a
 
     def inet_pton(p):
@@ -1451,35 +1455,35 @@ else:
       ::1.2.3.4.5
       """
       if p == '::':
-	return '\0'*16
+        return '\0'*16
       s = p
       m = RE_IP4.search(s)
       try:
-	  if m:
-	      pos = m.start()
-	      ip4 = [int(i) for i in s[pos:].split('.')]
-	      if not pos:
-	          return struct.pack('!QLBBBB',0,65535,*ip4)
-	      s = s[:pos]+'%x%02x:%x%02x'%tuple(ip4)
-	  a = s.split('::')
-	  if len(a) == 2:
-	    l,r = a
-	    if not l:
-	      r = r.split(':')
-	      return struct.pack('!HHHHHHHH',
-		*[0]*(8-len(r)) + [int(s,16) for s in r])
-	    if not r:
-	      l = l.split(':')
-	      return struct.pack('!HHHHHHHH',
-		*[int(s,16) for s in l] + [0]*(8-len(l)))
-	    l = l.split(':')
-	    r = r.split(':')
-	    return struct.pack('!HHHHHHHH',
-		*[int(s,16) for s in l] + [0]*(8-len(l)-len(r))
-		+ [int(s,16) for s in r])
-	  if len(a) == 1:
-	    return struct.pack('!HHHHHHHH',
-		*[int(s,16) for s in a[0].split(':')])
+          if m:
+              pos = m.start()
+              ip4 = [int(i) for i in s[pos:].split('.')]
+              if not pos:
+                  return struct.pack('!QLBBBB',0,65535,*ip4)
+              s = s[:pos]+'%x%02x:%x%02x'%tuple(ip4)
+          a = s.split('::')
+          if len(a) == 2:
+            l,r = a
+            if not l:
+              r = r.split(':')
+              return struct.pack('!HHHHHHHH',
+                *[0]*(8-len(r)) + [int(s,16) for s in r])
+            if not r:
+              l = l.split(':')
+              return struct.pack('!HHHHHHHH',
+                *[int(s,16) for s in l] + [0]*(8-len(l)))
+            l = l.split(':')
+            r = r.split(':')
+            return struct.pack('!HHHHHHHH',
+                *[int(s,16) for s in l] + [0]*(8-len(l)-len(r))
+                + [int(s,16) for s in r])
+          if len(a) == 1:
+            return struct.pack('!HHHHHHHH',
+                *[int(s,16) for s in a[0].split(':')])
       except ValueError: pass
       raise ValueError,p
 
