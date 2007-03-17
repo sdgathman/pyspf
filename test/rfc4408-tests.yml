@@ -1,6 +1,6 @@
 # This is the openspf.org test suite (version 2007.01) based on RFC 4408.
 # $Id$
-# vim:sw=2 sts=2
+# vim:sw=2 sts=2 et
 #
 # Changes:
 #  - The exp-empty-domain test case is subject to controversy, because
@@ -51,7 +51,13 @@ tests:
     spec: 4.3/1
     helo: A2345678
     host: 1.2.3.5
-    mailfrom: ''
+    mailfrom: ""
+    result: none
+  helo-domain-literal:
+    spec: 4.3/1
+    helo: "[1.2.3.5]"
+    host: 1.2.3.5
+    mailfrom: ""
     result: none
   nolocalpart:
     spec: 4.3/2
@@ -60,6 +66,12 @@ tests:
     mailfrom: '@example.net'
     result: fail
     explanation: postmaster
+  domain-literal:
+    spec: 4.3/1
+    helo: OEMCOMPUTER
+    host: 1.2.3.5
+    mailfrom: "foo@[1.2.3.5]"
+    result: none
 zonedata:
   example.com:
     - TIMEOUT
@@ -583,7 +595,7 @@ tests:
     result: pass
   a-bad-domain:
     description: >-
-      domain-spec must pass basic syntax checks, 
+      domain-spec must pass basic syntax checks
     comment: >-
       A ':' may appear in domain-spec, but not in top-label.
     spec: 8.1/2
@@ -904,7 +916,7 @@ tests:
     result: pass
   mx-bad-domain:
     description: >-
-      domain-spec must pass basic syntax checks, 
+      domain-spec must pass basic syntax checks
     comment: >-
       A ':' may appear in domain-spec, but not in top-label.
     spec: 8.1/2
@@ -1375,9 +1387,9 @@ tests:
     comment: >-
       A literal application of the grammar causes modifier syntax
       errors (except for macro syntax) to become unknown-modifier.
-
+      
         modifier = explanation | redirect | unknown-modifier
-
+      
       However, it is generally agreed, with precedent in other RFCs,
       that unknown-modifier should not be "greedy", and should not
       match known modifier names.  There should have been explicit
@@ -1489,9 +1501,9 @@ tests:
     comment: >-
       A literal application of the grammar causes modifier syntax
       errors (except for macro syntax) to become unknown-modifier.
-
+      
         modifier = explanation | redirect | unknown-modifier
-
+      
       However, it is generally agreed, with precedent in other RFCs,
       that unknown-modifier should not be "greedy", and should not
       match known modifier names.  There should have been explicit
@@ -1546,6 +1558,28 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e9.example.com
     result: permerror
+  default-modifier-obsolete:
+    description: |
+      Unknown modifiers do not modify the RFC SPF result.
+    comment: >-
+      Some implementations may have a leftover default= modifier from
+      earlier drafts.
+    spec: 6/3
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e19.example.com
+    result: neutral
+  default-modifier-obsolete2:
+    description: |
+      Unknown modifiers do not modify the RFC SPF result.
+    comment: >-
+      Some implementations may have a leftover default= modifier from
+      earlier drafts.
+    spec: 6/3
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e20.example.com
+    result: neutral
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -1598,6 +1632,10 @@ zonedata:
     - SPF: v=spf1 redirect=-all ?all
   e18.example.com:
     - SPF: v=spf1 ?all redirect=
+  e19.example.com:
+    - SPF: v=spf1 default=pass
+  e20.example.com:
+    - SPF: "v=spf1 default=+"
 ---
 description: Macro expansion rules
 tests:
@@ -1725,7 +1763,7 @@ tests:
     description: |-
       p = the validated domain name of <ip>
     comment: >-
-      If a subdomain of the <domain> is present, it SHOULD be used.  
+      If a subdomain of the <domain> is present, it SHOULD be used.
     helo: msgbas2x.cos.example.com
     host: CAFE:BABE::3
     mailfrom: test@e6.example.com
@@ -1736,7 +1774,7 @@ tests:
     description: |-
       p = the validated domain name of <ip>
     comment: >-
-      If a subdomain of the <domain> is present, it SHOULD be used.  
+      If a subdomain of the <domain> is present, it SHOULD be used.
     helo: msgbas2x.cos.example.com
     host: 192.168.218.42
     mailfrom: test@e7.example.com
@@ -1744,7 +1782,7 @@ tests:
   upper-macro:
     spec: 8.1/26
     description: >-
-      Uppercased macros expand exactly as their lowercased equivalents, 
+      Uppercased macros expand exactly as their lowercased equivalents,
       and are then URL escaped.
     helo: msgbas2x.cos.example.com
     host: 192.168.218.42
@@ -1770,10 +1808,22 @@ tests:
     host: 192.168.218.40
     mailfrom: test@e9.example.com
     result: fail
+  hello-domain-literal:
+    spec: 8.1/2
+    description: |-
+      h = HELO/EHLO domain, but HELO is a domain literal
+    comment: >-
+      Domain-spec must end in either a macro, or a valid toplabel.
+      It is not correct to check syntax after macro expansion.
+    helo: "[192.168.218.40]"
+    host: 192.168.218.40
+    mailfrom: test@e9.example.com
+    result: fail
   require-valid-helo:
     spec: 8.1/6
     description: >-
-      Example of requiring valid helo in sender policy.
+      Example of requiring valid helo in sender policy.  This is a complex
+      policy testing several points at once.
     helo: OEMCOMPUTER
     host: 1.2.3.4
     mailfrom: test@e10.example.com
@@ -1855,7 +1905,7 @@ description: Processing limits
 tests:
   redirect-loop:
     description: >-
-      SPF implementations MUST limit the number of mechanisms and modifiers 
+      SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
     spec: 10.1/6
     helo: mail.example.com
@@ -1864,7 +1914,7 @@ tests:
     result: permerror
   include-loop:
     description: >-
-      SPF implementations MUST limit the number of mechanisms and modifiers 
+      SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
     spec: 10.1/6
     helo: mail.example.com
@@ -1905,9 +1955,21 @@ tests:
     host: 1.2.3.5
     mailfrom: foo@e5.example.com
     result: [neutral, pass]
+  false-a-limit:
+    description: >-
+      unlike MX, PTR, there is no RR limit for A
+    comment: >-
+      There seems to be a tendency for developers to want to limit
+      A RRs in addition to MX and PTR.  These are IPs, not usable for
+      3rd party DoS attacks, and hence need no low limit.
+    spec: 10.1/7
+    helo: mail.example.com
+    host: 1.2.3.12
+    mailfrom: foo@e10.example.com
+    result: pass
   mech-at-limit:
     description: >-
-      SPF implementations MUST limit the number of mechanisms and modifiers 
+      SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
     spec: 10.1/6
     helo: mail.example.com
@@ -1916,7 +1978,7 @@ tests:
     result: pass
   mech-over-limit:
     description: >-
-      SPF implementations MUST limit the number of mechanisms and modifiers 
+      SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
     comment: >-
       We do not check whether an implementation counts mechanisms before
@@ -1928,7 +1990,7 @@ tests:
     result: permerror
   include-at-limit:
     description: >-
-      SPF implementations MUST limit the number of mechanisms and modifiers 
+      SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
     comment: >-
       The part of the RFC that talks about MAY parse the entire record first
@@ -1942,7 +2004,7 @@ tests:
     result: pass
   include-over-limit:
     description: >-
-      SPF implementations MUST limit the number of mechanisms and modifiers 
+      SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
     spec: 10.1/6
     helo: mail.example.com
@@ -1997,3 +2059,17 @@ zonedata:
     - SPF: v=spf1 a a a a a a a a
   e9.example.com:
     - SPF: v=spf1 a include:inc.example.com a ip4:1.2.3.4 -all
+  e10.example.com:
+    - SPF: v=spf1 a -all
+    - A: 1.2.3.1
+    - A: 1.2.3.2
+    - A: 1.2.3.3
+    - A: 1.2.3.4
+    - A: 1.2.3.5
+    - A: 1.2.3.6
+    - A: 1.2.3.7
+    - A: 1.2.3.8
+    - A: 1.2.3.9
+    - A: 1.2.3.10
+    - A: 1.2.3.11
+    - A: 1.2.3.12
