@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.3):
 # $Log$
+# Revision 1.108.2.18  2007/03/17 18:25:38  customdesigned
+# Default modifier is obsolete.  Retab (expandtab) spf.py
+#
 # Revision 1.108.2.17  2007/03/13 20:13:16  customdesigned
 # Missing parentheses.
 #
@@ -306,7 +309,7 @@ class query(object):
         self.strict = strict
         if i:
             self.set_ip(i)
-        self.default_modifier = False
+        self.default_modifier = True
 
     def set_ip(self, i):
         "Set connect ip, and ip6 or ip4 mode."
@@ -721,11 +724,15 @@ class query(object):
                 redirect = self.expand_domain(arg)
                 if not redirect:
                     raise PermError('redirect has empty domain:',arg)
-            elif mod == 'default' and self.default_modifier:
+            elif mod == 'default':
                 # default modifier is obsolete
-                arg = self.expand(arg)
-                # default=- is the same as default=fail
-                default = RESULTS.get(arg, default)
+                if self.strict > 1:
+                    raise AmbiguityWarning('The default= modifier is obsolete.')
+                if not self.strict and self.default_modifier:
+                    # might be an old policy, so do it anyway
+                    arg = self.expand(arg)
+                    # default=- is the same as default=fail
+                    default = RESULTS.get(arg, default)
             elif mod == 'op':
                 if not recursion:
                     for v in arg.split('.'):
