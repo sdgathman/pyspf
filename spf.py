@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.140  2007/03/27 02:53:10  customdesigned
+# Fix Received-SPF format.  Take additional key-value pairs as keyword parameters.
+#
 # Revision 1.139  2007/03/17 19:08:59  customdesigned
 # For default modifier, follow in lax mode, ignore in strict mode,
 # return ambiguous in harsh mode.
@@ -1401,9 +1404,9 @@ class query(object):
         for k in ('client_ip','envelope_from','helo','receiver',
           'problem','mechanism','identity'):
             v = locals()[k]
-            if v: res.append('%s=%s;'%(k,v))
+            if v: res.append('%s=%s;'%(k.replace('_','-'),v))
         for k,v in kv.items():
-            res.append('x-%s=%s;'%(k,quote_value(v)))
+            res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
         return ' '.join(res)
 
     def get_header_comment(self, res):
