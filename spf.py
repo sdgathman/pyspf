@@ -47,6 +47,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.139  2007/03/17 19:08:59  customdesigned
+# For default modifier, follow in lax mode, ignore in strict mode,
+# return ambiguous in harsh mode.
+#
 # Revision 1.138  2007/03/17 18:20:00  customdesigned
 # Default modifier is obsolete.  Retab (expandtab) spf.py
 #
@@ -1374,28 +1378,32 @@ class query(object):
         except socket.error: pass
         return False
 
-    def get_header(self, res, receiver=None):
+    def get_header(self, res, receiver=None, **kv):
         if not receiver:
             receiver = self.r
         client_ip = self.c
         helo = quote_value(self.h)
-        if self.ident == 'helo':
+        resmap = { 'pass': 'Pass', 'neutral': 'Neutral', 'fail': 'Fail',
+                'softfail': 'SoftFail', 'none': 'None',
+                'temperror': 'TempError', 'permerror': 'PermError' }
+        identity = self.ident
+        if identity == 'helo':
             envelope_from = None
         else:
             envelope_from = quote_value(self.s)
+        tag = resmap[res]
         if res == 'permerror' and self.mech:
-            tag = ' '.join([res] + self.mech)
             problem = quote_value(' '.join(self.mech))
         else:
-            tag = res
             problem = None
         mechanism = quote_value(self.mechanism)
         res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
         for k in ('client_ip','envelope_from','helo','receiver',
-          'problem','mechanism'):
+          'problem','mechanism','identity'):
             v = locals()[k]
             if v: res.append('%s=%s;'%(k,v))
-        res.append('identity=%s'%self.ident)
+        for k,v in kv.items():
+            res.append('x-%s=%s;'%(k,quote_value(v)))
         return ' '.join(res)
 
     def get_header_comment(self, res):

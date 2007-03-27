@@ -1,3 +1,14 @@
+Received-SPF header still doesn't conform to RFC4408.  Remove problem
+following result code, it is no longer allowed (use problem= key-value
+pair instead).  Use camelcase for result code.
+
+A pyspf query object should be usable for multiple queries.  The simple
+per query DNS cache has no TTL logic, however a mail connection could be
+considered a "single transaction", and the cache could be reused for
+multiple SPF evaluations (HELO, multiple MAIL FROM) within a session.
+PTR would especially benefit from this, and it could help justify always
+doing HELO checks.
+
 Make type SPF queries optional.  Perhaps order= option, with
 order=TXT / order=SPF / order=TXT,SPF / order=SPF,TXT
 
