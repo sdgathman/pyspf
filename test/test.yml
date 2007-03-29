@@ -20,9 +20,9 @@ tests:
     result: pass
     receiver: receiver.com
     header: >-
-      pass (receiver.com: domain of example.co.uk designates 1.2.3.5 as
-      permitted sender) client_ip=1.2.3.5;
-      envelope_from="lyme.eater@example.co.uk"; helo=mail.example.net;
+      Pass (receiver.com: domain of example.co.uk designates 1.2.3.5 as
+      permitted sender) client-ip=1.2.3.5;
+      envelope-from="lyme.eater@example.co.uk"; helo=mail.example.net;
       receiver=receiver.com; mechanism="exists:%{l}.%{d}.%{i}.spf.example.net";
       identity=mailfrom
   exists-fail:
@@ -59,9 +59,9 @@ tests:
     result: permerror
     receiver: receiver.com
     header: >-
-      permerror examplea.com:8080 (receiver.com: permanent error in processing
+      PermError (receiver.com: permanent error in processing
       domain of exampled.com: Invalid domain found (use FQDN))
-      client_ip=66.150.186.79; envelope_from="chuckvsr@exampled.com";
+      client-ip=66.150.186.79; envelope-from="chuckvsr@exampled.com";
       helo=mail.example.com; receiver=receiver.com;
       problem="examplea.com:8080"; identity=mailfrom
   tworecs:
@@ -71,9 +71,9 @@ tests:
     result: permerror
     receiver: receiver.com
     header: >-
-      permerror (receiver.com: permanent error in processing domain of
+      PermError (receiver.com: permanent error in processing domain of
       examplef.com: Two or more type TXT spf records found.)
-      client_ip=66.150.186.79; envelope_from="chuckvsr@examplef.com";
+      client-ip=66.150.186.79; envelope-from="chuckvsr@examplef.com";
       helo=mail.example.com; receiver=receiver.com; identity=mailfrom
   badip:
     helo: mail.example.com

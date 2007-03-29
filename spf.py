@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.141  2007/03/27 20:55:00  customdesigned
+# Change '_' to '-'.
+#
 # Revision 1.140  2007/03/27 02:53:10  customdesigned
 # Fix Received-SPF format.  Take additional key-value pairs as keyword parameters.
 #
@@ -1402,11 +1405,13 @@ class query(object):
         mechanism = quote_value(self.mechanism)
         res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
         for k in ('client_ip','envelope_from','helo','receiver',
-          'problem','mechanism','identity'):
+          'problem','mechanism'):
             v = locals()[k]
             if v: res.append('%s=%s;'%(k.replace('_','-'),v))
         for k,v in kv.items():
-            res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
+            if v: res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
+        # do identity last so we can easily drop the trailing ';'
+        res.append('%s=%s'%('identity',identity))
         return ' '.join(res)
 
     def get_header_comment(self, res):
