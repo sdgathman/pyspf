@@ -1,7 +1,3 @@
-Received-SPF header still doesn't conform to RFC4408.  Remove problem
-following result code, it is no longer allowed (use problem= key-value
-pair instead).  Use camelcase for result code.
-
 A pyspf query object should be usable for multiple queries.  The simple
 per query DNS cache has no TTL logic, however a mail connection could be
 considered a "single transaction", and the cache could be reused for
@@ -16,8 +12,6 @@ order=TXT / order=SPF / order=TXT,SPF / order=SPF,TXT
 
 Support TCP DNS (already supported with dnspython, I believe).
 
-Customized Received-SPF header (select key-value pairs).
-
 type99.py should be able to handle multi-line TXT RRs (and output
 multi-line type99 RRs as needed).
 
@@ -26,6 +20,8 @@ Improve permerror diagnostic:
 email.teamfanshop.com:
   - TXT: "v=spf1 mx a:smtp1.email.teamfanshop.com ip4:12.111.131.193 /26 ~all"
 
+DONE Customized Received-SPF header (select key-value pairs).
+DONE Received-SPF header still doesn't conform to RFC4408.
 DONE Collect op= modifiers as a dict of keywords.
 DONE Provide 'mechanism' key-value pair in Received-SPF.
 DONE Received-SPF header doesn't quote key-value-pairs where needed.
