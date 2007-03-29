@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.3):
 # $Log$
+# Revision 1.108.2.20  2007/03/27 20:54:22  customdesigned
+# Correct Received-SPF header format.
+#
 # Revision 1.108.2.19  2007/03/17 19:07:01  customdesigned
 # For default modifier, return ambiguous in harsh mode, ignore in strict mode,
 # follow in lax mode.
@@ -1192,11 +1195,13 @@ class query(object):
         mechanism = quote_value(self.mechanism)
         res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
         for k in ('client_ip','envelope_from','helo','receiver',
-          'problem','mechanism','identity'):
+          'problem','mechanism'):
             v = locals()[k]
             if v: res.append('%s=%s;'%(k.replace('_','-'),v))
         for k,v in kv.items():
           res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
+        # do identity last so we can easily drop the trailing ';'
+        res.append('%s=%s'%('identity',identity))
         return ' '.join(res)
 
     def get_header_comment(self, res):
