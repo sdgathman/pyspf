@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.3):
 # $Log$
+# Revision 1.108.2.21  2007/03/29 19:38:03  customdesigned
+# Remove trailing ';' again, fix Received-SPF tests.
+#
 # Revision 1.108.2.20  2007/03/27 20:54:22  customdesigned
 # Correct Received-SPF header format.
 #
@@ -1199,7 +1202,7 @@ class query(object):
             v = locals()[k]
             if v: res.append('%s=%s;'%(k.replace('_','-'),v))
         for k,v in kv.items():
-          res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
+            if v: res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
         # do identity last so we can easily drop the trailing ';'
         res.append('%s=%s'%('identity',identity))
         return ' '.join(res)
