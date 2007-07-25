@@ -52,6 +52,8 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/spfquery
 
 %changelog
+* Wed Jul 25 2007 Stuart Gathman <stuart@bmsi.com> 2.0.4-1
+- Keyword args for get_header, minor fixes
 * Mon Jan 15 2007 Stuart Gathman <stuart@bmsi.com> 2.0.3-1
 - pyspf requires pydns, python-pyspf requires python-pydns
 - Record matching mechanism and add to Received-SPF header.
