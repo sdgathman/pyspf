@@ -1,13 +1,10 @@
-# This is the openspf.org test suite (version 2007.01) based on RFC 4408.
+# This is the openspf.org test suite (version 2007.05) based on RFC 4408.
+# http://www.openspf.org/Test_Suite
+#
 # $Id$
 # vim:sw=2 sts=2 et
 #
-# Changes:
-#  - The exp-empty-domain test case is subject to controversy, because
-#    the grammar does not allow domain-spec to be empty, so both results
-#    are allowed for now.
-#  - There was a bug in 2006.11 that caused TXT ONLY implementations to fail.
-#    Added additional exp= and redirect= tests.
+# See rfc4408-tests.CHANGES for a changelog.
 #
 # Contributors:
 #   Stuart D Gathman    everything so far
@@ -223,11 +220,14 @@ tests:
   multispf1:
     description: >-
       Multiple records is a permerror, even when they are identical.
+      However, this situation cannot be reliably reproduced with live
+      DNS since cache and resolvers are allowed to combine identical
+      records.
     spec: 4.5/6
     helo: mail.example1.com
     host: 1.2.3.4
     mailfrom: foo@example7.com
-    result: permerror
+    result: [permerror, fail]
   multispf2:
     description: >-
       Older implementations will give pass because there is a single
@@ -277,7 +277,7 @@ zonedata:
     - SPF:  v=spf1 -all
     - SPF:  v=spf1 -all
   example8.com:
-    - SPF:  v=spf1 -all
+    - SPF:  V=spf1 -all
     - SPF:  v=spf1 -all
     - TXT:  v=spf1 +all
   example9.com:

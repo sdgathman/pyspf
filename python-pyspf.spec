@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.3
+Version:        2.0.4
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -14,6 +14,8 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 #BuildRequires:  python-setuptools
 Requires:       python-pydns python
+# Provide pyspf *only* if not using pyspf package for non-default python
+Provides:	pyspf
 
 %description
 SPF does email sender validation.  For more information about SPF,
@@ -53,6 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Wed Jul 25 2007 Stuart Gathman <stuart@bmsi.com> 2.0.4-1
+- Correct unofficial 'best guess' processing.
+- PTR validation processing cleanup
+- Improved detection of exp= errors
 - Keyword args for get_header, minor fixes
 * Mon Jan 15 2007 Stuart Gathman <stuart@bmsi.com> 2.0.3-1
 - pyspf requires pydns, python-pyspf requires python-pydns

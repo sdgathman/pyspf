@@ -2,6 +2,7 @@ Version 2.0.4 - January 24, 2007
   * Correct unofficial 'best guess' processing.
   * PTR validation processing cleanup
   * Improved detection of exp= errors
+  * Keyword parameters on get_header()
 
 Version 2.0.3 - January 15, 2007
   * IPv6 compatibility test fix to support Python 2.2
