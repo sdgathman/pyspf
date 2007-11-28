@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.3):
 # $Log$
+# Revision 1.108.2.22  2007/06/23 20:17:09  customdesigned
+# Don't try to include null (None) keyword values.
+#
 # Revision 1.108.2.21  2007/03/29 19:38:03  customdesigned
 # Remove trailing ';' again, fix Received-SPF tests.
 #
@@ -724,11 +727,16 @@ class query(object):
             modifiers.append(mod)
             if mod == 'exp':
                 # always fetch explanation to check permerrors
+                if not arg:
+                    raise PermError('exp has empty domain-spec:',arg)
                 arg = self.expand_domain(arg)
-                exp = self.get_explanation(arg)
-                if exp and not recursion:
-                    # only set explanation in base recursion level
-                    self.set_explanation(exp)
+                if arg:
+                    try:
+                        exp = self.get_explanation(arg)
+                        if exp and not recursion:
+                            # only set explanation in base recursion level
+                            self.set_explanation(exp)
+                    except: pass
             elif mod == 'redirect':
                 self.check_lookups()
                 redirect = self.expand_domain(arg)

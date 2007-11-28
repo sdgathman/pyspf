@@ -1464,23 +1464,51 @@ tests:
     mailfrom: foo@e11.example.com
     result: fail
     explanation: DEFAULT
+  exp-no-txt:
+    description: |
+      Ignore exp if no TXT records.
+    comment: >-
+      If domain-spec is empty, or there are any DNS processing errors (any
+      RCODE other than 0), or if no records are returned, or if more than one
+      record is returned, or if there are syntax errors in the explanation
+      string, then proceed as if no exp modifier was given.
+    spec: 6.2/4
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e22.example.com
+    result: fail
+    explanation: DEFAULT
+  exp-dns-error:
+    description: |
+      Ignore exp if DNS error.
+    comment: >-
+      If domain-spec is empty, or there are any DNS processing errors (any
+      RCODE other than 0), or if no records are returned, or if more than one
+      record is returned, or if there are syntax errors in the explanation
+      string, then proceed as if no exp modifier was given.
+    spec: 6.2/4
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e21.example.com
+    result: fail
+    explanation: DEFAULT
   exp-empty-domain:
     description: |
-      Ignore exp if domain-spec is empty.
+      PermError if exp= domain-spec is empty.
     comment: >-
       Section 6.2/4 says, "If domain-spec is empty, or there are any DNS
       processing errors (any RCODE other than 0), or if no records are
       returned, or if more than one record is returned, or if there are syntax
       errors in the explanation string, then proceed as if no exp modifier was
       given."  However, "if domain-spec is empty" conflicts with the grammar
-      given for the exp modifier.  If you fix the grammar to make
-      domain-spec optional, result is fail.  Otherwise, result is Permerror.
+      given for the exp modifier.  This was reported as an errata, and the
+      solution chosen was to report explicit exp= as PermError, but ignore
+      problems due to macro expansion, DNS, or invalid explanation string.
     spec: 6.2/4
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e12.example.com
-    result: [ fail, permerror ]
-    explanation: DEFAULT
+    result: permerror
   explanation-syntax-error:
     description: |
       Ignore exp if the explanation string has a syntax error.
@@ -1636,6 +1664,12 @@ zonedata:
     - SPF: v=spf1 default=pass
   e20.example.com:
     - SPF: "v=spf1 default=+"
+  e21.example.com:
+    - SPF: v=spf1 exp=e21msg.example.com -all
+  e21msg.example.com:
+    - TIMEOUT
+  e22.example.com:
+    - SPF: v=spf1 exp=mail.example.com -all
 ---
 description: Macro expansion rules
 tests:
