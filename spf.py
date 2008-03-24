@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.3):
 # $Log$
+# Revision 1.108.2.23  2007/11/28 19:48:37  customdesigned
+# Reflect decision on empty-exp errata.
+#
 # Revision 1.108.2.22  2007/06/23 20:17:09  customdesigned
 # Don't try to include null (None) keyword values.
 #
@@ -98,6 +101,15 @@ def DNSLookup(name, qtype, strict=True):
         # FIXME: pydns returns AAAA RR as 16 byte binary string, but
         # A RR as dotted quad.  For consistency, this driver should
         # return both as binary string.
+        #
+        if resp.header['tc'] == True:
+          if strict > 1:
+              raise TempError, 'DNS: Truncated UDP Reply, not retrying TCP'
+          try:
+              req = DNS.DnsRequest(name, qtype=qtype, protocol='tcp')
+              resp = req.req()
+          except DNS.DNSError, x:
+              raise TempError, 'DNS: TCP Fallback error: ' + str(x)
         return [((a['name'], a['typename']), a['data']) for a in resp.answers]
     except IOError, x:
         raise TempError, 'DNS ' + str(x)
