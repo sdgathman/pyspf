@@ -2,8 +2,8 @@
 """SPF (Sender Policy Framework) implementation.
 
 Copyright (c) 2003, Terence Way
-Portions Copyright (c) 2004,2005,2006,2007 Stuart Gathman <stuart@bmsi.com>
-Portions Copyright (c) 2005,2006,2007 Scott Kitterman <scott@kitterman.com>
+Portions Copyright (c) 2004,2005,2006,2007,2008 Stuart Gathman <stuart@bmsi.com>
+Portions Copyright (c) 2005,2006,2007,2008 Scott Kitterman <scott@kitterman.com>
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
 and disclaimer are retained in their original form.
@@ -28,8 +28,12 @@ For news, bugfixes, etc. visit the home page for this implementation at
     http://www.wayforward.net/spf/
 """
 
-# CVS Commits since last release (2.0.3):
+# CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.24  2008/03/24 21:33:22  customdesigned
+# Patch from Scott Kitterman to retry truncated results with TCP unless
+# in harsh mode.
+#
 # Revision 1.108.2.23  2007/11/28 19:48:37  customdesigned
 # Reflect decision on empty-exp errata.
 #
@@ -52,15 +56,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Revision 1.108.2.17  2007/03/13 20:13:16  customdesigned
 # Missing parentheses.
 #
-# Revision 1.108.2.16  2007/01/25 20:50:13  kitterma
-# Update versions to reflect working on 2.0.4 now.
-#
-#
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.4: January 24, 2007"
+__version__ = "2.0.5: March 26, 2008"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:

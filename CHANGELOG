@@ -1,3 +1,9 @@
+Version 2.0.5 - March 8, 2008
+  * Add TCP fallback if DNS UDP reply is truncated
+    - Fixes inconsistent results from trying to use partial UDP replies
+  * Correct Received-SPF formatting
+  * Minor updates to reflect RFC 44080 errata
+
 Version 2.0.4 - January 24, 2007
   * Correct unofficial 'best guess' processing.
   * PTR validation processing cleanup

@@ -1,3 +1,6 @@
+# Revision 1.108.2.16  2007/01/25 20:50:13  kitterma
+# Update versions to reflect working on 2.0.4 now.
+#
 # Revision 1.108.2.15  2007/01/19 23:23:50  customdesigned
 # Fix validated_ptrs and best_guess
 #
