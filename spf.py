@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 """SPF (Sender Policy Framework) implementation.
 
 Copyright (c) 2003, Terence Way
@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.26  2008/03/26 14:31:04  kitterma
+# Patch from Debian to avoid crash if command line SPF record request returns
+# TempError or PermError.
+#
 # Revision 1.108.2.25  2008/03/26 14:26:19  kitterma
 # Update for new version (working on 2.0.5) and year.
 #

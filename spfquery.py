@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 # Author: Stuart D. Gathman <stuart@bmsi.com>
 # Copyright 2004 Business Management Systems, Inc.
@@ -10,6 +10,9 @@
 # Emulate the spfquery command line tool used by Wayne Schlitt's SPF test suite
 
 # $Log$
+# Revision 1.4.2.1  2006/12/23 05:31:22  kitterma
+# Minor updates for packaging lessons learned from Ubuntu
+#
 # Revision 1.4  2006/11/20 18:39:41  customdesigned
 # Change license on spfquery.py.  Update README.  Move tests to test directory.
 #

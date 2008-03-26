@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 # Copy Bind zonefiles to stdout, removing TYPE99 RRs and
 # adding a TYPE99 RR for each TXT RR encountered.
@@ -8,6 +8,9 @@
 # filtering through this script will refresh the TYPE99 RRs.
 # 
 # $Log$
+# Revision 1.4.4.1  2006/12/23 05:31:22  kitterma
+# Minor updates for packaging lessons learned from Ubuntu
+#
 # Revision 1.4  2005/08/26 20:53:38  kitterma
 # Fixed typo in type99 script
 #
