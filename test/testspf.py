@@ -192,7 +192,6 @@ class SPFTestCase(unittest.TestCase):
     t = ('foo.com IN TXT ( "v=spf" "1" )\n',)
     a = list(type99.filter(t))
     self.assertEqual(2,len(a))
-    self.assertEqual(t[0].rstrip(),a[0])
     self.assertEqual(r'foo.com IN TYPE99 \# 7 06763d73706631',a[1])
     t = ('foo.com IN TXT ( "v=spf"\n',' "1" )\n',)
     a = list(type99.filter(t))
