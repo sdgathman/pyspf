@@ -16,6 +16,7 @@
 #   Scott Kitterman
 #   Norman Maurer
 #   Mark Shewmaker
+#   Philip Gladstone
 #
 ---
 description: Initial processing
@@ -230,9 +231,9 @@ tests:
     result: [permerror, fail]
   multispf2:
     description: >-
-      Older implementations will give pass because there is a single
-      TXT record.  But RFC 4408 requires permerror because the SPF
-      records override and there are more than one.
+      Older implementations ignoring SPF-type records will give pass because
+      there is a (single) TXT record.  But RFC 4408 requires permerror because
+      the SPF records override and there are more than one.
     spec: 4.5/6
     helo: mail.example1.com
     host: 1.2.3.4
@@ -260,7 +261,7 @@ zonedata:
   example1.com:
     - SPF:  v=spf1
   example2.com:
-    - SPF:  [ 'v=spf1', 'mx' ]
+    - SPF:  ['v=spf1', 'mx']
   mail.example1.com:
     - A:    1.2.3.4
   example4.com:
@@ -369,7 +370,7 @@ tests:
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@t10.example.com
-    result: [ fail, temperror ]
+    result: [fail, temperror]
   invalid-domain-long:
     description: >-
       Domain-spec must end in macro-expand or valid toplabel.
@@ -383,7 +384,7 @@ tests:
     helo: "%%%%%%%%%%%%%%%%%%%%%%"
     host: 1.2.3.4
     mailfrom: foo@t11.example.com
-    result: [ fail, temperror ]
+    result: [fail, temperror]
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -688,6 +689,14 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e5.example.com
     result: permerror
+  a-only-top-label:
+    description: >-
+      Domain-spec may not consist of only a top-label without a leading dot.
+    spec: 8.1/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e5a.example.com
+    result: permerror
   a-colon-domain:
     description: >-
       Domain-spec may contain any visible char except %
@@ -720,6 +729,20 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e13.example.com
     result: permerror
+  a-valid-syntax-but-unqueryable:
+    description: >-
+      If a DNS-interactive mechanism has valid syntax according to the SPF
+      specification, but a DNS query cannot be composed from its target-name
+      (e.g. due to empty labels, i.e. two or more successive dots), then the
+      mechanism should be treated as a no-match.
+    comment: >-
+      The rationale is that, technically, the mechanism is not a syntax error,
+      and the odd target-name obviously cannot exist in DNS.
+    spec: 8.1/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e14.example.com
+    result: neutral
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -741,6 +764,8 @@ zonedata:
     - SPF: v=spf1 a:111.222.33.44
   e5.example.com:
     - SPF: v=spf1 a:abc.123
+  e5a.example.com:
+    - SPF: v=spf1 a:museum
   e6.example.com:
     - SPF: v=spf1 a//33 -all
   e6a.example.com:
@@ -762,6 +787,8 @@ zonedata:
     - SPF: v=spf1 a:example.-com
   e13.example.com:
     - SPF: "v=spf1 a:"
+  e14.example.com:
+    - SPF: v=spf1 a:example..com
 ---
 description: Include mechanism semantics and syntax
 tests:
@@ -1096,7 +1123,7 @@ zonedata:
   e11.example.com:
     - SPF: v=spf1 mx:foo:bar/baz.example.com
   foo:bar/baz.example.com:
-    - MX: [ 0, "foo:bar/baz.example.com"]
+    - MX: [0, "foo:bar/baz.example.com"]
     - A: 1.2.3.4
   e12.example.com:
     - SPF: v=spf1 mx:example.-com
@@ -1393,7 +1420,7 @@ tests:
       However, it is generally agreed, with precedent in other RFCs,
       that unknown-modifier should not be "greedy", and should not
       match known modifier names.  There should have been explicit
-      prose to this effect, and some has been proposed as an errata.
+      prose to this effect, and some has been proposed as an erratum.
     spec: 6.1/2
     helo: mail.example.com
     host: 1.2.3.4
@@ -1501,8 +1528,8 @@ tests:
       returned, or if more than one record is returned, or if there are syntax
       errors in the explanation string, then proceed as if no exp modifier was
       given."  However, "if domain-spec is empty" conflicts with the grammar
-      given for the exp modifier.  This was reported as an errata, and the
-      solution chosen was to report explicit exp= as PermError, but ignore
+      given for the exp modifier.  This was reported as an erratum, and the
+      solution chosen was to report explicit "exp=" as PermError, but ignore
       problems due to macro expansion, DNS, or invalid explanation string.
     spec: 6.2/4
     helo: mail.example.com
@@ -1535,7 +1562,7 @@ tests:
       However, it is generally agreed, with precedent in other RFCs,
       that unknown-modifier should not be "greedy", and should not
       match known modifier names.  There should have been explicit
-      prose to this effect, and some has been proposed as an errata.
+      prose to this effect, and some has been proposed as an erratum.
     spec: 6.2/1
     helo: mail.example.com
     host: 1.2.3.4
@@ -1812,7 +1839,7 @@ tests:
     helo: msgbas2x.cos.example.com
     host: 192.168.218.42
     mailfrom: test@e7.example.com
-    result: [ pass, softfail ]
+    result: [pass, softfail]
   upper-macro:
     spec: 8.1/26
     description: >-
@@ -1862,6 +1889,15 @@ tests:
     host: 1.2.3.4
     mailfrom: test@e10.example.com
     result: fail
+  macro-reverse-split-on-dash:
+    spec: [8.1/15, 8.1/16, 8.1/17, 8.1/18]
+    description: >-
+      Macro value transformation (splitting on arbitrary characters, reversal,
+      number of right-hand parts to use)
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: philip-gladstone-test@e11.example.com
+    result: pass
 zonedata:
   example.com.d.spf.example.com:
     - SPF: v=spf1 redirect=a.spf.example.com
@@ -1934,6 +1970,10 @@ zonedata:
     - SPF: v=spf1 -include:_spfh.%{d2} ip4:1.2.3.0/24 -all
   _spfh.example.com:
     - SPF: v=spf1 -a:%{h} +all
+  e11.example.com:
+    - SPF: v=spf1 exists:%{i}.%{l2r-}.user.%{d2}
+  1.2.3.4.gladstone.philip.user.example.com:
+    - A: 127.0.0.2
 ---
 description: Processing limits
 tests:
