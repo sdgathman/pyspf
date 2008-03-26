@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.28  2008/03/26 14:45:37  kitterma
+# Update built in tests for Python2.5 (addr2bin will now fail slightly with older
+# Python versions). SF #1655736
+#
 # Revision 1.108.2.27  2008/03/26 14:34:35  kitterma
 # Change shebangs to #!/usr/bin/python throughout.
 #
