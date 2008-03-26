@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 """Type 99 (SPF) DNS conversion script.
 
 Copyright (c) 2005,2006 Stuart Gathman <stuart@bmsi.com>
@@ -29,6 +29,11 @@ For more information about SPF, a tool against email forgery, see
 # filtering through this script will refresh the TYPE99 RRs.
 # 
 # $Log$
+# Revision 1.8  2007/01/26 05:06:41  customdesigned
+# Tweaks for epydoc.
+# Design for test in type99.py, test cases.
+# Null byte test case for quote_value.
+#
 # Revision 1.7  2007/01/25 21:59:29  kitterma
 # Update comments to match bug fix.  Include copyright statements.  Update sheband.
 #
@@ -73,6 +78,24 @@ def filter(fin):
     if not RE_TYPE99.search(line):
       yield line
     m = RE_TXT.match(line)
+    if not m:
+        left = line.split('(')
+        try:
+            right = left[1].split(')')
+        except IndexError, errmsg:
+            right = left[0].split(')')
+            if len(left) == 2:
+                right = left[1]
+            else:
+                left = line.split('(')
+                right = left[0]
+        middlelist = right[0].split('"')
+        middle = ''
+        for fragment in middlelist:
+            if fragment != ' ':
+                middle = middle + fragment
+        line = left[0] + '"' + middle + '"'
+        m = RE_TXT.match(line)
     if m:
       phrase = dnstxt(m.group('str'))
       dns_string = ''
