@@ -5,6 +5,7 @@ Version 2.0.5 - March 8, 2008
   * Minor updates to reflect RFC 4408 errata
   * Added License file for RFC 4408 test suite
   * Update RFC 4408 test suite from svn
+  * Fix Type99 conversion script to work with multi-string TXT records
 
 Version 2.0.4 - January 24, 2007
   * Correct unofficial 'best guess' processing.
