@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.27  2008/03/26 14:34:35  kitterma
+# Change shebangs to #!/usr/bin/python throughout.
+#
 # Revision 1.108.2.26  2008/03/26 14:31:04  kitterma
 # Patch from Debian to avoid crash if command line SPF record request returns
 # TempError or PermError.
@@ -1414,7 +1417,7 @@ def addr2bin(str):
 
     Examples::
     >>> addr2bin('127.0.0.1')
-    2130706433L
+    2130706433
 
     >>> addr2bin('127.0.0.1') == socket.INADDR_LOOPBACK
     1
@@ -1428,12 +1431,12 @@ def addr2bin(str):
     Unlike DNS.addr2bin, the n, n.n, and n.n.n forms for IP addresses
     are handled as well::
     >>> addr2bin('10.65536')
-    167837696L
+    167837696
     >>> 10 * (2 ** 24) + 65536
     167837696
 
     >>> addr2bin('10.93.512')
-    173867520L
+    173867520
     >>> 10 * (2 ** 24) + 93 * (2 ** 16) + 512
     173867520
     """
