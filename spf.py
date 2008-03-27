@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.142  2007/03/29 19:38:37  customdesigned
+# Remove trailing ';' again.  Fix Received-SPF header tests.
+#
 # Revision 1.141  2007/03/27 20:55:00  customdesigned
 # Change '_' to '-'.
 #
@@ -1346,6 +1349,8 @@ class query(object):
         pre: qtype in ['A', 'AAAA', 'MX', 'PTR', 'TXT', 'SPF']
         post: isinstance(__return__, types.ListType)
         """
+        if not reduce(lambda x,y:x and 0 < len(y) < 64, name.split('.'),True):
+            return []   # invalid DNS name (too long or empty)
         result = self.cache.get( (name, qtype) )
         cname = None
 
