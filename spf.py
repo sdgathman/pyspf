@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.29  2008/03/26 15:08:20  kitterma
+# Fix commit log typo.
+#
 # Revision 1.108.2.28  2008/03/26 14:45:37  kitterma
 # Update built in tests for Python2.5 (addr2bin will now fail slightly with older
 # Python versions). SF #1655736
@@ -1173,6 +1176,9 @@ class query(object):
         pre: qtype in ['A', 'AAAA', 'MX', 'PTR', 'TXT', 'SPF']
         post: isinstance(__return__, types.ListType)
         """
+        if reduce(lambda x,y:x or len(y) < 1 or len(y) > 63, \
+                name.split('.'),False):
+            return []
         result = self.cache.get( (name, qtype) )
         cname = None
 
