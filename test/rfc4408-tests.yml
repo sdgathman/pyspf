@@ -1,0 +1,3184 @@
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/REC-html40/loose.dtd">
+<!-- ViewCVS - http://viewcvs.sourceforge.net/
+by Greg Stein - mailto:gstein@lyra.org -->
+<html>
+<head>
+<title>SPF Project Source Repositories - log - project: test-suite/rfc4408-tests.yml</title>
+<meta name="generator" content="ViewCVS 1.0-dev">
+<link rel="stylesheet" href="/viewcvs/styles.css" type="text/css">
+</head>
+<body>
+<div class="vc_navheader">
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td align="left"><a href="/source/project/?rev=96#dirlist">[project]</a> / <a href="/source/project/test-suite/?rev=96#dirlist">test-suite</a> / rfc4408-tests.yml</td>
+<td align="right">
+
+<form method=get action="/source/project/">
+
+<b>Project Root:</b>
+<select name="root" onchange="submit()">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<optgroup label="Subversion Repositories"><option>libspf</option><option>mail-spf-perl</option><option>mail-spf-query-perl</option><option selected>project</option><option>software</option><option>spf-old-website</option><option>spf-website</option><option>vote-register</option></optgroup>
+
+</select>
+<input type=submit value="Go">
+</form>
+
+</td>
+</tr>
+</table>
+</div>
+<h1>project: test-suite/rfc4408-tests.yml</h1>
+
+<hr noshade>
+
+No default branch
+
+<br>
+
+
+
+ 
+
+
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev96"></a>
+
+
+Revision <a href="/source/project?rev=96&view=rev"><b>96</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=96">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=96&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Wed Mar 26 23:19:10 2008 UTC</i> (79 minutes, 17 seconds ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 63416 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=95&r2=96">previous 95</a>
+
+
+
+
+
+
+
+<pre class="vc_log">a:museum. is also invalid
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev95"></a>
+
+
+Revision <a href="/source/project?rev=95&view=rev"><b>95</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=95&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=95">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=95&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Wed Mar 26 22:09:10 2008 UTC</i> (2 hours, 29 minutes ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 63072 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=95&r1=94&r2=95">previous 94</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* 'invalid-domain-empty-label', 'invalid-domain-long',
+  'invalid-domain-long-via-macro' test cases:
+  * A &lt;target-name&gt; that is a valid domain-spec per RFC 4408 but an invalid
+    domain name per RFC 1035 (two successive dots or labels longer than 63
+    characters) must be treated as non-existent and thus yield a no-match.
+    In particular, those cases can never cause a TempError because the error
+    is guaranteed to reoccur given the same input data.  This applies likewise
+    to RFC-1035-invalid &lt;target-name&gt;s that are the result of macro expansion.
+    Refined descriptions and comments to that end.
+    The no-match behavior can be inferred by analogy from 4.3/1 and 5/10/3.
+    The spec reference to 8.1/2 is bogus, however, because there is no such
+    thing as post-macro-expansion syntax checking in RFC 4408.
+* Removed 'a-valid-syntax-but-unqueryable' test case.  It is redundant to the
+  'invalid-domain-empty-label' test case.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev94"></a>
+
+
+Revision <a href="/source/project?rev=94&view=rev"><b>94</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=94&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=94">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=94&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Thu Dec  6 16:41:23 2007 UTC</i> (3 months, 2 weeks ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 62754 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=94&r1=93&r2=94">previous 93</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Added 'a-only-top-label' test case:
+    Domain-spec may not consist of only a top-label without a leading dot.
+* Added 'a-valid-syntax-but-unqueryable' test case:
+    If a DNS-interactive mechanism has valid syntax according to the SPF
+    specification, but a DNS query cannot be composed from its target-name
+    (e.g. due to empty labels, i.e. two or more successive dots), then the
+    mechanism should be treated as a no-match.
+    The rationale is that, technically, the mechanism is not a syntax error,
+    and the odd target-name obviously cannot exist in DNS.
+* Added 'macro-reverse-split-on-dash' test case (credits to Philip Gladstone):
+    Macro value transformation (splitting on arbitrary characters, reversal,
+    number of right-hand parts to use).
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev93"></a>
+
+
+Revision <a href="/source/project?rev=93&view=rev"><b>93</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=93&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=93">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=93&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Thu Dec  6 16:35:38 2007 UTC</i> (3 months, 2 weeks ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 61338 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=93&r1=92&r2=93">previous 92</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Slightly improved description of 'multispf2' test case.
+* s/errata/erratum/g (no plural uses of "errata" present).
+* Minor clean-up of whitespace use in [YAML, lists].
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev92"></a>
+
+
+Revision <a href="/source/project?rev=92&view=rev"><b>92</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=92&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=92">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=92&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Wed Nov 28 19:51:49 2007 UTC</i> (3 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 61314 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=92&r1=90&r2=92">previous 90</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Reflect decision on exp-empty errata.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev90"></a>
+
+
+Revision <a href="/source/project?rev=90&view=rev"><b>90</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=90&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=90">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=90&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Jul 30 02:42:52 2007 UTC</i> (7 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 60081 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=90&r1=88&r2=90">previous 88</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Allow results caused by DNS combining identical records.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev88"></a>
+
+
+Revision <a href="/source/project?rev=88&view=rev"><b>88</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=88&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=88">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=88&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Wed May 30 20:55:07 2007 UTC</i> (9 months, 3 weeks ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 59919 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=88&r1=87&r2=88">previous 87</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Added URL reference to the official test-suite web page.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev87"></a>
+
+
+Revision <a href="/source/project?rev=87&view=rev"><b>87</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=87&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=87">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=87&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat May 26 16:39:39 2007 UTC</i> (10 months ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 59881 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=87&r1=83&r2=87">previous 83</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Prepared for impending 2007.05 release.
+* Replaced minimalist changelog by a pointer to the new separate CHANGES file.
+
+test-suite/rfc4408-tests.CHANGES
+* Added as a separate changelog.  Thoroughly described all the changes from the
+  past up to the impending 2007.05 release.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev83"></a>
+
+
+Revision <a href="/source/project?rev=83&view=rev"><b>83</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=83&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=83">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=83&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Mar 17 18:28:17 2007 UTC</i> (12 months, 1 week ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 60143 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=83&r1=82&r2=83">previous 82</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Default modifier is obsolete.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev82"></a>
+
+
+Revision <a href="/source/project?rev=82&view=rev"><b>82</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=82&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=82">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=82&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Mar 17 16:23:17 2007 UTC</i> (12 months, 1 week ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 59389 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=82&r1=81&r2=82">previous 81</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Domain literals and false A RR limit.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev81"></a>
+
+
+Revision <a href="/source/project?rev=81&view=rev"><b>81</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=81&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=81">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=81&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Feb 17 00:12:42 2007 UTC</i> (13 months, 1 week ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 58061 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=81&r1=80&r2=81">previous 80</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Removed spurious trailing spaces and commas from test case descriptions.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev80"></a>
+
+
+Revision <a href="/source/project?rev=80&view=rev"><b>80</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=80&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=80">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=80&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Fri Feb 16 19:16:21 2007 UTC</i> (13 months, 1 week ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 58076 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=80&r1=78&r2=80">previous 78</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Extended Vim modeline to set 'expandtab' option.
+* Expanded all tabs to spaces.
+* Fixed indentation in values of 'description' elements of 'exp-syntax-error'
+  and 'redirect-syntax-error' test cases.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev78"></a>
+
+
+Revision <a href="/source/project?rev=78&view=rev"><b>78</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=78&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=78">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=78&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Jan 20 15:41:35 2007 UTC</i> (14 months ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 58032 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=78&r1=77&r2=78">previous 77</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Explain that unknown-modifier isn't intended to match known modifiers.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev77"></a>
+
+
+Revision <a href="/source/project?rev=77&view=rev"><b>77</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=77&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=77">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=77&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Wed Jan 17 00:50:57 2007 UTC</i> (14 months, 1 week ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 57144 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=77&r1=76&r2=77">previous 76</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Tests for illegal implicit and empty domains.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev76"></a>
+
+
+Revision <a href="/source/project?rev=76&view=rev"><b>76</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=76&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=76">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=76&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Tue Jan 16 23:31:29 2007 UTC</i> (14 months, 1 week ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 54603 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=76&r1=75&r2=76">previous 75</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Add Changes log from 2007.01 release.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev75"></a>
+
+
+Revision <a href="/source/project?rev=75&view=rev"><b>75</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=75&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=75">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=75&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Tue Jan 16 23:14:13 2007 UTC</i> (14 months, 1 week ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 54280 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=75&r1=72&r2=75">previous 72</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Test for exp and redirect syntax errors.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev72"></a>
+
+
+Revision <a href="/source/project?rev=72&view=rev"><b>72</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=72&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=72">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=72&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sun Jan 14 04:53:26 2007 UTC</i> (14 months, 1 week ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 53377 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=72&r1=71&r2=72">previous 71</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Test for exp,redirect appearing more than once.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev71"></a>
+
+
+Revision <a href="/source/project?rev=71&view=rev"><b>71</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=71&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=71">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=71&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Jan 13 18:34:04 2007 UTC</i> (14 months, 1 week ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 52473 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=71&r1=68&r2=71">previous 68</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Test cases for ignoring exp=.
+Fix p-macro and v-macro tests for TXT ONLY implementations.
+Test case for SPF none, TXT timeout.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev68"></a>
+
+
+Revision <a href="/source/project?rev=68&view=rev"><b>68</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=68&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=68">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=68&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Nov 27 21:26:52 2006 UTC</i> (15 months, 4 weeks ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 49888 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=68&r1=67&r2=68">previous 67</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Added "2006.11" release version number to comment header.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev67"></a>
+
+
+Revision <a href="/source/project?rev=67&view=rev"><b>67</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=67&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=67">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=67&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Nov 27 05:13:36 2006 UTC</i> (15 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 49870 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=67&r1=66&r2=67">previous 66</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Allow minority view results for whether ip4 mapped ip6 connections match
+ip6 mechanisms.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev66"></a>
+
+
+Revision <a href="/source/project?rev=66&view=rev"><b>66</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=66&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=66">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=66&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Nov 27 04:46:59 2006 UTC</i> (15 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 49039 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=66&r1=65&r2=66">previous 65</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Test for proper joining of TXT segments.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev65"></a>
+
+
+Revision <a href="/source/project?rev=65&view=rev"><b>65</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=65&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=65">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=65&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Nov 27 03:36:23 2006 UTC</i> (15 months, 4 weeks ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 48963 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=65&r1=63&r2=65">previous 63</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Fixed typo in "include-ignores-exp" test case description.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev63"></a>
+
+
+Revision <a href="/source/project?rev=63&view=rev"><b>63</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=63&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=63">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=63&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Wed Nov 15 16:19:04 2006 UTC</i> (16 months, 1 week ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 48961 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=63&r1=62&r2=63">previous 62</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Removed CNAME support again.  This isn't something we can expect SPF
+  libraries to do.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev62"></a>
+
+
+Revision <a href="/source/project?rev=62&view=rev"><b>62</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=62&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=62">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=62&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Wed Nov 15 00:39:15 2006 UTC</i> (16 months, 1 week ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 49406 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=62&r1=61&r2=62">previous 61</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Lower-cased domain names in zone data.  Test-suite drivers can be expected
+  to tolerate case differences, but it's cleaner that way and avoids irrelevant
+  trouble with those that don't.
+* Added two test cases for CNAME support and CNAME loop detection, plus the
+  corresponding DNS records.
+* Changed occurrances of multiple spec references per test case into sequences
+  (as opposed to comma-separated scalars) in order to provide structure.
+  This implies a change in the test-suite schema!
+* Changed several test scenario "description" nodes from block nodes into flow
+  nodes.
+* 'include-temperror' test case:
+  * Removed a superfluous (even spurious) 'SPF' record.  All we need and want
+    here is the TIMEOUT token.  DNS cannot return an 'SPF' record and a time-
+    out at the same time!
+* 'Semantics of exp and other modifiers' scenario:
+  * Shortened the "description" node and moved the remaining commentary into
+    a "comment" node.
+* Minor clean-ups.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev61"></a>
+
+
+Revision <a href="/source/project?rev=61&view=rev"><b>61</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=61&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=61">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=61&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sun Nov  5 12:32:48 2006 UTC</i> (16 months, 2 weeks ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 49015 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=61&r1=60&r2=61">previous 60</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Removed empty lines between YAML documents.  Perl's YAML module gets confused
+  by them.
+* s/doesn't/does not/g, s/don't/do not/g, s/can't/cannot/g
+* s/''/""/g, as '' means an escape of a single quote within a single-quote
+  string.
+* s/(JUMPIN' JUPITER)/"\1"/, quoting value that includes a single quote
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev60"></a>
+
+
+Revision <a href="/source/project?rev=60&view=rev"><b>60</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=60&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=60">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=60&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Oct 28 20:31:16 2006 UTC</i> (16 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 49023 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=60&r1=59&r2=60">previous 59</a>
+
+
+
+
+
+
+
+<pre class="vc_log">redirect-none
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev59"></a>
+
+
+Revision <a href="/source/project?rev=59&view=rev"><b>59</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=59&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=59">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=59&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Oct 28 20:13:34 2006 UTC</i> (16 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 48662 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=59&r1=56&r2=59">previous 56</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Section 5.2 and 5.4 tests.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev56"></a>
+
+
+Revision <a href="/source/project?rev=56&view=rev"><b>56</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=56&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=56">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=56&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Tue Oct 17 03:56:32 2006 UTC</i> (17 months, 1 week ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 40264 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=56&r1=54&r2=56">previous 54</a>
+
+
+
+
+
+
+
+<pre class="vc_log">DoS limit tests.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev54"></a>
+
+
+Revision <a href="/source/project?rev=54&view=rev"><b>54</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=54&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=54">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=54&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Oct  7 22:04:25 2006 UTC</i> (17 months, 2 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 38323 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=54&r1=53&r2=54">previous 53</a>
+
+
+
+
+
+
+
+<pre class="vc_log">More long/empty label testing.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev53"></a>
+
+
+Revision <a href="/source/project?rev=53&view=rev"><b>53</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=53&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=53">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=53&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Oct  7 18:17:39 2006 UTC</i> (17 months, 2 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 37058 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=53&r1=52&r2=53">previous 52</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Add toplab test and require-helo example.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev52"></a>
+
+
+Revision <a href="/source/project?rev=52&view=rev"><b>52</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=52&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=52">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=52&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Oct  7 17:36:26 2006 UTC</i> (17 months, 2 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 36455 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=52&r1=51&r2=52">previous 51</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Test domain-spec ending in macro.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev51"></a>
+
+
+Revision <a href="/source/project?rev=51&view=rev"><b>51</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=51&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=51">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=51&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Thu Oct  5 13:28:50 2006 UTC</i> (17 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 36144 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=51&r1=50&r2=51">previous 50</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Case insensitive version string, hello macro.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev50"></a>
+
+
+Revision <a href="/source/project?rev=50&view=rev"><b>50</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=50&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=50">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=50&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Oct  2 17:11:35 2006 UTC</i> (17 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 35550 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=50&r1=49&r2=50">previous 49</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Upper case macro test.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev49"></a>
+
+
+Revision <a href="/source/project?rev=49&view=rev"><b>49</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=49&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=49">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=49&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Sep 30 22:38:03 2006 UTC</i> (17 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 35220 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=49&r1=48&r2=49">previous 48</a>
+
+
+
+
+
+
+
+<pre class="vc_log">p-macro tests
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev48"></a>
+
+
+Revision <a href="/source/project?rev=48&view=rev"><b>48</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=48&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=48">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=48&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Fri Sep 29 20:01:22 2006 UTC</i> (17 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 32179 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=48&r1=31&r2=48">previous 31</a>
+
+
+
+
+
+
+
+<pre class="vc_log">IP6, PTR, macro tests
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev31"></a>
+
+
+Revision <a href="/source/project?rev=31&view=rev"><b>31</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=31&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=31">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=31&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Sep 25 21:36:03 2006 UTC</i> (18 months ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 28618 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=31&r1=30&r2=31">previous 30</a>
+
+
+
+
+
+
+
+<pre class="vc_log">More macro syntax tests.  Fix some paragraph numbers.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev30"></a>
+
+
+Revision <a href="/source/project?rev=30&view=rev"><b>30</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=30&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=30">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=30&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Tue Sep 19 19:58:49 2006 UTC</i> (18 months ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 27555 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=30&r1=29&r2=30">previous 29</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Revise mx-limit test.  Add macro expansion tests.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev29"></a>
+
+
+Revision <a href="/source/project?rev=29&view=rev"><b>29</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=29&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=29">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=29&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Fri Sep  1 22:18:06 2006 UTC</i> (18 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 22549 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=29&r1=28&r2=29">previous 28</a>
+
+
+
+
+
+
+
+<pre class="vc_log">IP6 parsing.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev28"></a>
+
+
+Revision <a href="/source/project?rev=28&view=rev"><b>28</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=28&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=28">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=28&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Thu Aug 31 17:15:18 2006 UTC</i> (18 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 18497 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=28&r1=27&r2=28">previous 27</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Correct dual-cidr tests.  MX limit test.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev27"></a>
+
+
+Revision <a href="/source/project?rev=27&view=rev"><b>27</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=27&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=27">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=27&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Wed Aug 30 19:06:45 2006 UTC</i> (18 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 16168 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=27&r1=26&r2=27">previous 26</a>
+
+
+
+
+
+
+
+<pre class="vc_log">More top-label tests.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev26"></a>
+
+
+Revision <a href="/source/project?rev=26&view=rev"><b>26</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=26&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=26">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=26&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Wed Aug 30 18:07:29 2006 UTC</i> (18 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 14861 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=26&r1=25&r2=26">previous 25</a>
+
+
+
+
+
+
+
+<pre class="vc_log">More test for a mechanism.
+
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev25"></a>
+
+
+Revision <a href="/source/project?rev=25&view=rev"><b>25</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=25&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=25">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=25&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Tue Aug 29 23:21:41 2006 UTC</i> (18 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 12683 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=25&r1=24&r2=25">previous 24</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Check dual-cidr accepted for A.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev24"></a>
+
+
+Revision <a href="/source/project?rev=24&view=rev"><b>24</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=24&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=24">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=24&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Tue Aug 29 23:02:37 2006 UTC</i> (18 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 11502 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=24&r1=23&r2=24">previous 23</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Add trailing dot test.  Make ip4:*/032 a permerror based on discussion.
+Make list hyphens in zonedata indented.  Although pyYAML accepts them on the
+same level, perl YAML does not.
+
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev23"></a>
+
+
+Revision <a href="/source/project?rev=23&view=rev"><b>23</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=23&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=23">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=23&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Aug 28 23:21:20 2006 UTC</i> (18 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 9694 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=23&r1=22&r2=23">previous 22</a>
+
+
+
+
+
+
+
+<pre class="vc_log">IP4 /33 gets permerror
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev22"></a>
+
+
+Revision <a href="/source/project?rev=22&view=rev"><b>22</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=22&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=22">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=22&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Aug 28 17:55:06 2006 UTC</i> (18 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 9398 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=22&r1=19&r2=22">previous 19</a>
+
+
+
+
+
+
+
+<pre class="vc_log">CIDR and processing limit tests
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev19"></a>
+
+
+Revision <a href="/source/project?rev=19&view=rev"><b>19</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=19&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=19">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=19&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Aug  7 22:40:33 2006 UTC</i> (19 months, 2 weeks ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 6958 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=19&r1=18&r2=19">previous 18</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+* Replaced one more literal ("|") block with a folded/stripped ("&gt;-") block.
+
+test-suite/schema.rng
+* Added.
+
+test-suite/rfc4408-tests.yml
+test-suite/pyspf-tests.yml
+test-suite/contrib/testspf.py
+test-suite/contrib/get-dns-records
+test-suite/contrib/nnn.spf1-test.mailzone.com.db
+test-suite/contrib/tnnnn.spftest.org.db
+* Added svn:mime-type, svn:eol-style, svn:keywords file properties.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev18"></a>
+
+
+Revision <a href="/source/project?rev=18&view=rev"><b>18</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=18&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=18">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=18&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Mon Aug  7 15:44:45 2006 UTC</i> (19 months, 2 weeks ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 6957 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=18&r1=17&r2=18">previous 17</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/rfc4408-tests.yml
+test-suite/pyspf-tests.yml
+* Corrected indentation of zonedata records below domain names to be greater
+  than that of their domain names, as required by YAML.
+* Replaced literal ("|") blocks with folded/stripped ("&gt;-") blocks or plain
+  scalars.
+* Added Subversion Id keywords.
+* Added Vim modelines.
+* Minor clean-ups.
+
+test-suite/pyspf-tests.yml
+* Renamed the "comment" field to "description" everywhere to conform with the
+  latest test data schema.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev17"></a>
+
+
+Revision <a href="/source/project?rev=17&view=rev"><b>17</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=17&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=17">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=17&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sun Aug  6 03:16:34 2006 UTC</i> (19 months, 2 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 6899 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=17&r1=16&r2=17">previous 16</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Add sections 4.6 and 4.7
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev16"></a>
+
+
+Revision <a href="/source/project?rev=16&view=rev"><b>16</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=16&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=16">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=16&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sun Jul 30 06:54:20 2006 UTC</i> (19 months, 3 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 4807 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=16&r1=15&r2=16">previous 15</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Use TXT: NONE for record selection tests.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev15"></a>
+
+
+Revision <a href="/source/project?rev=15&view=rev"><b>15</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=15&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=15">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=15&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Jul 29 21:22:30 2006 UTC</i> (19 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 4779 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=15&r1=14&r2=15">previous 14</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Move comment.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev14"></a>
+
+
+Revision <a href="/source/project?rev=14&view=rev"><b>14</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=14&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=14">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=14&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Sat Jul 29 21:07:20 2006 UTC</i> (19 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 4764 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=14&r1=12&r2=14">previous 12</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Changed comment fields to description.  Listed multiple legal results
+for SPF vs TXT tests.
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev12"></a>
+
+
+Revision <a href="/source/project?rev=12&view=rev"><b>12</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=12&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=12">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=12&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Fri Jul 28 18:05:05 2006 UTC</i> (19 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+
+
+<br>File length: 4360 byte(s)</b>
+
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?rev=12&r1=11&r2=12">previous 11</a>
+
+
+
+
+
+
+
+<pre class="vc_log">Add contributor section
+</pre>
+
+<hr size=1 noshade>
+
+
+
+
+<a name="rev11"></a>
+
+
+Revision <a href="/source/project?rev=11&view=rev"><b>11</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=11&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=11">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?rev=96&r1=11&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Modified
+
+<i>Fri Jul 28 17:21:30 2006 UTC</i> (19 months, 4 weeks ago) by <i>Julian Mehnle</i>
+
+
+
+
+
+
+
+
+<br>File length: 4291 byte(s)</b>
+
+
+<br>Copied from: <a href="/source/project/test-suite/spftest.yaml?rev=10&view=log">test-suite/spftest.yaml</a> revision 10
+
+
+
+
+
+<br>Diff to <a href="/source/project/test-suite/rfc4408-tests.yml?p1=test-suite%2Fspftest.yaml&rev=11&r1=10&r2=11">previous 10</a>
+
+
+
+
+
+
+
+<pre class="vc_log">test-suite/old-data/    -&gt; contrib/
+test-suite/spftest.yaml -&gt; rfc4408-tests.yml
+test-suite/pyspf.yaml   -&gt; pyspf-tests.yml
+* Renamed.
+</pre>
+
+<hr size=1 noshade>
+
+Filename: test-suite/spftest.yaml<br>
+
+
+<a name="rev10"></a>
+
+
+Revision <a href="/source/project?rev=10&view=rev"><b>10</b></a>
+ -
+(<a href="/source/project/test-suite/rfc4408-tests.yml?rev=10&view=markup">view</a>)
+(<a href="/source/*checkout*/project/test-suite/rfc4408-tests.yml?rev=10">download</a>)
+
+
+
+
+
+- <a href="/source/project/test-suite/rfc4408-tests.yml?p1=test-suite%2Fspftest.yaml&rev=96&r1=10&view=log">[select for diffs]</a>
+
+
+
+
+<br>
+
+Added
+
+<i>Fri Jul 28 16:57:30 2006 UTC</i> (19 months, 4 weeks ago) by <i>Stuart Gathman</i>
+
+
+
+
+
+
+<br>File length: 4291 byte(s)</b>
+
+
+
+
+
+
+
+
+
+
+<pre class="vc_log">Finally, some real tests.
+</pre>
+
+ 
+
+
+
+<a name="diff"></a>
+<hr noshade>
+This form allows you to request diffs between any two revisions of
+a file. You may select a symbolic revision name using the selection
+box or you may type in a numeric name using the type-in text box.
+<p>
+<form method="get" action="/source/project/test-suite/rfc4408-tests.yml" name="diff_select">
+
+<table border="0" cellpadding="2" cellspacing="0">
+<tr>
+<td>&nbsp;</td>
+<td>
+Diffs between
+
+<input type="hidden" name="r1" value="text" />
+
+<input type="TEXT" size="12" name="tr1" value="10"
+>
+and
+
+<input type="hidden" name="r2" value="text" />
+
+<input type="TEXT" size="12" name="tr2" value="96"
+>
+</td>
+</tr>
+<tr>
+<td><input type="checkbox" name="makepatch" id="makepatch" value="1"></td>
+<td><label for="makepatch">Generate output suitable for use with a patch
+program</label></td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>
+Type of Diff should be a
+<select name="diff_format" onchange="submit()">
+<option value="h" selected>Colored Diff</option>
+<option value="l" >Long Colored Diff</option>
+<option value="u" >Unidiff</option>
+<option value="c" >Context Diff</option>
+<option value="s" >Side by Side</option>
+</select>
+<input type="submit" value=" Get Diffs "></form>
+</td>
+</tr>
+</table>
+
+
+
+
+<hr noshade>
+<a name=logsort></a>
+<form method=get action="/source/project/test-suite/rfc4408-tests.yml">
+
+Sort log by:
+<select name="logsort" onchange="submit()">
+<option value="cvs" >Not sorted</option>
+<option value="date" selected>Commit date</option>
+<option value="rev" >Revision</option>
+</select>
+<input type=submit value=" Sort ">
+</form>
+
+
+<hr noshade>
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td align="left">
+<address><a href="mailto:spf-webmasters@v2.listbox.com">SPF Webmasters</a></address><br />
+Powered by <a href="http://viewcvs.sourceforge.net/">ViewCVS 1.0-dev</a>
+</td>
+<td align="right">
+<!--
+<img src="/viewcvs/images/logo.png" alt="(Powered by ViewCVS)" border="0"
+width="128" height="48" /><br />
+-->
+<h3><a target="_blank" href="/viewcvs/help_log.html">ViewCVS and CVS Help</a></h3>
+</td>
+</tr>
+</table>
+</body>
+</html>
+
