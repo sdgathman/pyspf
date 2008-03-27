@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.30  2008/03/27 00:58:15  customdesigned
+# Check dns names before DNSLookup
+#
 # Revision 1.108.2.29  2008/03/26 15:08:20  kitterma
 # Fix commit log typo.
 #
@@ -1176,9 +1179,8 @@ class query(object):
         pre: qtype in ['A', 'AAAA', 'MX', 'PTR', 'TXT', 'SPF']
         post: isinstance(__return__, types.ListType)
         """
-        if reduce(lambda x,y:x or len(y) < 1 or len(y) > 63, \
-                name.split('.'),False):
-            return []
+        if not reduce(lambda x,y:x and 0 < len(y) < 64, name.split('.'),True):
+            return []   # invalid DNS name (too long or empty)
         result = self.cache.get( (name, qtype) )
         cname = None
 
