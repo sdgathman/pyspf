@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.31  2008/03/27 01:15:33  customdesigned
+# Improve valid DNS name check.
+#
 # Revision 1.108.2.30  2008/03/27 00:58:15  customdesigned
 # Check dns names before DNSLookup
 #
@@ -112,9 +115,9 @@ if not hasattr(DNS.Type, 'SPF'):
     DNS.Type.typemap[99] = 'SPF'
     DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
 
-def DNSLookup(name, qtype, strict=True):
+def DNSLookup(name, qtype, strict=True, timeout=30):
     try:
-        req = DNS.DnsRequest(name, qtype=qtype)
+        req = DNS.DnsRequest(name, qtype=qtype, timeout=timeout)
         resp = req.req()
         #resp.show()
         # key k: ('wayforward.net', 'A'), value v
@@ -327,7 +330,8 @@ class query(object):
 
     Also keeps cache: DNS cache.  
     """
-    def __init__(self, i, s, h, local=None, receiver=None, strict=True):
+    def __init__(self, i, s, h, local=None, receiver=None, strict=True,
+        timeout=30):
         self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
@@ -352,6 +356,7 @@ class query(object):
         self.lookups = 0
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
+        self.timeout = timeout
         if i:
             self.set_ip(i)
         self.default_modifier = True
@@ -1186,7 +1191,8 @@ class query(object):
 
         if not result:
             safe2cache = query.SAFE2CACHE
-            for k, v in DNSLookup(name, qtype, self.strict):
+            for k, v in DNSLookup(name, qtype, self.strict,
+                                timeout=self.timeout):
                 if k == (name, 'CNAME'):
                     cname = v
                 if (qtype,k[1]) in safe2cache:
