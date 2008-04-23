@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.144  2008/04/23 20:54:23  customdesigned
+# Current draft test suite, query timeout param, empty-exp handling.
+#
 # Revision 1.143  2008/03/27 01:40:33  customdesigned
 # Check for valid DNS label.
 #
@@ -1731,9 +1734,14 @@ if __name__ == '__main__':
         print USAGE
         _test()
     elif len(sys.argv) == 2:
-        q = query(i='127.0.0.1', s='localhost', h='unknown',
-            receiver=socket.gethostname())
-        print q.dns_spf(sys.argv[1])
+        try:
+            q = query(i='127.0.0.1', s='localhost', h='unknown',
+                receiver=socket.gethostname())
+            print q.dns_spf(sys.argv[1])
+        except TempError, x:
+            print "Temporary DNS error: ", x
+        except PermError, x:
+            print "PermError: ", x
     elif len(sys.argv) == 4:
         print check(i=sys.argv[1], s=sys.argv[2], h=sys.argv[3],
             receiver=socket.gethostname())
