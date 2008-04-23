@@ -7,7 +7,7 @@ if not hasattr(dns.rdatatype,'SPF'):
   dns.rdatatype.SPF = 99
   dns.rdatatype._by_text['SPF'] = dns.rdatatype.SPF
 
-def DNSLookup(name,qtype):
+def DNSLookup(name,qtype,strict=True,timeout=30):
   retVal = []
   try:
     answers = dns.resolver.query(name, qtype)

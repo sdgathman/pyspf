@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.143  2008/03/27 01:40:33  customdesigned
+# Check for valid DNS label.
+#
 # Revision 1.142  2007/03/29 19:38:37  customdesigned
 # Remove trailing ';' again.  Fix Received-SPF header tests.
 #
@@ -310,12 +313,12 @@ import struct  # for pack() and unpack()
 import time    # for time()
 import urllib  # for quote()
 
-def DNSLookup(name, qtype, strict=True):
+def DNSLookup(name, qtype, strict=True, timeout=30):
     try:
         from SPF.pydns import DNSLookup
     except:
         from SPF.dnspython import DNSLookup
-    return DNSLookup(name, qtype, strict)
+    return DNSLookup(name, qtype, strict, timeout)
 
 RE_SPF = re.compile(r'^v=spf1$|^v=spf1 ',re.IGNORECASE)
 
@@ -507,7 +510,8 @@ class query(object):
 
     Also keeps cache: DNS cache.  
     """
-    def __init__(self, i, s, h, local=None, receiver=None, strict=True):
+    def __init__(self, i, s, h, local=None, receiver=None, strict=True,
+                timeout=30):
         self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
@@ -532,6 +536,7 @@ class query(object):
         self.lookups = 0
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
+        self.timeout = timeout
         if i:
             self.set_ip(i)
         self.default_modifier = True    # follow default= in lax mode
@@ -940,11 +945,16 @@ class query(object):
             modifiers.append(mod)
             if mod == 'exp':
                 # always fetch explanation to check permerrors
+                if not arg:
+                    raise PermError('exp has empty domain-spec:',arg)
                 arg = self.expand_domain(arg)
-                exp = self.get_explanation(arg)
-                if exp and not recursion:
-                    # only set explanation in base recursion level
-                    self.set_explanation(exp)
+                if arg:
+                    try:
+                        exp = self.get_explanation(arg)
+                        if exp and not recursion:
+                            # only set explanation in base recursion level
+                            self.set_explanation(exp)
+                    except: pass
             elif mod == 'redirect':
                 self.check_lookups()
                 redirect = self.expand_domain(arg)
@@ -1356,7 +1366,7 @@ class query(object):
 
         if not result:
             safe2cache = query.SAFE2CACHE
-            for k, v in DNSLookup(name, qtype, self.strict):
+            for k, v in DNSLookup(name, qtype, self.strict,self.timeout):
                 if k == (name, 'CNAME'):
                     cname = v
                 if (qtype,k[1]) in safe2cache:

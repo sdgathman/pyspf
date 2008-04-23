@@ -24,7 +24,7 @@ zonedata = {}
 RE_IP4 = re.compile(r'\.'.join(
 	[r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
 
-def DNSLookup(name,qtype,strict=True):
+def DNSLookup(name,qtype,strict=True,timeout=None):
   try:
     #print name
     timeout = True
