@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.32  2008/04/23 20:03:53  customdesigned
+# Add timeout keyword to query constructor and DNSLookup.
+#
 # Revision 1.108.2.31  2008/03/27 01:15:33  customdesigned
 # Improve valid DNS name check.
 #
@@ -331,7 +334,7 @@ class query(object):
     Also keeps cache: DNS cache.  
     """
     def __init__(self, i, s, h, local=None, receiver=None, strict=True,
-        timeout=30):
+                timeout=30):
         self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
@@ -1191,8 +1194,7 @@ class query(object):
 
         if not result:
             safe2cache = query.SAFE2CACHE
-            for k, v in DNSLookup(name, qtype, self.strict,
-                                timeout=self.timeout):
+            for k, v in DNSLookup(name, qtype, self.strict, self.timeout):
                 if k == (name, 'CNAME'):
                     cname = v
                 if (qtype,k[1]) in safe2cache:
@@ -1338,7 +1340,8 @@ def quote_value(s):
     """
     if s is None or RE_DOT_ATOM.match(s):
       return s
-    return '"' + s.replace('\\',r'\\').replace('"',r'\"') + '"'
+    return '"' + s.replace('\\',r'\\').replace('"',r'\"'
+                ).replace('\x00',r'\x00') + '"'
 
 def parse_mechanism(str, d):
     """Breaks A, MX, IP4, and PTR mechanisms into a (name, domain,
