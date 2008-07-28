@@ -55,6 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Wed Apr 02 2008 Stuart Gathman <stuart@bmsi.com> 2.0.5-1
+- Add timeout parameter to query ctor and DNSLookup
 - Patch from Scott Kitterman to retry truncated results with TCP unless harsh
 - Validate DNS labels
 - Reflect decision on empty-exp errata
