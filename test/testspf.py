@@ -25,7 +25,7 @@ RE_IP4 = re.compile(r'\.'.join(
 
 def DNSLookup(name,qtype,strict=True,timeout=None):
   try:
-    #print name
+    #print name,qtype
     timeout = True
 
     # emulate pydns-2.3.0 label processing
@@ -110,6 +110,7 @@ class SPFScenario(object):
       self.zonedata= dict([
         (d.lower(), list(getrdata(r))) for d,r in data['zonedata'].items()
       ])
+      #print self.zonedata
       for t,v in data['tests'].items():
         self.tests[t] = SPFTest(t,self,v)
       if 'id' in data:

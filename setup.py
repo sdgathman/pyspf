@@ -5,7 +5,7 @@ from distutils.core import setup
 DESC = """SPF (Sender Policy Framework) implemented in Python."""
 
 setup(name='pyspf',
-      version='2.0.4',
+      version='2.0.5',
       description=DESC,
       author='Terence Way',
       author_email='terry@wayforward.net',
