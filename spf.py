@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.33  2008/04/23 21:00:42  customdesigned
+# Quote nulls in Received-SPF.
+#
 # Revision 1.108.2.32  2008/04/23 20:03:53  customdesigned
 # Add timeout keyword to query constructor and DNSLookup.
 #
@@ -273,7 +276,7 @@ class PermError(Exception):
             return '%s: %s'%(self.msg, self.mech)
         return self.msg
 
-def check2(i, s, h, local=None, receiver=None):
+def check2(i, s, h, local=None, receiver=None, timeout=30):
     """Test an incoming MAIL FROM:<s>, from a client with ip address i.
     h is the HELO/EHLO domain name.  This is the RFC4408 compliant pySPF2.0
     interface.  The interface returns an SPF result and explanation only.
@@ -288,7 +291,8 @@ def check2(i, s, h, local=None, receiver=None):
     #>>> check2(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
 
     """
-    res,_,exp = query(i=i, s=s, h=h, local=local, receiver=receiver).check()
+    res,_,exp = query(i=i, s=s, h=h, local=local,
+        receiver=receiver,timeout=timeout).check()
     return res,exp
 
 def check(i, s, h, local=None, receiver=None):
