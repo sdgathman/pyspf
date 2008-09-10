@@ -178,6 +178,15 @@ class SPFTestCase(unittest.TestCase):
   def testRFC(self):
     self.runTest(loadYAML('rfc4408-tests.yml').values())
 
+  def testInvalidSPF(self):
+    i, s, h = '1.2.3.4','sender@domain','helo'
+    q = spf.query(i=i, s=s, h=h, receiver='localhost', strict=False)
+    res,code,txt = q.check('v=spf1...')
+    self.assertEquals('none',res)
+    q = spf.query(i=i, s=s, h=h, receiver='localhost', strict=2)
+    res,code,txt = q.check('v=spf1...')
+    self.assertEquals('ambiguous',res)
+
 def suite(): return unittest.makeSuite(SPFTestCase,'test')
 
 if __name__ == '__main__':

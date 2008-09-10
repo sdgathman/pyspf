@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.35  2008/09/10 00:35:03  customdesigned
+# Handle invalid SPF record on command line.
+#
 # Revision 1.108.2.34  2008/08/25 17:58:07  customdesigned
 # Add timeout to check2.
 #
@@ -742,8 +745,9 @@ class query(object):
         # for common mistakes like IN TXT "v=spf1" "mx" "-all"
         # in relaxed mode.
         if spf[0].lower() != 'v=spf1':
-            # can also happen when passing invalid SPF record on command line
-            raise AmbiguityWarning('Invalid SPF record in', self.d)
+            if self.strict > 1:
+                raise AmbiguityWarning('Invalid SPF record in', self.d)
+            return ('none', 250, EXPLANATIONS['none'])
         spf = spf[1:]
 
         # copy of explanations to be modified by exp=
