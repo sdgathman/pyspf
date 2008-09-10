@@ -47,6 +47,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Development taken over by Stuart Gathman <stuart@bmsi.com>.
 #
 # $Log$
+# Revision 1.145  2008/04/23 21:01:16  customdesigned
+# Show errors for command line queries.
+#
 # Revision 1.144  2008/04/23 20:54:23  customdesigned
 # Current draft test suite, query timeout param, empty-exp handling.
 #
@@ -916,7 +919,7 @@ class query(object):
         # for common mistakes like IN TXT "v=spf1" "mx" "-all"
         # in relaxed mode.
         if spf[0].lower() != 'v=spf1':
-            assert strict > 1
+            # can also happen when passing invalid SPF record on command line
             raise AmbiguityWarning('Invalid SPF record in', self.d)
         spf = spf[1:]
 
