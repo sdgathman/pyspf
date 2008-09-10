@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.34  2008/08/25 17:58:07  customdesigned
+# Add timeout to check2.
+#
 # Revision 1.108.2.33  2008/04/23 21:00:42  customdesigned
 # Quote nulls in Received-SPF.
 #
@@ -739,7 +742,7 @@ class query(object):
         # for common mistakes like IN TXT "v=spf1" "mx" "-all"
         # in relaxed mode.
         if spf[0].lower() != 'v=spf1':
-            assert strict > 1
+            # can also happen when passing invalid SPF record on command line
             raise AmbiguityWarning('Invalid SPF record in', self.d)
         spf = spf[1:]
 
