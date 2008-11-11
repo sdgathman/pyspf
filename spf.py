@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.36  2008/09/10 00:46:45  customdesigned
+# Test case for handling invalid SPF on command line.
+#
 # Revision 1.108.2.35  2008/09/10 00:35:03  customdesigned
 # Handle invalid SPF record on command line.
 #
@@ -676,7 +679,10 @@ class query(object):
                 raise PermError('Invalid IP6 CIDR length', mech)
             if self.v == 'ip6':
                 cidrlength = cidr6length
-        elif m == 'ip4':
+        elif m == 'ip4' or RE_IP4.match(m):
+            if m != 'ip4':
+              self.note_error( 'Missing IP4' , mech)
+              m,arg = 'ip4',m
             if cidr6length is not None:
                 raise PermError('Dual CIDR not allowed', mech)
             if cidrlength is None:
@@ -1448,8 +1454,8 @@ def addr2bin(str):
     """Convert a string IPv4 address into an unsigned integer.
 
     Examples::
-    >>> addr2bin('127.0.0.1')
-    2130706433
+    >>> long(addr2bin('127.0.0.1'))
+    2130706433L
 
     >>> addr2bin('127.0.0.1') == socket.INADDR_LOOPBACK
     1
@@ -1462,15 +1468,11 @@ def addr2bin(str):
 
     Unlike DNS.addr2bin, the n, n.n, and n.n.n forms for IP addresses
     are handled as well::
-    >>> addr2bin('10.65536')
-    167837696
-    >>> 10 * (2 ** 24) + 65536
-    167837696
+    >>> long(addr2bin('10.65536'))
+    167837696L
 
-    >>> addr2bin('10.93.512')
-    173867520
-    >>> 10 * (2 ** 24) + 93 * (2 ** 16) + 512
-    173867520
+    >>> long(addr2bin('10.93.512'))
+    173867520L
     """
     return struct.unpack("!L", socket.inet_aton(str))[0]
 
