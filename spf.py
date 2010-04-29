@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.38  2010/04/29 16:36:47  customdesigned
+# report CIDR error only for valid mechanism
+#
 # Revision 1.108.2.37  2008/11/11 18:43:42  customdesigned
 # Make doc tests run on 2.5.  Heuristic for missing IP4.
 #
@@ -125,6 +128,7 @@ import socket  # for inet_ntoa() and inet_aton()
 import struct  # for pack() and unpack()
 import time    # for time()
 import urllib  # for quote()
+from email.Message import Message
 
 import DNS    # http://pydns.sourceforge.net
 if not hasattr(DNS.Type, 'SPF'):
@@ -1248,7 +1252,45 @@ class query(object):
         except socket.error: pass
         return False
 
+    def parse_header(self, val):
+        """Set SPF values from Received-SPF header.
+        
+        Useful when SPF has already been run on a trusted gateway machine.
+
+        Examples:
+        >>> q = query('0.0.0.0','','')
+        >>> q.parse_header('''Pass (test) client-ip=70.98.79.77;
+        ... envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com;
+        ... receiver=mail.bmsi.com; mechanism=a; identity=mailfrom''')
+        >>> q.get_header(q.result)
+        'Pass (test) client-ip=70.98.79.77; envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com; receiver=mail.bmsi.com; mechanism=a; identity=mailfrom'
+
+        """
+        a = val.split(None,1)
+        self.result = a[0].lower()
+        self.mechanism = None
+        if len(a) < 2: return
+        val = a[1]
+        if val.startswith('('):
+          pos = val.find(')')
+          if pos < 0: return
+          self.comment = val[1:pos]
+          val = val[pos+1:]
+        msg = Message()
+        msg.add_header('Received-SPF','; '+val)
+        p = {}
+        for k,v in msg.get_params(header='Received-SPF'):
+          if k == 'client-ip':
+            self.set_ip(v)
+          elif k == 'envelope-from': self.s = v
+          elif k == 'helo': self.h = v
+          elif k == 'receiver': self.r = v
+          elif k == 'problem': self.mech = v
+          elif k == 'mechanism': self.mechanism = v
+        pass
+
     def get_header(self, res, receiver=None, **kv):
+        """Generate Received-SPF header based on last lookup."""
         if not receiver:
             receiver = self.r
         client_ip = self.c
@@ -1267,7 +1309,11 @@ class query(object):
         else:
             problem = None
         mechanism = quote_value(self.mechanism)
-        res = ['%s (%s: %s)' % (tag,receiver,self.get_header_comment(res))]
+        if hasattr(self,'comment'):
+          comment = self.comment
+        else:
+          comment = '%s: %s' % (receiver,self.get_header_comment(res))
+        res = ['%s (%s)' % (tag,comment)]
         for k in ('client_ip','envelope_from','helo','receiver',
           'problem','mechanism'):
             v = locals()[k]
@@ -1279,8 +1325,7 @@ class query(object):
         return ' '.join(res)
 
     def get_header_comment(self, res):
-        """Return comment for Received-SPF header.
-        """
+        """Return comment for Received-SPF header.  """
         sender = self.o
         if res == 'pass':
             return \
