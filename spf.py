@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.39  2010/04/29 18:53:38  customdesigned
+# Parse Received-SPF header
+#
 # Revision 1.108.2.38  2010/04/29 16:36:47  customdesigned
 # report CIDR error only for valid mechanism
 #
@@ -1259,21 +1262,21 @@ class query(object):
 
         Examples:
         >>> q = query('0.0.0.0','','')
-        >>> q.parse_header('''Pass (test) client-ip=70.98.79.77;
+        >>> res = q.parse_header('''Pass (test) client-ip=70.98.79.77;
         ... envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com;
         ... receiver=mail.bmsi.com; mechanism=a; identity=mailfrom''')
-        >>> q.get_header(q.result)
+        >>> q.get_header(res)
         'Pass (test) client-ip=70.98.79.77; envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com; receiver=mail.bmsi.com; mechanism=a; identity=mailfrom'
 
         """
         a = val.split(None,1)
         self.result = a[0].lower()
         self.mechanism = None
-        if len(a) < 2: return
+        if len(a) < 2: return 'none'
         val = a[1]
         if val.startswith('('):
           pos = val.find(')')
-          if pos < 0: return
+          if pos < 0: return self.result
           self.comment = val[1:pos]
           val = val[pos+1:]
         msg = Message()
@@ -1287,7 +1290,8 @@ class query(object):
           elif k == 'receiver': self.r = v
           elif k == 'problem': self.mech = v
           elif k == 'mechanism': self.mechanism = v
-        pass
+        self.l, self.o = split_email(self.s, self.h)
+        return self.result
 
     def get_header(self, res, receiver=None, **kv):
         """Generate Received-SPF header based on last lookup."""
