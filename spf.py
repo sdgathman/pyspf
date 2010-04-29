@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.37  2008/11/11 18:43:42  customdesigned
+# Make doc tests run on 2.5.  Heuristic for missing IP4.
+#
 # Revision 1.108.2.36  2008/09/10 00:46:45  customdesigned
 # Test case for handling invalid SPF on command line.
 #
@@ -702,6 +705,7 @@ class query(object):
                 raise PermError('Invalid IP6 address', mech)
         else:
             if cidrlength is not None or cidr6length is not None:
+              if m in ALL_MECHANISMS:
                 raise PermError('CIDR not allowed', mech)
             cidrlength = self.cidrmax
 
