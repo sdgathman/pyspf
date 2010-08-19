@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.40  2010/04/29 20:23:44  customdesigned
+# Return result from parse_header
+#
 # Revision 1.108.2.39  2010/04/29 18:53:38  customdesigned
 # Parse Received-SPF header
 #
@@ -1262,12 +1265,19 @@ class query(object):
 
         Examples:
         >>> q = query('0.0.0.0','','')
-        >>> res = q.parse_header('''Pass (test) client-ip=70.98.79.77;
+        >>> p = q.parse_header('''Pass (test) client-ip=70.98.79.77;
         ... envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com;
         ... receiver=mail.bmsi.com; mechanism=a; identity=mailfrom''')
-        >>> q.get_header(res)
+        >>> q.get_header(q.result)
         'Pass (test) client-ip=70.98.79.77; envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com; receiver=mail.bmsi.com; mechanism=a; identity=mailfrom'
-
+	>>> p = q.parse_header('''None (mail.bmsi.com: test)
+	... client-ip=163.247.46.150; envelope-from="admin@squiebras.cl";
+	... helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24;
+	... x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom''')
+	>>> q.get_header(q.result,**p)
+	'None (mail.bmsi.com: test) client-ip=163.247.46.150; envelope-from="admin@squiebras.cl"; helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24; x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom'
+	>>> p['bestguess']
+	'pass'
         """
         a = val.split(None,1)
         self.result = a[0].lower()
@@ -1290,8 +1300,10 @@ class query(object):
           elif k == 'receiver': self.r = v
           elif k == 'problem': self.mech = v
           elif k == 'mechanism': self.mechanism = v
+          elif k == 'identity': self.ident = v
+	  elif k.startswith('x-'): p[k[2:]] = v
         self.l, self.o = split_email(self.s, self.h)
-        return self.result
+        return p
 
     def get_header(self, res, receiver=None, **kv):
         """Generate Received-SPF header based on last lookup."""
