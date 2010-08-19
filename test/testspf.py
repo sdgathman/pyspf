@@ -187,7 +187,11 @@ class SPFTestCase(unittest.TestCase):
     res,code,txt = q.check('v=spf1...')
     self.assertEquals('ambiguous',res)
 
-def suite(): return unittest.makeSuite(SPFTestCase,'test')
+def suite(): 
+  suite = unittest.makeSuite(SPFTestCase,'test')
+  import doctest
+  suite.addTest(doctest.DocTestSuite(spf))
+  return suite
 
 if __name__ == '__main__':
   tc = None
@@ -200,4 +204,5 @@ if __name__ == '__main__':
       t = loadYAML('rfc4408-tests.yml')
     tc.runTest([t[i]])
   if not tc:
-    unittest.main()
+    suite = suite()
+    unittest.TextTestRunner().run(suite)
