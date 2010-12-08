@@ -19,7 +19,7 @@ def DNSLookup(name, qtype, strict=True, timeout=30):
         #
         if resp.header['tc'] == True:
           if strict > 1:
-              raise spf.TempError, 'DNS: Truncated UDP Reply, not retrying TCP'
+              raise spf.AmbiguityWarning, 'DNS: Truncated UDP Reply, SPF records should fit in a UDP packet, retrying TCP'
           try:
               req = DNS.DnsRequest(name, qtype=qtype, protocol='tcp',
                         timeout=timeout)
