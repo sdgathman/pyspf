@@ -28,8 +28,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
     http://www.wayforward.net/spf/
 """
 
-# CVS Commits since last release (2.0.4):
+# CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.43  2011/02/11 18:17:47  kitterma
+# Ensure an error is raise for all DNS rcodes other than 0 and 3 per RFC 4408.
+#
 # Revision 1.108.2.42  2011/02/11 18:14:22  kitterma
 # Make TCP fallback an AmbiguityWarning in strict mode rather than an
 # error in harsh mode so we can retry and validate the TCP based record.
@@ -58,66 +61,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # Revision 1.108.2.34  2008/08/25 17:58:07  customdesigned
 # Add timeout to check2.
 #
-# Revision 1.108.2.33  2008/04/23 21:00:42  customdesigned
-# Quote nulls in Received-SPF.
-#
-# Revision 1.108.2.32  2008/04/23 20:03:53  customdesigned
-# Add timeout keyword to query constructor and DNSLookup.
-#
-# Revision 1.108.2.31  2008/03/27 01:15:33  customdesigned
-# Improve valid DNS name check.
-#
-# Revision 1.108.2.30  2008/03/27 00:58:15  customdesigned
-# Check dns names before DNSLookup
-#
-# Revision 1.108.2.29  2008/03/26 15:08:20  kitterma
-# Fix commit log typo.
-#
-# Revision 1.108.2.28  2008/03/26 14:45:37  kitterma
-# Update built in tests for Python2.5 (addr2bin will now fail slightly with older
-# Python versions). SF #1655736
-#
-# Revision 1.108.2.27  2008/03/26 14:34:35  kitterma
-# Change shebangs to #!/usr/bin/python throughout.
-#
-# Revision 1.108.2.26  2008/03/26 14:31:04  kitterma
-# Patch from Debian to avoid crash if command line SPF record request returns
-# TempError or PermError.
-#
-# Revision 1.108.2.25  2008/03/26 14:26:19  kitterma
-# Update for new version (working on 2.0.5) and year.
-#
-# Revision 1.108.2.24  2008/03/24 21:33:22  customdesigned
-# Patch from Scott Kitterman to retry truncated results with TCP unless
-# in harsh mode.
-#
-# Revision 1.108.2.23  2007/11/28 19:48:37  customdesigned
-# Reflect decision on empty-exp errata.
-#
-# Revision 1.108.2.22  2007/06/23 20:17:09  customdesigned
-# Don't try to include null (None) keyword values.
-#
-# Revision 1.108.2.21  2007/03/29 19:38:03  customdesigned
-# Remove trailing ';' again, fix Received-SPF tests.
-#
-# Revision 1.108.2.20  2007/03/27 20:54:22  customdesigned
-# Correct Received-SPF header format.
-#
-# Revision 1.108.2.19  2007/03/17 19:07:01  customdesigned
-# For default modifier, return ambiguous in harsh mode, ignore in strict mode,
-# follow in lax mode.
-#
-# Revision 1.108.2.18  2007/03/17 18:25:38  customdesigned
-# Default modifier is obsolete.  Retab (expandtab) spf.py
-#
-# Revision 1.108.2.17  2007/03/13 20:13:16  customdesigned
-# Missing parentheses.
-#
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.5: March 26, 2008"
+__version__ = "2.0.6: Feb 11, 2011"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
