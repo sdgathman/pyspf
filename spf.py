@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.42  2011/02/11 18:14:22  kitterma
+# Make TCP fallback an AmbiguityWarning in strict mode rather than an
+# error in harsh mode so we can retry and validate the TCP based record.
+#
 # Revision 1.108.2.41  2010/08/19 01:18:08  customdesigned
 # Return extra keyword dict from parse_header, parse identity.
 #
@@ -164,6 +168,8 @@ def DNSLookup(name, qtype, strict=True, timeout=30):
               resp = req.req()
           except DNS.DNSError, x:
               raise TempError, 'DNS: TCP Fallback error: ' + str(x)
+          if resp.header['rcode'] != 0 and resp.header['rcode'] != 3:
+              raise IOError, 'Error: ' + resp.header['status'] + '  RCODE: ' + str(resp.header['rcode'])
         return [((a['name'], a['typename']), a['data']) for a in resp.answers]
     except IOError, x:
         raise TempError, 'DNS ' + str(x)
