@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.4):
 # $Log$
+# Revision 1.108.2.41  2010/08/19 01:18:08  customdesigned
+# Return extra keyword dict from parse_header, parse identity.
+#
 # Revision 1.108.2.40  2010/04/29 20:23:44  customdesigned
 # Return result from parse_header
 #
@@ -155,7 +158,7 @@ def DNSLookup(name, qtype, strict=True, timeout=30):
         #
         if resp.header['tc'] == True:
           if strict > 1:
-              raise TempError, 'DNS: Truncated UDP Reply, not retrying TCP'
+              raise AmbiguityWarning, 'DNS: Truncated UDP Reply, SPF records should fit in a UDP packet, retrying TCP'
           try:
               req = DNS.DnsRequest(name, qtype=qtype, protocol='tcp')
               resp = req.req()
