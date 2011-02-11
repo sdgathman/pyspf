@@ -1,4 +1,11 @@
-Version 2.0.5 - March 8, 2008
+Version 2.0.6 - February 11, 2011
+  * Ensure Temperror for all DNS rcodes other than 0 and 3 per RFC 4408
+  * Parse Received-SPF header
+  * Report CIDR error only for valid mechanism
+  * Handle invalid SPF record on command line
+  * Add timeout to check2
+
+Version 2.0.5 - July 29, 2008
   * Add TCP fallback if DNS UDP reply is truncated
     - Fixes inconsistent results from trying to use partial UDP replies
   * Correct Received-SPF formatting
