@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from distutils.core import setup
+import sys
 
 DESC = """SPF (Sender Policy Framework) implemented in Python."""
 
@@ -30,3 +31,6 @@ setup(name='pyspf',
 	'Topic :: Software Development :: Libraries :: Python Modules'
       ]
 )
+
+if sys.version_info < (2, 6):
+    raise Exception("pyspf 2.0.6 and later requires at least python2.6."
