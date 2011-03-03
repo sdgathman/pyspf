@@ -17,6 +17,9 @@ specific Python extension directory::
 	% su
 	# python setup.py install
 
+The minimum Python version required is python2.6.  The spf module in this
+version has been tested with python3.2 using 2to3.
+
 Testing
 -------
 After this package is installed, cd into the test directory and

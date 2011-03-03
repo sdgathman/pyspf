@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.44  2011/02/11 18:25:31  kitterma
+# Move older spf.py commit messages to pyspf_changelog.txt and update version numbers.
+#
 # Revision 1.108.2.43  2011/02/11 18:17:47  kitterma
 # Ensure an error is raise for all DNS rcodes other than 0 and 3 per RFC 4408.
 #
@@ -65,7 +68,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.6: Feb 11, 2011"
+__version__ = "2.0.6: Mar  2, 2011"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -187,14 +190,6 @@ EXPLANATIONS = {'pass': 'sender SPF authorized',
                 #Ambiguous only used in harsh mode for SPF validation
                 'ambiguous': 'No error, but results may vary'
         }
-
-# support pre 2.2.1....
-try:
-    bool, True, False = bool, True, False
-except NameError:
-    False, True = 0, 1
-    def bool(x): return not not x
-# ...pre 2.2.1
 
 DELEGATE = None
 
@@ -577,27 +572,27 @@ class query(object):
     ('?mx:%{d}/27', 'mx', 'email.example.com', 27, 'neutral')
 
     >>> try: q.validate_mechanism('ip4:1.2.3.4/247')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid IP4 CIDR length: ip4:1.2.3.4/247
     
     >>> try: q.validate_mechanism('ip4:1.2.3.4/33')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid IP4 CIDR length: ip4:1.2.3.4/33
 
     >>> try: q.validate_mechanism('a:example.com:8080')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid domain found (use FQDN): example.com:8080
     
     >>> try: q.validate_mechanism('ip4:1.2.3.444/24')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid IP4 address: ip4:1.2.3.444/24
     
     >>> try: q.validate_mechanism('ip4:1.2.03.4/24')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid IP4 address: ip4:1.2.03.4/24
     
     >>> try: q.validate_mechanism('-all:3030')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid all mechanism format - only qualifier allowed with all: -all:3030
 
     >>> q.validate_mechanism('-mx:%%%_/.Clara.de/27')
@@ -610,7 +605,7 @@ class query(object):
     ('a:mail.example.com.', 'a', 'mail.example.com', 32, 'pass')
 
     >>> try: q.validate_mechanism('a:mail.example.com,')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Do not separate mechnisms with commas: a:mail.example.com,
     """
         if mech.endswith( "," ):
@@ -962,7 +957,7 @@ class query(object):
         '3.2.0.192.in-addr.strong.lp._spf.example.com'
 
         >>> try: q.expand('%(ir).%{v}.%{l1r-}.lp._spf.%{d2}')
-        ... except PermError,x: print x
+        ... except PermError as x: print(x)
         invalid-macro-char : %(ir)
 
         >>> q.expand('%{p2}.trusted-domains.example.net')
@@ -1482,11 +1477,11 @@ def addr2bin(str):
     >>> addr2bin('127.0.0.1') == socket.INADDR_LOOPBACK
     1
 
-    >>> addr2bin('255.255.255.254')
-    4294967294L
+    >>> addr2bin('255.255.255.254') #doctest: +SKIP
+    4294967294
 
-    >>> addr2bin('192.168.0.1')
-    3232235521L
+    >>> addr2bin('192.168.0.1') #doctest: +SKIP
+    3232235521
 
     Unlike DNS.addr2bin, the n, n.n, and n.n.n forms for IP addresses
     are handled as well::
