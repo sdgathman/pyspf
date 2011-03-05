@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.46  2011/03/05 17:37:57  kitterma
+# Revert to older doctest construct for python2.4/2.5 compatibility and set minimum version to 2.4.
+#
 # Revision 1.108.2.45  2011/03/03 04:14:31  kitterma
 #  * Refactor spf.py to support python3 via 2to3 - Minimum Python version is now python2.6.
 #  * Update README and CHANGELOG
@@ -96,7 +99,10 @@ import socket  # for inet_ntoa() and inet_aton()
 import struct  # for pack() and unpack()
 import time    # for time()
 import urllib  # for quote()
-from email.Message import Message
+try:
+    from email.message import Message
+except ImportError:
+    from email.Messge import Message
 
 import DNS    # http://pydns.sourceforge.net
 if not hasattr(DNS.Type, 'SPF'):
