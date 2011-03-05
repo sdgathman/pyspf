@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.45  2011/03/03 04:14:31  kitterma
+#  * Refactor spf.py to support python3 via 2to3 - Minimum Python version is now python2.6.
+#  * Update README and CHANGELOG
+#
 # Revision 1.108.2.44  2011/02/11 18:25:31  kitterma
 # Move older spf.py commit messages to pyspf_changelog.txt and update version numbers.
 #
@@ -572,27 +576,27 @@ class query(object):
     ('?mx:%{d}/27', 'mx', 'email.example.com', 27, 'neutral')
 
     >>> try: q.validate_mechanism('ip4:1.2.3.4/247')
-    ... except PermError as x: print(x)
+    ... except PermError,x: print x
     Invalid IP4 CIDR length: ip4:1.2.3.4/247
     
     >>> try: q.validate_mechanism('ip4:1.2.3.4/33')
-    ... except PermError as x: print(x)
+    ... except PermError,x: print x
     Invalid IP4 CIDR length: ip4:1.2.3.4/33
 
     >>> try: q.validate_mechanism('a:example.com:8080')
-    ... except PermError as x: print(x)
+    ... except PermError,x: print x
     Invalid domain found (use FQDN): example.com:8080
     
     >>> try: q.validate_mechanism('ip4:1.2.3.444/24')
-    ... except PermError as x: print(x)
+    ... except PermError,x: print x
     Invalid IP4 address: ip4:1.2.3.444/24
     
     >>> try: q.validate_mechanism('ip4:1.2.03.4/24')
-    ... except PermError as x: print(x)
+    ... except PermError,x: print x
     Invalid IP4 address: ip4:1.2.03.4/24
     
     >>> try: q.validate_mechanism('-all:3030')
-    ... except PermError as x: print(x)
+    ... except PermError,x: print x
     Invalid all mechanism format - only qualifier allowed with all: -all:3030
 
     >>> q.validate_mechanism('-mx:%%%_/.Clara.de/27')
@@ -605,7 +609,7 @@ class query(object):
     ('a:mail.example.com.', 'a', 'mail.example.com', 32, 'pass')
 
     >>> try: q.validate_mechanism('a:mail.example.com,')
-    ... except PermError as x: print(x)
+    ... except PermError,x: print x
     Do not separate mechnisms with commas: a:mail.example.com,
     """
         if mech.endswith( "," ):
@@ -956,9 +960,9 @@ class query(object):
         >>> q.expand('%{ir}.%{v}.%{l1r-}.lp._spf.%{d2}')
         '3.2.0.192.in-addr.strong.lp._spf.example.com'
 
-        >>> try: q.expand('%(ir).%{v}.%{l1r-}.lp._spf.%{d2}')
-        ... except PermError as x: print(x)
-        invalid-macro-char : %(ir)
+        >>> q.expand('%(ir).%{v}.%{l1r-}.lp._spf.%{d2}')
+        Traceback (most recent call last):
+        PermError: invalid-macro-char : %(ir)
 
         >>> q.expand('%{p2}.trusted-domains.example.net')
         'example.org.trusted-domains.example.net'
@@ -1253,7 +1257,7 @@ class query(object):
           elif k == 'problem': self.mech = v
           elif k == 'mechanism': self.mechanism = v
           elif k == 'identity': self.ident = v
-	  elif k.startswith('x-'): p[k[2:]] = v
+          elif k.startswith('x-'): p[k[2:]] = v
         self.l, self.o = split_email(self.s, self.h)
         return p
 
