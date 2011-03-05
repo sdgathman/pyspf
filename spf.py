@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.48  2011/03/05 18:00:46  kitterma
+# Fix typo.
+#
 # Revision 1.108.2.47  2011/03/05 18:00:15  kitterma
 # Try to import both email.message and email.Message for backward compatibility.
 #
@@ -969,9 +972,9 @@ class query(object):
         >>> q.expand('%{ir}.%{v}.%{l1r-}.lp._spf.%{d2}')
         '3.2.0.192.in-addr.strong.lp._spf.example.com'
 
-        >>> q.expand('%(ir).%{v}.%{l1r-}.lp._spf.%{d2}')
-        Traceback (most recent call last):
-        PermError: invalid-macro-char : %(ir)
+        >>> try: q.expand('%(ir).%{v}.%{l1r-}.lp._spf.%{d2}')
+        ... except PermError,x: print x
+        invalid-macro-char : %(ir)
 
         >>> q.expand('%{p2}.trusted-domains.example.net')
         'example.org.trusted-domains.example.net'
