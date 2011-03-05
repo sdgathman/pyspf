@@ -1,9 +1,10 @@
-%define __python python2.4
+%define __python python2.6
+%define pythonbase python26
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
-Name:           pyspf
-Version:        2.0.5
-Release:        1%{?dist}.py24
+Name:           %{pythonbase}-pyspf
+Version:        2.0.6
+Release:        1
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
 Group:          Development/Languages
@@ -14,7 +15,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
 #BuildRequires:  python-setuptools
-Requires:       pydns %{__python}
+Requires:       pydns, %{pythonbase}
 
 %description
 SPF does email sender validation.  For more information about SPF,
@@ -28,10 +29,8 @@ should be done during the MAIL FROM:<...> command.
 %prep
 %setup -q -n %{namewithoutpythonprefix}-%{version}
 
-
 %build
 %{__python} setup.py build
-
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -40,10 +39,8 @@ mv $RPM_BUILD_ROOT/usr/bin/type99.py $RPM_BUILD_ROOT/usr/bin/type99
 mv $RPM_BUILD_ROOT/usr/bin/spfquery.py $RPM_BUILD_ROOT/usr/bin/spfquery
 rm -f $RPM_BUILD_ROOT/usr/bin/*.py{o,c}
 
-
 %clean
 rm -rf $RPM_BUILD_ROOT
-
 
 %files
 %defattr(-,root,root,-)
@@ -53,11 +50,16 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/spfquery
 
 %changelog
+* Wed Apr 02 2008 Stuart Gathman <stuart@bmsi.com> 2.0.6-1
+- Python-2.6
+- parse_header method
+
 * Wed Apr 02 2008 Stuart Gathman <stuart@bmsi.com> 2.0.5-1
 - Add timeout parameter to query ctor and DNSLookup
 - Patch from Scott Kitterman to retry truncated results with TCP unless harsh
 - Validate DNS labels
 - Reflect decision on empty-exp errata
+
 * Wed Jul 25 2007 Stuart Gathman <stuart@bmsi.com> 2.0.4-1
 - Correct unofficial 'best guess' processing.
 - PTR validation processing cleanup

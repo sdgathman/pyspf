@@ -33,4 +33,4 @@ setup(name='pyspf',
 )
 
 if sys.version_info < (2, 6):
-    raise Exception("pyspf 2.0.6 and later requires at least python2.6."
+    raise Exception("pyspf 2.0.6 and later requires at least python2.6.")
