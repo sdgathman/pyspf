@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.47  2011/03/05 18:00:15  kitterma
+# Try to import both email.message and email.Message for backward compatibility.
+#
 # Revision 1.108.2.46  2011/03/05 17:37:57  kitterma
 # Revert to older doctest construct for python2.4/2.5 compatibility and set minimum version to 2.4.
 #
@@ -102,7 +105,7 @@ import urllib  # for quote()
 try:
     from email.message import Message
 except ImportError:
-    from email.Messge import Message
+    from email.Message import Message
 
 import DNS    # http://pydns.sourceforge.net
 if not hasattr(DNS.Type, 'SPF'):
