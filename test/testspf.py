@@ -21,7 +21,7 @@ except:
 
 zonedata = {}
 RE_IP4 = re.compile(r'\.'.join(
-	[r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
+    [r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
 
 def DNSLookup(name,qtype,strict=True,timeout=None):
   try:
@@ -40,18 +40,18 @@ def DNSLookup(name,qtype,strict=True,timeout=None):
     for i in zonedata[name.lower()]:
       if i == 'TIMEOUT':
         if timeout:
-	  raise spf.TempError,'DNS timeout'
-	return
+          raise spf.TempError,'DNS timeout'
+        return
       t,v = i
       if t == qtype:
         timeout = False
       if v == 'TIMEOUT':
         if t == qtype:
-	  raise spf.TempError,'DNS timeout'
-	continue
+          raise spf.TempError,'DNS timeout'
+        continue
       # keep test zonedata human readable, but translate to simulate pydns
       if t == 'AAAA':
-	v = spf.inet_pton(v)
+        v = spf.inet_pton(v)
       yield ((name,t),v)
   except KeyError:
     if name.startswith('error.'):
@@ -78,21 +78,21 @@ class SPFTest(object):
 
 def getrdata(r):
   "Unpack rdata given as list of maps to list of tuples."
-  txt = []	# generated TXT records
+  txt = []        # generated TXT records
   gen = True
   for m in r:
     try:
       for i in m.items():
         t,v = i
         if t == 'TXT':
-	  gen = False # no generated TXT records
-	elif t == 'SPF' and gen:
-	  txt.append(('TXT',v))
-	if v != 'NONE':
-	  if t in ('TXT','SPF') and type(v) == str:
-	    yield (t,(v,))
-	  else:
-	    yield i
+          gen = False # no generated TXT records
+        elif t == 'SPF' and gen:
+          txt.append(('TXT',v))
+        if v != 'NONE':
+          if t in ('TXT','SPF') and type(v) == str:
+            yield (t,(v,))
+          else:
+            yield i
     except:
       yield m
   if gen:
@@ -114,7 +114,7 @@ class SPFScenario(object):
       for t,v in data['tests'].items():
         self.tests[t] = SPFTest(t,self,v)
       if 'id' in data:
-	self.id = data['id']
+        self.id = data['id']
       if 'comment' in data:
         self.comment = data['comment'].splitlines()
 
@@ -153,22 +153,22 @@ class SPFTestCase(unittest.TestCase):
       ok = True
       if res != t.result and res not in t.result:
         if verbose: print t.result,'!=',res
-	ok = False
+        ok = False
       elif res != t.result and res != t.result[0]:
         print "WARN: %s in %s, %s: %s preferred to %s" % (
-		t.id,t.scenario.filename,t.spec,t.result[0],res)
+            t.id,t.scenario.filename,t.spec,t.result[0],res)
       if t.explanation is not None and t.explanation != exp:
         if verbose: print t.explanation,'!=',exp
         ok = False
       if t.header:
         self.assertEqual(t.header,q.get_header(res,receiver=t.receiver))
       if ok:
-	passed += 1
+        passed += 1
       else:
-	failed += 1
-	print "%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec)
-	if verbose and not t.explanation: print exp
-	if verbose > 1: print t.scenario.zonedata
+        failed += 1
+        print "%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec)
+        if verbose and not t.explanation: print exp
+        if verbose > 1: print t.scenario.zonedata
     if failed:
       print "%d passed" % passed,"%d failed" % failed
 
