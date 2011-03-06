@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.49  2011/03/05 23:10:55  kitterma
+# Fix one missed instance of reverting to the older doctest with error type.
+#
 # Revision 1.108.2.48  2011/03/05 18:00:46  kitterma
 # Fix typo.
 #
@@ -1487,25 +1490,25 @@ def addr2bin(str):
     """Convert a string IPv4 address into an unsigned integer.
 
     Examples::
-    >>> long(addr2bin('127.0.0.1'))
-    2130706433L
+    >>> str(long(addr2bin('127.0.0.1')))
+    '2130706433'
 
     >>> addr2bin('127.0.0.1') == socket.INADDR_LOOPBACK
     1
 
-    >>> addr2bin('255.255.255.254') #doctest: +SKIP
-    4294967294
+    >>> str(addr2bin('255.255.255.254'))
+    '4294967294'
 
-    >>> addr2bin('192.168.0.1') #doctest: +SKIP
-    3232235521
+    >>> str(addr2bin('192.168.0.1'))
+    '3232235521'
 
     Unlike DNS.addr2bin, the n, n.n, and n.n.n forms for IP addresses
     are handled as well::
-    >>> long(addr2bin('10.65536'))
-    167837696L
+    >>> str(long(addr2bin('10.65536')))
+    '167837696'
 
-    >>> long(addr2bin('10.93.512'))
-    173867520L
+    >>> str(long(addr2bin('10.93.512')))
+    '173867520'
     """
     return struct.unpack("!L", socket.inet_aton(str))[0]
 
