@@ -2,8 +2,8 @@
 """SPF (Sender Policy Framework) implementation.
 
 Copyright (c) 2003, Terence Way
-Portions Copyright (c) 2004,2005,2006,2007,2008 Stuart Gathman <stuart@bmsi.com>
-Portions Copyright (c) 2005,2006,2007,2008 Scott Kitterman <scott@kitterman.com>
+Portions Copyright (c) 2004,2005,2006,2007,2008,2010,2011 Stuart Gathman <stuart@bmsi.com>
+Portions Copyright (c) 2005,2006,2007,2008,2011 Scott Kitterman <scott@kitterman.com>
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
 and disclaimer are retained in their original form.
@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.50  2011/03/06 03:14:54  kitterma
+# Wrangle types around so addr2bin tests pass with python2.4/2.6/3.2(with 2to3).
+#
 # Revision 1.108.2.49  2011/03/05 23:10:55  kitterma
 # Fix one missed instance of reverting to the older doctest with error type.
 #
