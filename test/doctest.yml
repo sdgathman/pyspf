@@ -1,0 +1,10 @@
+# Zonedata for doctests
+zonedata:
+  example.net:
+  - A: 192.0.32.10
+  _exp.controlledmail.com:
+  - TXT: Controlledmail.com does not send mail from itself.
+  _spf.controlledmail.com:
+  - TXT: v=spf1 ip4:72.81.252.18 ip4:72.81.252.19 ip4:208.43.65.50 ip6:2607:f0d0:3001:00aa:0000:0000:0000:0002 -all
+  controlledmail.com:
+  - TXT: v=spf1 redirect=_spf.controlledmail.com

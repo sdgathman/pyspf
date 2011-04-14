@@ -99,6 +99,11 @@ def getrdata(r):
     for i in txt:
       yield i
 
+def loadZone(data):
+  return dict([
+    (d.lower(), list(getrdata(r))) for d,r in data['zonedata'].items()
+  ])
+
 class SPFScenario(object):
   def __init__(self,filename=None,data={}):
     self.id = None
@@ -107,9 +112,7 @@ class SPFScenario(object):
     self.zonedata = {}
     self.tests = {}
     if data:
-      self.zonedata= dict([
-        (d.lower(), list(getrdata(r))) for d,r in data['zonedata'].items()
-      ])
+      self.zonedata= loadZone(data)
       #print self.zonedata
       for t,v in data['tests'].items():
         self.tests[t] = SPFTest(t,self,v)
@@ -127,18 +130,27 @@ class SPFScenario(object):
 def loadYAML(fname):
   "Load testcases in YAML format.  Return map of SPFTests by name."
   fp = open(fname,'rb')
-  tests = {}
-  for s in yaml.safe_load_all(fp):
-    scenario = SPFScenario(fname,data=s)
-    for k,v in scenario.tests.items():
-      tests[k] = v
-  return tests
+  try:
+    tests = {}
+    for s in yaml.safe_load_all(fp):
+      scenario = SPFScenario(fname,data=s)
+      for k,v in scenario.tests.items():
+        tests[k] = v
+    return tests
+  finally: fp.close()
 
 oldresults = { 'unknown': 'permerror', 'error': 'temperror' }
 
 verbose = 0
 
 class SPFTestCase(unittest.TestCase):
+
+  def setUp(self):
+    global zonedata
+    self.savezonedata = zonedata
+  def tearDown(self):
+    global zonedata
+    zonedata = self.savezonedata
 
   def runTest(self,tests):
     global zonedata
@@ -204,5 +216,10 @@ if __name__ == '__main__':
       t = loadYAML('rfc4408-tests.yml')
     tc.runTest([t[i]])
   if not tc:
+    fp = open('doctest.yml','rb')
+    try:
+      zonedata = loadZone(yaml.safe_load_all(fp).next())
+    finally: fp.close()
+    #print zonedata
     suite = suite()
     unittest.TextTestRunner().run(suite)
