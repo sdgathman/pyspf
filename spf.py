@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.6
 """SPF (Sender Policy Framework) implementation.
 
 Copyright (c) 2003, Terence Way
@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.51  2011/03/06 03:54:01  kitterma
+# Update copyright years.
+#
 # Revision 1.108.2.50  2011/03/06 03:14:54  kitterma
 # Wrangle types around so addr2bin tests pass with python2.4/2.6/3.2(with 2to3).
 #
@@ -91,11 +94,11 @@ __version__ = "2.0.6: Mar  2, 2011"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
-    % python spf.py {ip} {sender} {helo}
+    % python spf.py [-v] {ip} {sender} {helo}
     % python spf.py 69.55.226.139 tway@optsw.com mx1.wayforward.net
 
 To test an SPF record:
-    % python spf.py "v=spf1..." {ip} {sender} {helo}
+    % python spf.py [-v] "v=spf1..." {ip} {sender} {helo}
     % python spf.py "v=spf1 +mx +ip4:10.0.0.1 -all" 10.0.0.1 tway@foo.com a    
 
 To fetch an SPF record:
@@ -272,7 +275,7 @@ class PermError(Exception):
             return '%s: %s'%(self.msg, self.mech)
         return self.msg
 
-def check2(i, s, h, local=None, receiver=None, timeout=30):
+def check2(i, s, h, local=None, receiver=None, timeout=30, verbose=False):
     """Test an incoming MAIL FROM:<s>, from a client with ip address i.
     h is the HELO/EHLO domain name.  This is the RFC4408 compliant pySPF2.0
     interface.  The interface returns an SPF result and explanation only.
@@ -288,10 +291,10 @@ def check2(i, s, h, local=None, receiver=None, timeout=30):
 
     """
     res,_,exp = query(i=i, s=s, h=h, local=local,
-        receiver=receiver,timeout=timeout).check()
+        receiver=receiver,timeout=timeout,verbose=verbose).check()
     return res,exp
 
-def check(i, s, h, local=None, receiver=None):
+def check(i, s, h, local=None, receiver=None, verbose=False):
     """Test an incoming MAIL FROM:<s>, from a client with ip address i.
     h is the HELO/EHLO domain name.  This is the pre-RFC SPF Classic interface.
     Applications written for pySPF 1.6/1.7 can use this interface to allow
@@ -305,7 +308,8 @@ def check(i, s, h, local=None, receiver=None):
     #>>> check(i='61.51.192.42', s='liukebing@bcc.com', h='bmsi.com')
 
     """
-    res,code,exp = query(i=i, s=s, h=h, local=local, receiver=receiver).check()
+    res,code,exp = query(i=i, s=s, h=h, local=local, receiver=receiver,
+        verbose=verbose).check()
     if res == 'permerror':
         res = 'unknown'
     elif res == 'tempfail':
@@ -334,7 +338,7 @@ class query(object):
     Also keeps cache: DNS cache.  
     """
     def __init__(self, i, s, h, local=None, receiver=None, strict=True,
-                timeout=30):
+                timeout=30,verbose=False):
         self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
@@ -363,6 +367,10 @@ class query(object):
         if i:
             self.set_ip(i)
         self.default_modifier = True
+        self.verbose = verbose
+
+    def log(self,mech,d,spf):
+        print '%s: %s "%s"'%(mech,d,spf)
 
     def set_ip(self, i):
         "Set connect ip, and ip6 or ip4 mode."
@@ -505,6 +513,7 @@ class query(object):
             self.lookups = 0
             if not spf:
                 spf = self.dns_spf(self.d)
+                if self.verbose: self.log("top",self.d,spf)
             if self.libspf_local and spf: 
                 spf = insert_libspf_local_policy(
                     spf, self.libspf_local)
@@ -810,8 +819,10 @@ class query(object):
 
             if m == 'include':
                 self.check_lookups()
-                res, code, txt = self.check1(self.dns_spf(arg),
-                      arg, recursion + 1)
+                d = self.dns_spf(arg)
+                if self.verbose: self.log("include",arg,d)
+                #print "%s: %s"%(arg,d)
+                res, code, txt = self.check1(d,arg, recursion + 1)
                 if res == 'pass':
                     break
                 if res == 'none':
@@ -871,6 +882,7 @@ class query(object):
                 if not redirect_record:
                     raise PermError('redirect domain has no SPF record',
                         redirect)
+                if self.verbose: self.log("redirect",redirect,redirect_record)
                 # forget modifiers on redirect
                 if not recursion:
                   self.exps = dict(self.defexps)
@@ -1712,26 +1724,39 @@ DNS.DiscoverNameServers() # Fails on Mac OS X? Add domain to /etc/resolv.conf
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) == 1:
+    import getopt
+    try:
+       opts,argv = getopt.getopt(sys.argv[1:],"hv",["help","verbose"])
+    except getopt.GetoptError, err:
+       print str(err)
+       print USAGE
+       sys.exit(2)
+    verbose = False
+    for o,a in opts:
+        if o in ('-v','--verbose'):
+           verbose = True
+        elif o in ('-h','--help'):
+           print USAGE
+    if len(argv) == 0:
         print USAGE
         _test()
-    elif len(sys.argv) == 2:
+    elif len(argv) == 1:
         try:
             q = query(i='127.0.0.1', s='localhost', h='unknown',
                 receiver=socket.gethostname())
-            print q.dns_spf(sys.argv[1])
+            print q.dns_spf(argv[0])
         except TempError, x:
             print "Temporary DNS error: ", x
         except PermError, x:
             print "PermError: ", x
-    elif len(sys.argv) == 4:
-        print check(i=sys.argv[1], s=sys.argv[2], h=sys.argv[3],
-            receiver=socket.gethostname())
-    elif len(sys.argv) == 5:
-        i, s, h = sys.argv[2:]
+    elif len(argv) == 3:
+        print check(i=argv[0], s=argv[1], h=argv[2],
+            receiver=socket.gethostname(), verbose=verbose)
+    elif len(argv) == 4:
+        i, s, h = argv[1:]
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
-            strict=False)
-        print q.check(sys.argv[1]),q.mechanism
+            strict=False, verbose=verbose)
+        print q.check(argv[0]),q.mechanism
         if q.perm_error and q.perm_error.ext:
             print q.perm_error.ext
     else:
