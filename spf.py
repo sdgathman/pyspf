@@ -2,8 +2,8 @@
 """SPF (Sender Policy Framework) implementation.
 
 Copyright (c) 2003, Terence Way
-Portions Copyright (c) 2004,2005,2006,2007,2008,2010,2011 Stuart Gathman <stuart@bmsi.com>
-Portions Copyright (c) 2005,2006,2007,2008,2011 Scott Kitterman <scott@kitterman.com>
+Portions Copyright (c) 2004,2005,2006,2007,2008 Stuart Gathman <stuart@bmsi.com>
+Portions Copyright (c) 2005,2006,2007,2008 Scott Kitterman <scott@kitterman.com>
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
 and disclaimer are retained in their original form.
@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.52  2011/10/04 23:08:18  customdesigned
+# verbose option
+#
 # Revision 1.108.2.51  2011/03/06 03:54:01  kitterma
 # Update copyright years.
 #
@@ -1505,25 +1508,25 @@ def addr2bin(str):
     """Convert a string IPv4 address into an unsigned integer.
 
     Examples::
-    >>> str(long(addr2bin('127.0.0.1')))
-    '2130706433'
+    >>> long(addr2bin('127.0.0.1'))
+    2130706433L
 
     >>> addr2bin('127.0.0.1') == socket.INADDR_LOOPBACK
     1
 
-    >>> str(addr2bin('255.255.255.254'))
-    '4294967294'
+    >>> addr2bin('255.255.255.254') #doctest: +SKIP
+    4294967294
 
-    >>> str(addr2bin('192.168.0.1'))
-    '3232235521'
+    >>> addr2bin('192.168.0.1') #doctest: +SKIP
+    3232235521
 
     Unlike DNS.addr2bin, the n, n.n, and n.n.n forms for IP addresses
     are handled as well::
-    >>> str(long(addr2bin('10.65536')))
-    '167837696'
+    >>> long(addr2bin('10.65536'))
+    167837696L
 
-    >>> str(long(addr2bin('10.93.512')))
-    '173867520'
+    >>> long(addr2bin('10.93.512'))
+    173867520L
     """
     return struct.unpack("!L", socket.inet_aton(str))[0]
 
