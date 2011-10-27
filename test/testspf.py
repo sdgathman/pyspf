@@ -15,8 +15,8 @@ import re
 try:
   import yaml
 except:
-  print "yaml can be found at http://pyyaml.org/"
-  print "Tested with PYYAML 3.04"
+  print("yaml can be found at http://pyyaml.org/")
+  print("Tested with PYYAML 3.04")
   raise
 
 zonedata = {}
@@ -33,21 +33,21 @@ def DNSLookup(name,qtype,strict=True,timeout=None):
     for label in name.split('.'):
       if label:
         if len(label) > 63:
-          raise spf.TempError,'DNS label too long'
+          raise spf.TempError('DNS label too long')
         a.append(label)
     name = '.'.join(a)
 
     for i in zonedata[name.lower()]:
       if i == 'TIMEOUT':
         if timeout:
-          raise spf.TempError,'DNS timeout'
+          raise spf.TempError('DNS timeout')
         return
       t,v = i
       if t == qtype:
         timeout = False
       if v == 'TIMEOUT':
         if t == qtype:
-          raise spf.TempError,'DNS timeout'
+          raise spf.TempError('DNS timeout')
         continue
       # keep test zonedata human readable, but translate to simulate pydns
       if t == 'AAAA':
@@ -55,7 +55,7 @@ def DNSLookup(name,qtype,strict=True,timeout=None):
       yield ((name,t),v)
   except KeyError:
     if name.startswith('error.'):
-      raise spf.TempError,'DNS timeout'
+      raise spf.TempError('DNS timeout')
 
 spf.DNSLookup = DNSLookup
 
@@ -70,8 +70,8 @@ class SPFTest(object):
     self.receiver = None
     self.comment = []
     if 'result' not in data:
-      print testid,'missing result'
-    for k,v in data.items():
+      print(testid,'missing result')
+    for k,v in list(data.items()):
       setattr(self,k,v)
     if type(self.comment) is str:
       self.comment = self.comment.splitlines()
@@ -82,7 +82,7 @@ def getrdata(r):
   gen = True
   for m in r:
     try:
-      for i in m.items():
+      for i in list(m.items()):
         t,v = i
         if t == 'TXT':
           gen = False # no generated TXT records
@@ -101,7 +101,7 @@ def getrdata(r):
 
 def loadZone(data):
   return dict([
-    (d.lower(), list(getrdata(r))) for d,r in data['zonedata'].items()
+    (d.lower(), list(getrdata(r))) for d,r in list(data['zonedata'].items())
   ])
 
 class SPFScenario(object):
@@ -114,7 +114,7 @@ class SPFScenario(object):
     if data:
       self.zonedata= loadZone(data)
       #print self.zonedata
-      for t,v in data['tests'].items():
+      for t,v in list(data['tests'].items()):
         self.tests[t] = SPFTest(t,self,v)
       if 'id' in data:
         self.id = data['id']
@@ -134,7 +134,7 @@ def loadYAML(fname):
     tests = {}
     for s in yaml.safe_load_all(fp):
       scenario = SPFScenario(fname,data=s)
-      for k,v in scenario.tests.items():
+      for k,v in list(scenario.tests.items()):
         tests[k] = v
     return tests
   finally: fp.close()
@@ -164,13 +164,13 @@ class SPFTestCase(unittest.TestCase):
         res = oldresults[res]
       ok = True
       if res != t.result and res not in t.result:
-        if verbose: print t.result,'!=',res
+        if verbose: print(t.result,'!=',res)
         ok = False
       elif res != t.result and res != t.result[0]:
-        print "WARN: %s in %s, %s: %s preferred to %s" % (
-            t.id,t.scenario.filename,t.spec,t.result[0],res)
+        print("WARN: %s in %s, %s: %s preferred to %s" % (
+            t.id,t.scenario.filename,t.spec,t.result[0],res))
       if t.explanation is not None and t.explanation != exp:
-        if verbose: print t.explanation,'!=',exp
+        if verbose: print(t.explanation,'!=',exp)
         ok = False
       if t.header:
         self.assertEqual(t.header,q.get_header(res,receiver=t.receiver))
@@ -178,17 +178,17 @@ class SPFTestCase(unittest.TestCase):
         passed += 1
       else:
         failed += 1
-        print "%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec)
-        if verbose and not t.explanation: print exp
-        if verbose > 1: print t.scenario.zonedata
+        print("%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec))
+        if verbose and not t.explanation: print(exp)
+        if verbose > 1: print(t.scenario.zonedata)
     if failed:
-      print "%d passed" % passed,"%d failed" % failed
+      print("%d passed" % passed,"%d failed" % failed)
 
   def testYAML(self):
-    self.runTest(loadYAML('test.yml').values())
+    self.runTest(list(loadYAML('test.yml').values()))
 
   def testRFC(self):
-    self.runTest(loadYAML('rfc4408-tests.yml').values())
+    self.runTest(list(loadYAML('rfc4408-tests.yml').values()))
 
   def testInvalidSPF(self):
     i, s, h = '1.2.3.4','sender@domain','helo'
@@ -218,7 +218,7 @@ if __name__ == '__main__':
   if not tc:
     fp = open('doctest.yml','rb')
     try:
-      zonedata = loadZone(yaml.safe_load_all(fp).next())
+      zonedata = loadZone(next(yaml.safe_load_all(fp)))
     finally: fp.close()
     #print zonedata
     suite = suite()
