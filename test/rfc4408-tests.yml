@@ -89,10 +89,22 @@ tests:
     mailfrom: "foo@[1.2.3.5]"
     result: none
   non-ascii-policy:
+    description: >-
+      SPF policies are restricted to 7-bit ascii.
     spec: 3.1.1/1
     helo: hosed
     host: 1.2.3.4
     mailfrom: "foobar@hosed.example.com"
+    result: permerror
+  non-ascii-mech:
+    description: >-
+      SPF policies are restricted to 7-bit ascii.
+    comment: >-
+      Checking a possibly different code path for non-ascii chars.
+    spec: 3.1.1/1
+    helo: hosed
+    host: 1.2.3.4
+    mailfrom: "foobar@hosed2.example.com"
     result: permerror
 zonedata:
   example.com:
@@ -107,6 +119,8 @@ zonedata:
     - SPF:  v=spf1 -all
   hosed.example.com:
     - SPF:  "v=spf1 a:\xEF\xBB\xBFgarbage.example.net -all"
+  hosed2.example.com:
+    - SPF:  "v=spf1 \x80a:example.net -all"
 ---
 description: Record lookup
 tests:
