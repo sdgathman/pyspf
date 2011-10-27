@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.58  2011/10/27 14:29:49  customdesigned
+# Catch non-ascii domains.
+#
 # Revision 1.108.2.57  2011/10/27 10:32:06  kitterma
 # Drop version from spf.py shebang.
 #
@@ -595,10 +598,6 @@ class query(object):
 
     def expand_domain(self,arg):
         "validate and expand domain-spec"
-        try:
-          arg = arg.encode('ascii')
-        except UnicodeEncodeError:
-          raise PermError('Non-ascii domain found',repr(arg))
         # any trailing dot was removed by expand()
         if RE_TOPLAB.split(arg)[-1]:
             raise PermError('Invalid domain found (use FQDN)', arg)
@@ -1093,7 +1092,7 @@ class query(object):
         if len(a) > 1:
             raise PermError('Two or more type TXT spf records found.')
         if len(a) == 1 and self.strict < 2:
-            return a[0]               
+            return to_ascii(a[0])
         # check official SPF type first when it becomes more popular
         if self.strict > 1:
             #Only check for Type SPF in harsh mode until it is more popular.
@@ -1110,15 +1109,15 @@ class query(object):
                 #Changed from permerror to warning based on RFC 4408 Auth 48 change
                     raise AmbiguityWarning(
 'v=spf1 records of both type TXT and SPF (type 99) present, but not identical')
-                return b[0]
+                return to_ascii(b[0])
         if len(a) == 1:
-            return a[0]    # return TXT if SPF wasn't found
+            return to_ascii(a[0])    # return TXT if SPF wasn't found
         if DELEGATE:    # use local record if neither found
             a = [t
               for t in self.dns_txt(domain+'._spf.'+DELEGATE)
             if RE_SPF.match(t)
             ]
-            if len(a) == 1: return a[0]
+            if len(a) == 1: return to_ascii(a[0])
         return None
 
     def dns_txt(self, domainname):
@@ -1747,6 +1746,13 @@ def insert_libspf_local_policy(spftxt, local=None):
     # inserting 'local' mechanism to handle this properly
     #MAX_LOOKUP = 100 
     return 'v=spf1 '+local
+
+def to_ascii(s):
+    "Raise PermError is arg is not 7-bit ascii."
+    try:
+      return s.encode('ascii')
+    except UnicodeEncodeError:
+      raise PermError('Non-ascii domain found',repr(s))
 
 def _test():
     import doctest, spf
