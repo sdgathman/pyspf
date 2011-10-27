@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.60  2011/10/27 16:28:18  kitterma
+# Use bytes in to_ascii to work in python and python3.
+#
 # Revision 1.108.2.59  2011/10/27 14:50:05  customdesigned
 # Ensure entire SPF policy is ascii.
 #
@@ -131,6 +134,7 @@ To test this script (and to output this usage message):
     % python spf.py
 """
 
+import sys
 import re
 import socket  # for inet_ntoa() and inet_aton()
 import struct  # for pack() and unpack()
@@ -1751,15 +1755,20 @@ def insert_libspf_local_policy(spftxt, local=None):
     #MAX_LOOKUP = 100 
     return 'v=spf1 '+local
 
-def to_ascii(s):
-    "Raise PermError is arg is not 7-bit ascii."
-    try:
-        if sys.version_info[0] == 2:
-            return bytes(s).decode('ascii')
-        else:
-            return bytes(s, 'ascii').decode('ascii')
-    except UnicodeEncodeError:
-      raise PermError('Non-ascii domain found',repr(s))
+if sys.version_info[0] == 2:
+  def to_ascii(s):
+      "Raise PermError is arg is not 7-bit ascii."
+      try:
+        return s.encode('ascii')
+      except UnicodeEncodeError:
+        raise PermError('Non-ascii domain found',repr(s))
+else:
+  def to_ascii(s):
+      "Raise PermError is arg is not 7-bit ascii."
+      try:
+        return bytes(s,'ascii').decode('ascii')
+      except UnicodeEncodeError:
+        raise PermError('Non-ascii domain found',repr(s))
 
 def _test():
     import doctest, spf
@@ -1768,7 +1777,6 @@ def _test():
 DNS.DiscoverNameServers() # Fails on Mac OS X? Add domain to /etc/resolv.conf
 
 if __name__ == '__main__':
-    import sys
     import getopt
     try:
        opts,argv = getopt.getopt(sys.argv[1:],"hv",["help","verbose"])
