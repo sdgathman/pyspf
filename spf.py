@@ -609,27 +609,27 @@ class query(object):
     ('?mx:%{d}/27', 'mx', 'email.example.com', 27, 'neutral')
 
     >>> try: q.validate_mechanism('ip4:1.2.3.4/247')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid IP4 CIDR length: ip4:1.2.3.4/247
     
     >>> try: q.validate_mechanism('ip4:1.2.3.4/33')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid IP4 CIDR length: ip4:1.2.3.4/33
 
     >>> try: q.validate_mechanism('a:example.com:8080')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid domain found (use FQDN): example.com:8080
     
     >>> try: q.validate_mechanism('ip4:1.2.3.444/24')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid IP4 address: ip4:1.2.3.444/24
     
     >>> try: q.validate_mechanism('ip4:1.2.03.4/24')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid IP4 address: ip4:1.2.03.4/24
     
     >>> try: q.validate_mechanism('-all:3030')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Invalid all mechanism format - only qualifier allowed with all: -all:3030
 
     >>> q.validate_mechanism('-mx:%%%_/.Clara.de/27')
@@ -642,7 +642,7 @@ class query(object):
     ('a:mail.example.com.', 'a', 'mail.example.com', 32, 'pass')
 
     >>> try: q.validate_mechanism('a:mail.example.com,')
-    ... except PermError,x: print x
+    ... except PermError as x: print(x)
     Do not separate mechnisms with commas: a:mail.example.com,
     """
         if mech.endswith( "," ):
@@ -997,7 +997,7 @@ class query(object):
         '3.2.0.192.in-addr.strong.lp._spf.example.com'
 
         >>> try: q.expand('%(ir).%{v}.%{l1r-}.lp._spf.%{d2}')
-        ... except PermError,x: print x
+        ... except PermError as x: print(x)
         invalid-macro-char : %(ir)
 
         >>> q.expand('%{p2}.trusted-domains.example.net')
