@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.59  2011/10/27 14:50:05  customdesigned
+# Ensure entire SPF policy is ascii.
+#
 # Revision 1.108.2.58  2011/10/27 14:29:49  customdesigned
 # Catch non-ascii domains.
 #
@@ -133,6 +136,7 @@ import socket  # for inet_ntoa() and inet_aton()
 import struct  # for pack() and unpack()
 import time    # for time()
 import urllib  # for quote()
+import sys     # for version_info()
 try:
     from email.message import Message
 except ImportError:
@@ -1750,7 +1754,10 @@ def insert_libspf_local_policy(spftxt, local=None):
 def to_ascii(s):
     "Raise PermError is arg is not 7-bit ascii."
     try:
-      return s.encode('ascii')
+        if sys.version_info[0] == 2:
+            return bytes(s).decode('ascii')
+        else:
+            return bytes(s, 'ascii').decode('ascii')
     except UnicodeEncodeError:
       raise PermError('Non-ascii domain found',repr(s))
 
