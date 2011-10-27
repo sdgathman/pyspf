@@ -4,7 +4,7 @@
 
 Name:           %{pythonbase}-pyspf
 Version:        2.0.6
-Release:        1
+Release:        2
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
 Group:          Development/Languages
@@ -15,7 +15,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
 #BuildRequires:  python-setuptools
-Requires:       pydns, %{pythonbase}
+Requires:       %{pythonbase}-pydns, %{pythonbase}
 
 %description
 SPF does email sender validation.  For more information about SPF,
@@ -25,7 +25,7 @@ This SPF client is intended to be installed on the border MTA, checking
 if incoming SMTP clients are permitted to send mail.  The SPF check
 should be done during the MAIL FROM:<...> command.
 
-%define namewithoutpythonprefix %(echo %{name} | sed 's/^python-//')
+%define namewithoutpythonprefix %(echo %{name} | sed 's/^%{pythonbase}-//')
 %prep
 %setup -q -n %{namewithoutpythonprefix}-%{version}
 
@@ -48,9 +48,19 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/spf.py*
 /usr/bin/type99
 /usr/bin/spfquery
+/usr/lib/python2.6/site-packages/pyspf-2.0.6-py2.6.egg-info
 
 %changelog
-* Wed Apr 02 2008 Stuart Gathman <stuart@bmsi.com> 2.0.6-1
+* Thu Oct 27 2011 Stuart Gathman <stuart@bmsi.com> 2.0.6-2
+- Python3 port (still requires 2to3 on spf.py)
+- Ensure Temperror for all DNS rcodes other than 0 and 3 per RFC 4408
+- Parse Received-SPF header
+- Report CIDR error only for valid mechanism
+- Handle invalid SPF record on command line
+- Add timeout to check2
+- Check for non-ascii policy
+
+* Wed Mar 03 2011 Stuart Gathman <stuart@bmsi.com> 2.0.6-1
 - Python-2.6
 - parse_header method
 

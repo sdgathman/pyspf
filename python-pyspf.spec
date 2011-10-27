@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.5
+Version:        2.0.6
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -54,16 +54,29 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/spfquery
 
 %changelog
+* Thu Oct 27 2011 Stuart Gathman <stuart@bmsi.com> 2.0.6-1
+- Python3 port (still requires 2to3 on spf.py)
+- Ensure Temperror for all DNS rcodes other than 0 and 3 per RFC 4408
+- Parse Received-SPF header
+- Report CIDR error only for valid mechanism
+- Handle invalid SPF record on command line
+- Add timeout to check2
+- Check for non-ascii policy
+- parse_header method
+- python2.6
+
 * Wed Apr 02 2008 Stuart Gathman <stuart@bmsi.com> 2.0.5-1
 - Add timeout parameter to query ctor and DNSLookup
 - Patch from Scott Kitterman to retry truncated results with TCP unless harsh
 - Validate DNS labels
 - Reflect decision on empty-exp errata
+
 * Wed Jul 25 2007 Stuart Gathman <stuart@bmsi.com> 2.0.4-1
 - Correct unofficial 'best guess' processing.
 - PTR validation processing cleanup
 - Improved detection of exp= errors
 - Keyword args for get_header, minor fixes
+
 * Mon Jan 15 2007 Stuart Gathman <stuart@bmsi.com> 2.0.3-1
 - pyspf requires pydns, python-pyspf requires python-pydns
 - Record matching mechanism and add to Received-SPF header.
@@ -71,6 +84,7 @@ rm -rf $RPM_BUILD_ROOT
 - Test for type SPF (type 99) by default in harsh mode only.
 - Permerror for more than one exp or redirect modifier.
 - Parse op= modifier
+
 * Sat Dec 30 2006 Stuart Gathman <stuart@bmsi.com> 2.0.2-1
 - Update openspf URLs
 - Update Readme to better describe available pyspf interfaces
@@ -79,18 +93,22 @@ rm -rf $RPM_BUILD_ROOT
 - Add spfquery.py usage instructions
 - Incorporate downstream feedback from Debian packager
 - Fix key-value quoting in get_header
+
 * Fri Dec 08 2006 Stuart Gathman <stuart@bmsi.com> 2.0.1-1
 - Prevent cache poisoning attack
 - Prevent malformed RR attack
 - Update license on a few files we missed last time
+
 * Mon Nov 20 2006 Stuart Gathman <stuart@bmsi.com> 2.0-1
 - Completed RFC 4408 compliance
 - Added spf.check2 for RFC 4408 compatible result codes
 - Full IP6 support
 - Fedora Core compatible RPM spec file
 - Update README, licenses
+
 * Wed Sep 26 2006 Stuart Gathman <stuart@bmsi.com> 1.8-1
 - YAML test suite syntax
 - trailing dot support (RFC4408 8.1)
+
 * Tue Aug 29 2006 Sean Reifschneider <jafo@tummy.com> 1.7-1
 - Initial RPM spec file.
