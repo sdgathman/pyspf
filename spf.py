@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.53  2011/10/18 02:56:32  kitterma
+# Resolve local conflicts in spf.py changelog.
+#
 # Revision 1.108.2.52  2011/10/04 23:08:18  customdesigned
 # verbose option
 #
@@ -1508,25 +1511,37 @@ def addr2bin(str):
     """Convert a string IPv4 address into an unsigned integer.
 
     Examples::
-    >>> long(addr2bin('127.0.0.1'))
-    2130706433L
+    >>> import sys
+    >>> if sys.version_info[0] == 2:
+    ...     print(long(addr2bin('127.0.0.1')))
+    ... else:
+    ...     print(addr2bin('127.0.0.1'))
+    2130706433
 
     >>> addr2bin('127.0.0.1') == socket.INADDR_LOOPBACK
     1
 
-    >>> addr2bin('255.255.255.254') #doctest: +SKIP
+    >>> print(addr2bin('255.255.255.254'))
     4294967294
 
-    >>> addr2bin('192.168.0.1') #doctest: +SKIP
+    >>> print(addr2bin('192.168.0.1'))
     3232235521
 
     Unlike DNS.addr2bin, the n, n.n, and n.n.n forms for IP addresses
     are handled as well::
-    >>> long(addr2bin('10.65536'))
-    167837696L
+    >>> import sys
+    >>> if sys.version_info[0] == 2:
+    ...     print(long(addr2bin('10.65536')))
+    ... else:
+    ...     print(addr2bin('10.65536'))
+    167837696
 
-    >>> long(addr2bin('10.93.512'))
-    173867520L
+    >>> import sys
+    >>> if sys.version_info[0] == 2:
+    ...     print(long(addr2bin('10.93.512')))
+    ... else:
+    ...     print(addr2bin('10.93.512'))
+    173867520
     """
     return struct.unpack("!L", socket.inet_aton(str))[0]
 
