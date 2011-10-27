@@ -29,6 +29,9 @@ For more information about SPF, a tool against email forgery, see
 # filtering through this script will refresh the TYPE99 RRs.
 # 
 # $Log$
+# Revision 1.4.4.3  2008/03/26 19:01:07  kitterma
+# Capture Type99.py improvements from trunk.  SF #1257140
+#
 # Revision 1.9  2008/03/26 18:56:42  kitterma
 # Update Type99 script to correctly parse multi-string single line TXT records.
 # Multi-string/multi-line still fails.
@@ -86,7 +89,7 @@ def filter(fin):
         left = line.split('(')
         try:
             right = left[1].split(')')
-        except IndexError, errmsg:
+        except IndexError as errmsg:
             right = left[0].split(')')
             if len(left) == 2:
                 right = left[1]
@@ -120,11 +123,11 @@ if __name__ == '__main__':
       sys.exit(1)
 
   if sys.argv[1] == '-':
-    sys.stdout.writelines(filter(fileinput.input()))
+      sys.stdout.writelines(list(filter(fileinput.input())))
   else:
     dns_string = ''
     list = sys.argv[1:]
     for st in list:
       dns_string += st
     phrase = dnstxt(dns_string)
-    print "\# %i"%len(phrase),''.join(["%02x"%ord(c) for c in phrase])
+    print("\# {0} {1}".format(len(phrase), ''.join(["%02x"%ord(c) for c in phrase])))
