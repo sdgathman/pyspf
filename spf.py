@@ -1,4 +1,4 @@
-#!/usr/bin/python2.6
+#!/usr/bin/python
 """SPF (Sender Policy Framework) implementation.
 
 Copyright (c) 2003, Terence Way
@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.56  2011/10/27 04:58:03  kitterma
+# Update CHANGELOG, adjust minimum version requirement in setup.py, and update dates for a release.
+#
 # Revision 1.108.2.55  2011/10/27 03:49:11  kitterma
 # Fix doctests to raise ... as ... and print(x) as 2to3 doesn't fix these.
 # Doctests all pass in 2.6, 2.7, and 3.2
