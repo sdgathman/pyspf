@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.57  2011/10/27 10:32:06  kitterma
+# Drop version from spf.py shebang.
+#
 # Revision 1.108.2.56  2011/10/27 04:58:03  kitterma
 # Update CHANGELOG, adjust minimum version requirement in setup.py, and update dates for a release.
 #
@@ -592,6 +595,10 @@ class query(object):
 
     def expand_domain(self,arg):
         "validate and expand domain-spec"
+        try:
+          arg = arg.encode('ascii')
+        except UnicodeEncodeError:
+          raise PermError('Non-ascii domain found',repr(arg))
         # any trailing dot was removed by expand()
         if RE_TOPLAB.split(arg)[-1]:
             raise PermError('Invalid domain found (use FQDN)', arg)
