@@ -1,6 +1,9 @@
-Version 2.0.6 - March 2, 2011
+Version 2.0.6 - October 27, 2011
   * Refactor code so that 2to3 will provide a working python3 module - Now
     requires at least python2.6
+  * Update spfquery.py, type99.py, and testspf.py to work with either python or
+    python3 (2to3 not needed for these scripts)
+    - SPF test suite can not be run from either python or python3
   * Ensure Temperror for all DNS rcodes other than 0 and 3 per RFC 4408
   * Parse Received-SPF header
   * Report CIDR error only for valid mechanism

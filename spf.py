@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.55  2011/10/27 03:49:11  kitterma
+# Fix doctests to raise ... as ... and print(x) as 2to3 doesn't fix these.
+# Doctests all pass in 2.6, 2.7, and 3.2
+#
 # Revision 1.108.2.53  2011/10/18 02:56:32  kitterma
 # Resolve local conflicts in spf.py changelog.
 #
@@ -96,7 +100,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.6: Mar  2, 2011"
+__version__ = "2.0.6: Oct 27, 2011"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
