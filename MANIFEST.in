@@ -7,5 +7,6 @@ include type99.py
 include setup.py
 include setup.cfg
 include test/*.yml
+include test/*.LICENSE
 include test/testspf.py
-include python-pyspf.spec
+include *.spec
