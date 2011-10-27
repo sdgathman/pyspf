@@ -10,6 +10,11 @@
 # Emulate the spfquery command line tool used by Wayne Schlitt's SPF test suite
 
 # $Log$
+# Revision 1.4.2.3  2011/10/27 04:44:58  kitterma
+# Update spfquery.py to work with 2.6, 2.7, and 3.2:
+#  - raise ... as ...
+#  - print()
+#
 # Revision 1.4.2.2  2008/03/26 14:34:35  kitterma
 # Change shebangs to #!/usr/bin/python throughout.
 #
