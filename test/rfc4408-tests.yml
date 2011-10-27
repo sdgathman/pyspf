@@ -1,4 +1,4 @@
-# This is the openspf.org test suite (release 2008.08) based on RFC 4408.
+# This is the openspf.org test suite (release 2009.10) based on RFC 4408.
 # http://www.openspf.org/Test_Suite
 #
 # $Id$
@@ -16,6 +16,25 @@
 #   Norman Maurer
 #   Mark Shewmaker
 #   Philip Gladstone
+#
+# While the test suite is designed for all types of implementations, it only
+# needs to explicitly concern itself with SPF-only (type 99) and TXT-only
+# implementations.  This is because while an implementation may support both,
+# it must use only one record type for a given query - see 4.5/5.  If an
+# implementation finds SPF (type 99) records and decides to use them, they
+# override TXT, and it must ignore any TXT records.  Note that an
+# implementation may decide whether to use SPF records on a case by case basis.
+# Maybe it looks TXT and SPF up in parallel and goes with the first result to
+# come back.  Or maybe one is cached already.  Or maybe it chooses at random.
+# Think of dual SPF/TXT implementations as a quantum superposition of SPF-only
+# and TXT-only.  It must collapse to one or the other on each observation to be
+# compliant.
+#
+# The "Selecting records" test section is the only one concerned with weeding
+# out (incorrect) mixed behaviour and checking for proper response to duplicate
+# or conflicting records.  Other sections rely on auto-magic duplication
+# of SPF to TXT records (by test suite drivers) to test all implementation
+# types with one specification.
 #
 ---
 description: Initial processing
@@ -69,6 +88,12 @@ tests:
     host: 1.2.3.5
     mailfrom: "foo@[1.2.3.5]"
     result: none
+  non-ascii-policy:
+    spec: 3.1.1/1
+    helo: hosed
+    host: 1.2.3.4
+    mailfrom: "foobar@hosed.example.com"
+    result: permerror
 zonedata:
   example.com:
     - TIMEOUT
@@ -80,6 +105,8 @@ zonedata:
     - TXT:  '%{l}'
   a12345678901234567890123456789012345678901234567890123456789012.example.com:
     - SPF:  v=spf1 -all
+  hosed.example.com:
+    - SPF:  "v=spf1 a:\xEF\xBB\xBFgarbage.example.net -all"
 ---
 description: Record lookup
 tests:
@@ -271,8 +298,8 @@ zonedata:
     - TXT:  v=spf1 -all
     - TXT:  v=spf1 +all
   example6.com:
-    - TXT:  v=spf1 -all
-    - TXT:  V=sPf1 +all
+    - SPF:  v=spf1 -all
+    - SPF:  V=sPf1 +all
   example7.com:
     - SPF:  v=spf1 -all
     - SPF:  v=spf1 -all
@@ -673,6 +700,14 @@ tests:
     host: 1234::1
     mailfrom: foo@e2a.example.com
     result: pass
+  a-ip6-dualstack:
+    description: >-
+      Simple IP6 Address match with dual stack.
+    spec: 5.3/3
+    helo: mail.example.com
+    host: 1234::1
+    mailfrom: foo@ipv6.example.com
+    result: pass
   a-cidr6-0-nxdomain:
     description: >-
       No match if no AAAA records are present in DNS.
@@ -789,6 +824,10 @@ zonedata:
   e2b.example.com:
     - A: 1.1.1.1
     - SPF: v=spf1 a//0 -all
+  ipv6.example.com:
+    - AAAA: 1234::1
+    - A: 1.1.1.1
+    - SPF: v=spf1 a -all
   e3.example.com:
     - SPF: "v=spf1 a:foo.example.com\0"
   e4.example.com:
@@ -1942,6 +1981,16 @@ tests:
     host: 1.2.3.4
     mailfrom: philip-gladstone-test@e11.example.com
     result: pass
+  macro-multiple-delimiters:
+    spec: [8.1/15, 8.1/16]
+    description: |-
+      Multiple delimiters may be specified in a macro expression.
+        macro-expand = ( "%{" macro-letter transformers *delimiter "}" )
+                       / "%%" / "%_" / "%-"
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo-bar+zip+quux@e12.example.com
+    result: pass
 zonedata:
   example.com.d.spf.example.com:
     - SPF: v=spf1 redirect=a.spf.example.com
@@ -2021,6 +2070,10 @@ zonedata:
   e11.example.com:
     - SPF: v=spf1 exists:%{i}.%{l2r-}.user.%{d2}
   1.2.3.4.gladstone.philip.user.example.com:
+    - A: 127.0.0.2
+  e12.example.com:
+    - SPF: v=spf1 exists:%{l2r+-}.user.%{d2}
+  bar.foo.user.example.com:
     - A: 127.0.0.2
 ---
 description: Processing limits
