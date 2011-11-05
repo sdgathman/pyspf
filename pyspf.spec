@@ -19,7 +19,7 @@ Requires:       %{pythonbase}-pydns, %{pythonbase}
 
 %description
 SPF does email sender validation.  For more information about SPF,
-please see http://openspf.org
+please see http://openspf.net
 
 This SPF client is intended to be installed on the border MTA, checking
 if incoming SMTP clients are permitted to send mail.  The SPF check

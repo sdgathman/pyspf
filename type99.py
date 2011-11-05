@@ -19,7 +19,7 @@ AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
 SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 For more information about SPF, a tool against email forgery, see
-    http://www.openspf.org/"""
+    http://www.openspf.net/"""
     
 # Copy Bind zonefiles to stdout, removing TYPE99 RRs and
 # adding a TYPE99 RR for each TXT RR encountered.
@@ -29,6 +29,12 @@ For more information about SPF, a tool against email forgery, see
 # filtering through this script will refresh the TYPE99 RRs.
 # 
 # $Log$
+# Revision 1.4.4.4  2011/10/27 04:44:58  kitterma
+# Update type99.py to work with 2.6, 2.7, and 3.2:
+#  - raise ... as ...
+#  - Add filter to stdin processing
+#  - Modernize output print to use format to get consistent python/python3 output
+#
 # Revision 1.4.4.3  2008/03/26 19:01:07  kitterma
 # Capture Type99.py improvements from trunk.  SF #1257140
 #

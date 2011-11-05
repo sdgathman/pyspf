@@ -20,7 +20,7 @@ AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
 SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 For more information about SPF, a tool against email forgery, see
-    http://www.openspf.org/
+    http://www.openspf.net/
 
 For news, bugfixes, etc. visit the home page for this implementation at
     http://cheeseshop.python.org/pypi/pyspf/
@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.5):
 # $Log$
+# Revision 1.108.2.61  2011/10/27 16:29:38  customdesigned
+# Move python version test to def time.
+#
 # Revision 1.108.2.60  2011/10/27 16:28:18  kitterma
 # Use bytes in to_ascii to work in python and python3.
 #
