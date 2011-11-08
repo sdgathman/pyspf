@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.63  2011/11/08 04:36:33  kitterma
+# Update CHANGELOG, setup.py, spf.py, and move old commit messages to
+# pyspf_changelog.txt to start on new version (2.0.7).
+#
 # Revision 1.108.2.62  2011/11/05 19:07:53  customdesigned
 # New website openspf.org -> openspf.net
 #
@@ -1241,7 +1245,32 @@ class query(object):
         return p
 
     def get_header(self, res, receiver=None, **kv):
-        """Generate Received-SPF header based on last lookup."""
+        """Generate Received-SPF header based on last lookup.
+
+        >>> q = query(s='strong-bad@email.example.com', h='mx.example.org',
+        ...           i='192.0.2.3')
+        >>> q.r='abuse@kitterman.com'
+        >>> q.check(spf='v=spf1 ?all')
+        ('neutral', 250, 'access neither permitted nor denied')
+        >>> q.get_header('neutral')
+        'Neutral (abuse@kitterman.com: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) client-ip=192.0.2.3; envelope-from="strong-bad@email.example.com"; helo=mx.example.org; receiver=abuse@kitterman.com; mechanism=?all; identity=mailfrom'
+
+        >>> q.check(spf='v=spf1 redirect=controlledmail.com exp=_exp.controlledmail.com')
+        ('fail', 550, 'SPF fail - not authorized')
+        >>> q.get_header('fail')
+        'Fail (abuse@kitterman.com: domain of email.example.com does not designate 192.0.2.3 as permitted sender) client-ip=192.0.2.3; envelope-from="strong-bad@email.example.com"; helo=mx.example.org; receiver=abuse@kitterman.com; mechanism=-all; identity=mailfrom'
+    
+        >>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ?all moo')
+        ('permerror', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+        >>> q.get_header('permerror')
+        'PermError (abuse@kitterman.com: permanent error in processing domain of email.example.com: Unknown mechanism found) client-ip=192.0.2.3; envelope-from="strong-bad@email.example.com"; helo=mx.example.org; receiver=abuse@kitterman.com; problem=moo; identity=mailfrom'
+
+        >>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ~all')
+        ('pass', 250, 'sender SPF authorized')
+        >>> q.get_header('pass')
+        'Pass (abuse@kitterman.com: domain of email.example.com designates 192.0.2.3 as permitted sender) client-ip=192.0.2.3; envelope-from="strong-bad@email.example.com"; helo=mx.example.org; receiver=abuse@kitterman.com; mechanism="ip4:192.0.0.0/8"; identity=mailfrom'
+        """
+
         if not receiver:
             receiver = self.r
         client_ip = self.c
