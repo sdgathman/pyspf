@@ -1,3 +1,87 @@
+# Revision 1.108.2.61  2011/10/27 16:29:38  customdesigned
+# Move python version test to def time.
+#
+# Revision 1.108.2.60  2011/10/27 16:28:18  kitterma
+# Use bytes in to_ascii to work in python and python3.
+#
+# Revision 1.108.2.59  2011/10/27 14:50:05  customdesigned
+# Ensure entire SPF policy is ascii.
+#
+# Revision 1.108.2.58  2011/10/27 14:29:49  customdesigned
+# Catch non-ascii domains.
+#
+# Revision 1.108.2.57  2011/10/27 10:32:06  kitterma
+# Drop version from spf.py shebang.
+#
+# Revision 1.108.2.56  2011/10/27 04:58:03  kitterma
+# Update CHANGELOG, adjust minimum version requirement in setup.py, and update dates for a release.
+#
+# Revision 1.108.2.55  2011/10/27 03:49:11  kitterma
+# Fix doctests to raise ... as ... and print(x) as 2to3 doesn't fix these.
+# Doctests all pass in 2.6, 2.7, and 3.2
+#
+# Revision 1.108.2.53  2011/10/18 02:56:32  kitterma
+# Resolve local conflicts in spf.py changelog.
+#
+# Revision 1.108.2.52  2011/10/04 23:08:18  customdesigned
+# verbose option
+#
+# Revision 1.108.2.51  2011/03/06 03:54:01  kitterma
+# Update copyright years.
+#
+# Revision 1.108.2.50  2011/03/06 03:14:54  kitterma
+# Wrangle types around so addr2bin tests pass with python2.4/2.6/3.2(with 2to3).
+#
+# Revision 1.108.2.49  2011/03/05 23:10:55  kitterma
+# Fix one missed instance of reverting to the older doctest with error type.
+#
+# Revision 1.108.2.48  2011/03/05 18:00:46  kitterma
+# Fix typo.
+#
+# Revision 1.108.2.47  2011/03/05 18:00:15  kitterma
+# Try to import both email.message and email.Message for backward compatibility.
+#
+# Revision 1.108.2.46  2011/03/05 17:37:57  kitterma
+# Revert to older doctest construct for python2.4/2.5 compatibility and set minimum version to 2.4.
+#
+# Revision 1.108.2.45  2011/03/03 04:14:31  kitterma
+#  * Refactor spf.py to support python3 via 2to3 - Minimum Python version is now python2.6.
+#  * Update README and CHANGELOG
+#
+# Revision 1.108.2.44  2011/02/11 18:25:31  kitterma
+# Move older spf.py commit messages to pyspf_changelog.txt and update version numbers.
+#
+# Revision 1.108.2.43  2011/02/11 18:17:47  kitterma
+# Ensure an error is raise for all DNS rcodes other than 0 and 3 per RFC 4408.
+#
+# Revision 1.108.2.42  2011/02/11 18:14:22  kitterma
+# Make TCP fallback an AmbiguityWarning in strict mode rather than an
+# error in harsh mode so we can retry and validate the TCP based record.
+#
+# Revision 1.108.2.41  2010/08/19 01:18:08  customdesigned
+# Return extra keyword dict from parse_header, parse identity.
+#
+# Revision 1.108.2.40  2010/04/29 20:23:44  customdesigned
+# Return result from parse_header
+#
+# Revision 1.108.2.39  2010/04/29 18:53:38  customdesigned
+# Parse Received-SPF header
+#
+# Revision 1.108.2.38  2010/04/29 16:36:47  customdesigned
+# report CIDR error only for valid mechanism
+#
+# Revision 1.108.2.37  2008/11/11 18:43:42  customdesigned
+# Make doc tests run on 2.5.  Heuristic for missing IP4.
+#
+# Revision 1.108.2.36  2008/09/10 00:46:45  customdesigned
+# Test case for handling invalid SPF on command line.
+#
+# Revision 1.108.2.35  2008/09/10 00:35:03  customdesigned
+# Handle invalid SPF record on command line.
+#
+# Revision 1.108.2.34  2008/08/25 17:58:07  customdesigned
+# Add timeout to check2.
+#
 # Revision 1.108.2.33  2008/04/23 21:00:42  customdesigned
 # Quote nulls in Received-SPF.
 #
