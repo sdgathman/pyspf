@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.64  2011/11/08 05:11:56  kitterma
+# Add tests for query.get_header.
+#
 # Revision 1.108.2.63  2011/11/08 04:36:33  kitterma
 # Update CHANGELOG, setup.py, spf.py, and move old commit messages to
 # pyspf_changelog.txt to start on new version (2.0.7).
@@ -1244,8 +1247,10 @@ class query(object):
         self.l, self.o = split_email(self.s, self.h)
         return p
 
-    def get_header(self, res, receiver=None, **kv):
-        """Generate Received-SPF header based on last lookup.
+    def get_header(self, res, receiver=None, header_type='spf', aid=None, **kv):
+        """
+        Generate Received-SPF or Authentication Results header based on the
+         last lookup.
 
         >>> q = query(s='strong-bad@email.example.com', h='mx.example.org',
         ...           i='192.0.2.3')
@@ -1269,7 +1274,32 @@ class query(object):
         ('pass', 250, 'sender SPF authorized')
         >>> q.get_header('pass')
         'Pass (abuse@kitterman.com: domain of email.example.com designates 192.0.2.3 as permitted sender) client-ip=192.0.2.3; envelope-from="strong-bad@email.example.com"; helo=mx.example.org; receiver=abuse@kitterman.com; mechanism="ip4:192.0.0.0/8"; identity=mailfrom'
+
+        >>> q.check(spf='v=spf1 ?all')
+        ('neutral', 250, 'access neither permitted nor denied')
+        >>> q.get_header('neutral', header_type = 'authres', aid='bmsi.com')
+        'Authentication-Results: bmsi.com; spf=neutral reason="abuse@kitterman.com: 192.0.2.3 is neither permitted nor denied by domain of email.example.com" smtp.mailfrom=strong-bad@email.example.com'
+
+        >>> p = query(s='strong-bad@email.example.com', h='mx.example.org',
+        ...           i='192.0.2.3')
+        >>> p.r='abuse@kitterman.com'
+        >>> p.check(spf='v=spf1 redirect=controlledmail.com exp=_exp.controlledmail.com')
+        ('fail', 550, 'SPF fail - not authorized')
+        >>> p.ident = 'helo'
+        >>> p.get_header('fail', header_type = 'authres', aid='bmsi.com')
+        'Authentication-Results: bmsi.com; spf=fail reason="abuse@kitterman.com: domain of email.example.com does not designate 192.0.2.3 as permitted sender" smtp.mailfrom=strong-bad@email.example.com smtp.helo=mx.example.org'
+
+        >>> q.check(spf='v=spf1 ?all')
+        ('neutral', 250, 'access neither permitted nor denied')
+        >>> try: q.get_header('neutral', header_type = 'dkim')
+        ... except SyntaxError as x: print(x)
+        Unknown results header type: dkim
         """
+        # If type is Authentication Results header (spf/authres)
+        if header_type == 'authres':
+            if not aid:
+                raise SyntaxError('authserv-id missing for Authentication Results header type, see RFC5451 2.3')
+            import authres
 
         if not receiver:
             receiver = self.r
@@ -1294,15 +1324,23 @@ class query(object):
         else:
           comment = '%s: %s' % (receiver,self.get_header_comment(res))
         res = ['%s (%s)' % (tag,comment)]
-        for k in ('client_ip','envelope_from','helo','receiver',
-          'problem','mechanism'):
-            v = locals()[k]
-            if v: res.append('%s=%s;'%(k.replace('_','-'),v))
-        for k,v in kv.items():
-            if v: res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
-        # do identity last so we can easily drop the trailing ';'
-        res.append('%s=%s'%('identity',identity))
-        return ' '.join(res)
+        if header_type == 'spf':
+            for k in ('client_ip','envelope_from','helo','receiver',
+                'problem','mechanism'):
+                v = locals()[k]
+                if v: res.append('%s=%s;'%(k.replace('_','-'),v))
+            for k,v in kv.items():
+                if v: res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
+            # do identity last so we can easily drop the trailing ';'
+            res.append('%s=%s'%('identity',identity))
+            return ' '.join(res)
+        elif header_type == 'authres':
+            if envelope_from:
+                return str(authres.AuthenticationResultsHeader(authserv_id = aid, results = [authres.SPFAuthenticationResult(result = tag, smtp_mailfrom = self.s, reason = comment)]))
+            else:
+                return str(authres.AuthenticationResultsHeader(authserv_id = aid, results = [authres.SPFAuthenticationResult(result = tag, smtp_helo = self.h, reason = comment)]))
+        else:
+            raise SyntaxError('Unknown results header type: {0}'.format(header_type))
 
     def get_header_comment(self, res):
         """Return comment for Received-SPF header.  """
