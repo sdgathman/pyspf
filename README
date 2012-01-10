@@ -8,7 +8,9 @@ Installation
 ------------
 This package requires PyDNS, available at http://pydns.sourceforge.net.
 Binary and source RPMs for PyDNS are also available from
-http://pymilter.sourceforge.net.
+http://pymilter.sourceforge.net. This package requires authres from either
+pypi or http://launchpad.net/authentication-results-python to process and
+generate RFC 5451 Authentication Results headers.
 
 After unpacking the source distribution, install this in your site-
 specific Python extension directory::

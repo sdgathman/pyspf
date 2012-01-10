@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.66  2012/01/10 00:17:09  kitterma
+# Fix authentication results support to provide similar comments as Received-SPF.
+#   
 # Revision 1.108.2.65  2011/11/08 07:38:37  kitterma
 # Extend query.get_header to return either Received-SPF (still default) or
 #     Authentication Results headers
@@ -48,7 +51,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.7: Nov  7, 2011"
+__version__ = "2.0.7: Jan  9, 201i2"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -328,6 +331,7 @@ class query(object):
             self.set_ip(i)
         self.default_modifier = True
         self.verbose = verbose
+        self.authserv = None # Only used in A-R header generation tests
 
     def log(self,mech,d,spf):
         print '%s: %s "%s"'%(mech,d,spf)
@@ -1204,19 +1208,55 @@ class query(object):
         except socket.error: pass
         return False
 
-    def parse_header(self, val):
+    def parse_header_ar(self, val):
+        """Set SPF values from RFC 5451 Authentication Results header.
+        
+        Useful when SPF has already been run on a trusted gateway machine.
+
+        Expects the entire header as an input.
+
+        Examples:
+        >>> q = query('192.0.2.3','strong-bad@email.example.com','mx.example.org')
+        >>> q.mechanism = 'unknown'
+        >>> p = q.parse_header_ar('''Authentication-Results: bmsi.com; spf=neutral \\n     (abuse@kitterman.com: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) \\n     smtp.mailfrom=email.example.com \\n     (sender=strong-bad@email.example.com; helo=mx.example.org; client-ip=192.0.2.3; receiver=abuse@kitterman.com; mechanism=?all)''')
+        >>> q.get_header(q.result, header_type='authres', aid='bmsi.com')
+        'Authentication-Results: bmsi.com; spf=neutral (unknown: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) smtp.mailfrom=email.example.com (sender=email.example.com; helo=mx.example.org; client-ip=192.0.2.3; receiver=unknown; mechanism=unknown)'
+        >>> p = q.parse_header_ar('''Authentication-Results: bmsi.com; spf=None (mail.bmsi.com: test; client-ip=163.247.46.150) smtp.mailfrom=admin@squiebras.cl (helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24)''')
+        >>> q.get_header(q.result, header_type='authres', aid='bmsi.com')
+        'Authentication-Results: bmsi.com; spf=none (unknown: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) smtp.mailfrom=admin@squiebras.cl (sender=admin@squiebras.cl; helo=mx.example.org; client-ip=192.0.2.3; receiver=unknown; mechanism=unknown)'
+        """
+        import authres
+        # Authres expects unwrapped headers
+        unwrap = ''
+        valsplit = val.split('\n')
+        for element in valsplit:
+            unwrap += '{0} '.format(element.strip())
+        arobj = authres.AuthenticationResultsHeader.parse(val)
+        # TODO extract and parse comments (not supported by authres)
+        for resobj in arobj.results:
+            if resobj.method == 'spf':
+                self.authserv = arobj.authserv_id
+                self.result = resobj.result
+                if resobj.properties[0].name == 'mailfrom':
+                    self.d = resobj.properties[0].value
+                    self.s = resobj.properties[0].value
+                if resobj.properties[0].name == 'helo':
+                    self.h = resobj.properties[0].value
+        return
+
+    def parse_header_spf(self, val):
         """Set SPF values from Received-SPF header.
         
         Useful when SPF has already been run on a trusted gateway machine.
 
         Examples:
         >>> q = query('0.0.0.0','','')
-        >>> p = q.parse_header('''Pass (test) client-ip=70.98.79.77;
+        >>> p = q.parse_header_spf('''Pass (test) client-ip=70.98.79.77;
         ... envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com;
         ... receiver=mail.bmsi.com; mechanism=a; identity=mailfrom''')
         >>> q.get_header(q.result)
         'Pass (test) client-ip=70.98.79.77; envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com; receiver=mail.bmsi.com; mechanism=a; identity=mailfrom'
-	>>> p = q.parse_header('''None (mail.bmsi.com: test)
+	>>> p = q.parse_header_spf('''None (mail.bmsi.com: test)
 	... client-ip=163.247.46.150; envelope-from="admin@squiebras.cl";
 	... helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24;
 	... x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom''')
@@ -1250,6 +1290,43 @@ class query(object):
           elif k.startswith('x-'): p[k[2:]] = v
         self.l, self.o = split_email(self.s, self.h)
         return p
+
+    def parse_header(self, val):
+        """Set SPF values from Received-SPF or RFC 5451 Authentication Results header.
+        
+        Useful when SPF has already been run on a trusted gateway machine. Auto
+        detects the header type and parses it. Use parse_header_spf or parse_header_ar
+        for each type if required.
+
+        Examples:
+        >>> q = query('0.0.0.0','','')
+        >>> p = q.parse_header('''Pass (test) client-ip=70.98.79.77;
+        ... envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com;
+        ... receiver=mail.bmsi.com; mechanism=a; identity=mailfrom''')
+        >>> q.get_header(q.result)
+        'Pass (test) client-ip=70.98.79.77; envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com; receiver=mail.bmsi.com; mechanism=a; identity=mailfrom'
+        >>> p = q.parse_header('''None (mail.bmsi.com: test)
+        ... client-ip=163.247.46.150; envelope-from="admin@squiebras.cl";
+        ... helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24;
+        ... x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom''')
+        >>> q.get_header(q.result,**p)
+        'None (mail.bmsi.com: test) client-ip=163.247.46.150; envelope-from="admin@squiebras.cl"; helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24; x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom'
+        >>> p['bestguess']
+        'pass'
+        >>> q = query('192.0.2.3','strong-bad@email.example.com','mx.example.org')
+        >>> q.mechanism = 'unknown'
+        >>> p = q.parse_header_ar('''Authentication-Results: bmsi.com; spf=neutral \\n     (abuse@kitterman.com: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) \\n     smtp.mailfrom=email.example.com \\n     (sender=strong-bad@email.example.com; helo=mx.example.org; client-ip=192.0.2.3; receiver=abuse@kitterman.com; mechanism=?all)''')
+        >>> q.get_header(q.result, header_type='authres', aid='bmsi.com')
+        'Authentication-Results: bmsi.com; spf=neutral (unknown: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) smtp.mailfrom=email.example.com (sender=email.example.com; helo=mx.example.org; client-ip=192.0.2.3; receiver=unknown; mechanism=unknown)'
+        >>> p = q.parse_header_ar('''Authentication-Results: bmsi.com; spf=None (mail.bmsi.com: test; client-ip=163.247.46.150) smtp.mailfrom=admin@squiebras.cl (helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24)''')
+        >>> q.get_header(q.result, header_type='authres', aid='bmsi.com')
+        'Authentication-Results: bmsi.com; spf=none (unknown: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) smtp.mailfrom=admin@squiebras.cl (sender=admin@squiebras.cl; helo=mx.example.org; client-ip=192.0.2.3; receiver=unknown; mechanism=unknown)'
+        """
+
+        if val.startswith('Authentication-Results:'):
+            return(self.parse_header_ar(val))
+        else:
+            return(self.parse_header_spf(val))
 
     def get_header(self, res, receiver=None, header_type='spf', aid=None, **kv):
         """
