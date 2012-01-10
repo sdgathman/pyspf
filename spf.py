@@ -3,7 +3,7 @@
 
 Copyright (c) 2003, Terence Way
 Portions Copyright (c) 2004,2005,2006,2007,2008 Stuart Gathman <stuart@bmsi.com>
-Portions Copyright (c) 2005,2006,2007,2008 Scott Kitterman <scott@kitterman.com>
+Portions Copyright (c) 2005,2006,2007,2008,2011,2012 Scott Kitterman <scott@kitterman.com>
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
 and disclaimer are retained in their original form.
@@ -30,6 +30,16 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.67  2012/01/10 04:42:03  kitterma
+#   * Rework query.parse_header:
+#     - Make query.parse_header automatically select Received-DPF or
+#       Authentication Results header types and use them to collect SPF
+#       results from trusted relays
+#     - Add query.parse_header_spf and query.parse_header_ar functions for
+#       header type specific processing
+#   * Add 'Programming Language :: Python3' to setup.py
+#   * Bump release dates
+#
 # Revision 1.108.2.66  2012/01/10 00:17:09  kitterma
 # Fix authentication results support to provide similar comments as Received-SPF.
 #   
@@ -51,7 +61,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.7: Jan  9, 201i2"
+__version__ = "2.0.7: Jan  9, 2012"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
