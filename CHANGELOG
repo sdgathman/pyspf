@@ -8,6 +8,8 @@ Version 2.0.7 - January 9, 2012
       results from trusted relays
     - Add query.parse_header_spf and query.parse_header_ar functions for
       header type specific processing
+  * Finish Python3 port - works with python2.6/2.7/3.2 and 2to3 is no longer
+    required
 
 Version 2.0.6 - October 27, 2011
   * Refactor code so that 2to3 will provide a working python3 module - Now

@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.68  2012/01/10 05:56:16  kitterma
+# Update copyright years and fix date.
+#
 # Revision 1.108.2.67  2012/01/10 04:42:03  kitterma
 #   * Rework query.parse_header:
 #     - Make query.parse_header automatically select Received-DPF or
@@ -85,8 +88,12 @@ import re
 import socket  # for inet_ntoa() and inet_aton()
 import struct  # for pack() and unpack()
 import time    # for time()
-import urllib  # for quote()
+try:
+    import urllib.parse as urllibparse # for quote()
+except:
+    import urllib as urllibparse
 import sys     # for version_info()
+from functools import reduce
 try:
     from email.message import Message
 except ImportError:
@@ -111,19 +118,19 @@ def DNSLookup(name, qtype, strict=True, timeout=30):
         #
         if resp.header['tc'] == True:
           if strict > 1:
-              raise AmbiguityWarning, 'DNS: Truncated UDP Reply, SPF records should fit in a UDP packet, retrying TCP'
+              raise AmbiguityWarning('DNS: Truncated UDP Reply, SPF records should fit in a UDP packet, retrying TCP')
           try:
               req = DNS.DnsRequest(name, qtype=qtype, protocol='tcp')
               resp = req.req()
-          except DNS.DNSError, x:
-              raise TempError, 'DNS: TCP Fallback error: ' + str(x)
+          except DNS.DNSError as x:
+              raise TempError('DNS: TCP Fallback error: ' + str(x))
           if resp.header['rcode'] != 0 and resp.header['rcode'] != 3:
-              raise IOError, 'Error: ' + resp.header['status'] + '  RCODE: ' + str(resp.header['rcode'])
+              raise IOError('Error: ' + resp.header['status'] + '  RCODE: ' + str(resp.header['rcode']))
         return [((a['name'], a['typename']), a['data']) for a in resp.answers]
-    except IOError, x:
-        raise TempError, 'DNS ' + str(x)
-    except DNS.DNSError, x:
-        raise TempError, 'DNS ' + str(x)
+    except IOError as x:
+        raise TempError('DNS ' + str(x))
+    except DNS.DNSError as x:
+        raise TempError('DNS ' + str(x))
 
 RE_SPF = re.compile(r'^v=spf1$|^v=spf1 ',re.IGNORECASE)
 
@@ -344,7 +351,7 @@ class query(object):
         self.authserv = None # Only used in A-R header generation tests
 
     def log(self,mech,d,spf):
-        print '%s: %s "%s"'%(mech,d,spf)
+        print('%s: %s "%s"'%(mech,d,spf))
 
     def set_ip(self, i):
         "Set connect ip, and ip6 or ip4 mode."
@@ -354,14 +361,14 @@ class query(object):
         else:
             self.ip = bin2long6(inet_pton(i))
             if (self.ip >> 32) == 0xFFFF:       # IP4 mapped address
-                self.ip = self.ip & 0xFFFFFFFFL
+                self.ip = self.ip & 0xFFFFFFFF
                 ip6 = False
             else:
                 ip6 = True
         # NOTE: self.A is not lowercase, so isn't a macro.  See query.expand()
         if ip6:
             self.c = inet_ntop(
-                struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFFL))
+                struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFF))
             self.i = '.'.join(list('%032X'%self.ip))
             self.A = 'AAAA'
             self.v = 'ip6'
@@ -498,12 +505,12 @@ class query(object):
                 raise self.perm_error
             return rc
                 
-        except TempError, x:
+        except TempError as x:
             self.prob = x.msg
             if x.mech:
                 self.mech.append(x.mech)
             return ('temperror', 451, 'SPF Temporary Error: ' + str(x))
-        except PermError, x:
+        except PermError as x:
             if not self.perm_error:
                 self.perm_error = x
             self.prob = x.msg
@@ -533,7 +540,7 @@ class query(object):
                 return self.check0(spf, recursion)
             finally:
                 self.d = tmp
-        except AmbiguityWarning,x:
+        except AmbiguityWarning as x:
             self.prob = x.msg
             if x.mech:
                 self.mech.append(x.mech)
@@ -546,7 +553,7 @@ class query(object):
         if not self.perm_error:
             try:
                 raise PermError(*msg)
-            except PermError, x:
+            except PermError as x:
                 # FIXME: keep a list of errors for even friendlier diagnostics.
                 self.perm_error = x
         return self.perm_error
@@ -1020,7 +1027,7 @@ class query(object):
                         raise PermError('Unknown Macro Encountered', macro) 
                     e = expand_one(expansion, macro[3:-1], JOINERS.get(letter))
                     if letter != macro[2]:
-                        e = urllib.quote(e)
+                        e = urllibparse.quote(e)
                     result += e
 
             end = i.end()
@@ -1053,7 +1060,7 @@ class query(object):
             #Only check for Type SPF in harsh mode until it is more popular.
             try:
                 b = [t for t in self.dns_99(domain) if RE_SPF.match(t)]
-            except TempError,x:
+            except TempError as x:
                 # some braindead DNS servers hang on type 99 query
                 if self.strict > 1: raise TempError(x)
                 b = []
@@ -1199,7 +1206,7 @@ class query(object):
                 raise PermError('Length of CNAME chain exceeds %d' % MAX_CNAME)
             cnames[name] = cname
             if cname in cnames:
-                raise PermError, 'CNAME loop'
+                raise PermError('CNAME loop')
             result = self.dns(cname, qtype, cnames=cnames)
         return result
 
@@ -1207,10 +1214,10 @@ class query(object):
         """Match connect IP against a list of other IP addresses."""
         try:
             if self.v == 'ip6':
-                MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFL
+                MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
                 bin = bin2long6
             else:
-                MASK = 0xFFFFFFFFL
+                MASK = 0xFFFFFFFF
                 bin = addr2bin
             c = ~(MASK >> n) & MASK & self.ip
             for ip in [bin(ip) for ip in ipaddrs]:
@@ -1420,7 +1427,7 @@ class query(object):
                 'problem','mechanism'):
                 v = locals()[k]
                 if v: res.append('%s=%s;'%(k.replace('_','-'),v))
-            for k,v in kv.items():
+            for k,v in list(kv.items()):
                 if v: res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
             # do identity last so we can easily drop the trailing ';'
             res.append('%s=%s'%('identity',identity))
@@ -1752,7 +1759,7 @@ else:
             return struct.pack('!HHHHHHHH',
                 *[int(s,16) for s in a[0].split(':')])
       except ValueError: pass
-      raise ValueError,p
+      raise ValueError(p)
 
 def expand_one(expansion, str, joiner):
     if not str:
@@ -1870,37 +1877,37 @@ if __name__ == '__main__':
     import getopt
     try:
        opts,argv = getopt.getopt(sys.argv[1:],"hv",["help","verbose"])
-    except getopt.GetoptError, err:
-       print str(err)
-       print USAGE
+    except getopt.GetoptError as err:
+       print(str(err))
+       print(USAGE)
        sys.exit(2)
     verbose = False
     for o,a in opts:
         if o in ('-v','--verbose'):
            verbose = True
         elif o in ('-h','--help'):
-           print USAGE
+           print(USAGE)
     if len(argv) == 0:
-        print USAGE
+        print(USAGE)
         _test()
     elif len(argv) == 1:
         try:
             q = query(i='127.0.0.1', s='localhost', h='unknown',
                 receiver=socket.gethostname())
-            print q.dns_spf(argv[0])
-        except TempError, x:
-            print "Temporary DNS error: ", x
-        except PermError, x:
-            print "PermError: ", x
+            print(q.dns_spf(argv[0]))
+        except TempError as x:
+            print("Temporary DNS error: ", x)
+        except PermError as x:
+            print("PermError: ", x)
     elif len(argv) == 3:
-        print check(i=argv[0], s=argv[1], h=argv[2],
-            receiver=socket.gethostname(), verbose=verbose)
+        print(check(i=argv[0], s=argv[1], h=argv[2],
+            receiver=socket.gethostname(), verbose=verbose))
     elif len(argv) == 4:
         i, s, h = argv[1:]
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
             strict=False, verbose=verbose)
-        print q.check(argv[0]),q.mechanism
+        print(q.check(argv[0]),q.mechanism)
         if q.perm_error and q.perm_error.ext:
-            print q.perm_error.ext
+            print(q.perm_error.ext)
     else:
-        print USAGE
+        print(USAGE)
