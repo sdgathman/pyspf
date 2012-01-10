@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.65  2011/11/08 07:38:37  kitterma
+# Extend query.get_header to return either Received-SPF (still default) or
+#     Authentication Results headers
+#
 # Revision 1.108.2.64  2011/11/08 05:11:56  kitterma
 # Add tests for query.get_header.
 #
@@ -1278,7 +1282,7 @@ class query(object):
         >>> q.check(spf='v=spf1 ?all')
         ('neutral', 250, 'access neither permitted nor denied')
         >>> q.get_header('neutral', header_type = 'authres', aid='bmsi.com')
-        'Authentication-Results: bmsi.com; spf=neutral reason="abuse@kitterman.com: 192.0.2.3 is neither permitted nor denied by domain of email.example.com" smtp.mailfrom=strong-bad@email.example.com'
+        'Authentication-Results: bmsi.com; spf=neutral (abuse@kitterman.com: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) smtp.mailfrom=email.example.com (sender=strong-bad@email.example.com; helo=mx.example.org; client-ip=192.0.2.3; receiver=abuse@kitterman.com; mechanism=?all)'
 
         >>> p = query(s='strong-bad@email.example.com', h='mx.example.org',
         ...           i='192.0.2.3')
@@ -1287,7 +1291,7 @@ class query(object):
         ('fail', 550, 'SPF fail - not authorized')
         >>> p.ident = 'helo'
         >>> p.get_header('fail', header_type = 'authres', aid='bmsi.com')
-        'Authentication-Results: bmsi.com; spf=fail reason="abuse@kitterman.com: domain of email.example.com does not designate 192.0.2.3 as permitted sender" smtp.mailfrom=strong-bad@email.example.com smtp.helo=mx.example.org'
+        'Authentication-Results: bmsi.com; spf=fail (abuse@kitterman.com: domain of email.example.com does not designate 192.0.2.3 as permitted sender) smtp.helo=mx.example.org (sender=strong-bad@email.example.com; client-ip=192.0.2.3; receiver=abuse@kitterman.com; mechanism=-all)'
 
         >>> q.check(spf='v=spf1 ?all')
         ('neutral', 250, 'access neither permitted nor denied')
@@ -1336,9 +1340,19 @@ class query(object):
             return ' '.join(res)
         elif header_type == 'authres':
             if envelope_from:
-                return str(authres.AuthenticationResultsHeader(authserv_id = aid, results = [authres.SPFAuthenticationResult(result = tag, smtp_mailfrom = self.s, reason = comment)]))
+                return str(authres.AuthenticationResultsHeader(authserv_id = aid, \
+                    results = [authres.SPFAuthenticationResult(result = tag, \
+                    result_comment = comment, smtp_mailfrom = self.d, \
+                    smtp_mailfrom_comment = \
+                    'sender={0}; helo={1}; client-ip={2}; receiver={3}; mechanism={4}'.format(self.s, \
+                    self.h, self.i, self.r, mechanism))]))
             else:
-                return str(authres.AuthenticationResultsHeader(authserv_id = aid, results = [authres.SPFAuthenticationResult(result = tag, smtp_helo = self.h, reason = comment)]))
+                return str(authres.AuthenticationResultsHeader(authserv_id = aid, \
+                    results = [authres.SPFAuthenticationResult(result = tag, \
+                    result_comment = comment, smtp_helo = self.h, \
+                    smtp_helo_comment = \
+                    'sender={0}; client-ip={1}; receiver={2}; mechanism={3}'.format(self.s, \
+                    self.i, self.r, mechanism))]))
         else:
             raise SyntaxError('Unknown results header type: {0}'.format(header_type))
 

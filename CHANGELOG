@@ -1,7 +1,7 @@
-Version 2.0.7 - November 8, 2011
+Version 2.0.7 - January 9, 2012
   * Use openspf.net for SPF web site instead of openspf.org
   * Extend query.get_header to return either Received-SPF (still default) or
-    Authentication Results headers
+    RFC 5451 Authentication Results headers (needs authres 0.3 or later)
 
 Version 2.0.6 - October 27, 2011
   * Refactor code so that 2to3 will provide a working python3 module - Now
