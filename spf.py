@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.69  2012/01/10 06:13:18  kitterma
+#   * Finish Python3 port - works with python2.6/2.7/3.2 and 2to3 is no longer
+#     required.
+#
 # Revision 1.108.2.68  2012/01/10 05:56:16  kitterma
 # Update copyright years and fix date.
 #
@@ -64,7 +68,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.7: Jan  9, 2012"
+__version__ = "2.0.7: Jan 12, 2012"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -106,9 +110,9 @@ if not hasattr(DNS.Type, 'SPF'):
     DNS.Type.typemap[99] = 'SPF'
     DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
 
-def DNSLookup(name, qtype, strict=True, timeout=30):
+def DNSLookup(name, qtype, strict=True, timeout=20, timer=0):
     try:
-        req = DNS.DnsRequest(name, qtype=qtype, timeout=timeout)
+        req = DNS.DnsRequest(name, qtype=qtype, timeout=(timeout-timer))
         resp = req.req()
         #resp.show()
         # key k: ('wayforward.net', 'A'), value v
@@ -117,16 +121,17 @@ def DNSLookup(name, qtype, strict=True, timeout=30):
         # return both as binary string.
         #
         if resp.header['tc'] == True:
-          if strict > 1:
-              raise AmbiguityWarning('DNS: Truncated UDP Reply, SPF records should fit in a UDP packet, retrying TCP')
-          try:
-              req = DNS.DnsRequest(name, qtype=qtype, protocol='tcp')
-              resp = req.req()
-          except DNS.DNSError as x:
-              raise TempError('DNS: TCP Fallback error: ' + str(x))
-          if resp.header['rcode'] != 0 and resp.header['rcode'] != 3:
-              raise IOError('Error: ' + resp.header['status'] + '  RCODE: ' + str(resp.header['rcode']))
-        return [((a['name'], a['typename']), a['data']) for a in resp.answers]
+            if strict > 1:
+                raise AmbiguityWarning('DNS: Truncated UDP Reply, SPF records should fit in a UDP packet, retrying TCP')
+            try:
+                req = DNS.DnsRequest(name, qtype=qtype, protocol='tcp', timeout=(timeout-timer))
+                resp = req.req()
+            except DNS.DNSError as x:
+                raise TempError('DNS: TCP Fallback error: ' + str(x))
+            if resp.header['rcode'] != 0 and resp.header['rcode'] != 3:
+                raise IOError('Error: ' + resp.header['status'] + '  RCODE: ' + str(resp.header['rcode']))
+        timer += resp.args['elapsed']/1000 # elapsed is in milliseconds
+        return [((a['name'], a['typename']), a['data']) for a in resp.answers], timer
     except IOError as x:
         raise TempError('DNS ' + str(x))
     except DNS.DNSError as x:
@@ -211,6 +216,7 @@ MAX_MX = 10 #RFC 4408 Para 10.1
 MAX_PTR = 10 #RFC 4408 Para 10.1
 MAX_CNAME = 10 # analogous interpretation to MAX_PTR
 MAX_RECURSION = 20
+MAX_GLOBAL_TIME = 20 # RFC 4408 Para 10.1
 
 ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
 COMMON_MISTAKES = {
@@ -255,7 +261,7 @@ class PermError(Exception):
             return '%s: %s'%(self.msg, self.mech)
         return self.msg
 
-def check2(i, s, h, local=None, receiver=None, timeout=30, verbose=False):
+def check2(i, s, h, local=None, receiver=None, timeout=MAX_GLOBAL_TIME, verbose=False):
     """Test an incoming MAIL FROM:<s>, from a client with ip address i.
     h is the HELO/EHLO domain name.  This is the RFC4408 compliant pySPF2.0
     interface.  The interface returns an SPF result and explanation only.
@@ -318,7 +324,7 @@ class query(object):
     Also keeps cache: DNS cache.  
     """
     def __init__(self, i, s, h, local=None, receiver=None, strict=True,
-                timeout=30,verbose=False):
+                timeout=MAX_GLOBAL_TIME,verbose=False):
         self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
@@ -344,6 +350,7 @@ class query(object):
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
         self.timeout = timeout
+        self.timer = 0
         if i:
             self.set_ip(i)
         self.default_modifier = True
@@ -492,6 +499,7 @@ class query(object):
 
         try:
             self.lookups = 0
+            self.timer = 0
             if not spf:
                 spf = self.dns_spf(self.d)
                 if self.verbose: self.log("top",self.d,spf)
@@ -1192,7 +1200,8 @@ class query(object):
 
         if not result:
             safe2cache = query.SAFE2CACHE
-            for k, v in DNSLookup(name, qtype, self.strict, self.timeout):
+            dns_result, self.timer = DNSLookup(name, qtype, self.strict, self.timeout, self.timer)
+            for k, v in dns_result:
                 if k == (name, 'CNAME'):
                     cname = v
                 if (qtype,k[1]) in safe2cache:

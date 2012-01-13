@@ -1,4 +1,9 @@
-Version 2.0.7 - January 9, 2012
+Version 2.0.7 - January 12, 2012
+  * Change timeouts to be global for all DNS lookups instead of per DNS lookup
+    to match processing limits recommendation in RFC 4408 10.1
+    - Default is 20 seconds for the global timer instead of 30 seconds per DNS
+      lookup
+    - This can be adjusted by changing spf.MAX_GLOBAL_TIME
   * Use openspf.net for SPF web site instead of openspf.org
   * Extend query.get_header to return either Received-SPF (still default) or
     RFC 5451 Authentication Results headers (needs authres 0.3 or later)
