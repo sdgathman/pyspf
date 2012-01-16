@@ -30,6 +30,13 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.70  2012/01/13 04:21:19  kitterma
+#   * Change timeouts to be global for all DNS lookups instead of per DNS lookup
+#     to match processing limits recommendation in RFC 4408 10.1
+#     - Default is 20 seconds for the global timer instead of 30 seconds per DNS
+#       lookup
+#     - This can be adjusted by changing spf.MAX_GLOBAL_TIME
+#
 # Revision 1.108.2.69  2012/01/10 06:13:18  kitterma
 #   * Finish Python3 port - works with python2.6/2.7/3.2 and 2to3 is no longer
 #     required.
@@ -110,9 +117,9 @@ if not hasattr(DNS.Type, 'SPF'):
     DNS.Type.typemap[99] = 'SPF'
     DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
 
-def DNSLookup(name, qtype, strict=True, timeout=20, timer=0):
+def DNSLookup(name, qtype, strict=True, timeout=30):
     try:
-        req = DNS.DnsRequest(name, qtype=qtype, timeout=(timeout-timer))
+        req = DNS.DnsRequest(name, qtype=qtype, timeout=timeout)
         resp = req.req()
         #resp.show()
         # key k: ('wayforward.net', 'A'), value v
@@ -130,8 +137,7 @@ def DNSLookup(name, qtype, strict=True, timeout=20, timer=0):
                 raise TempError('DNS: TCP Fallback error: ' + str(x))
             if resp.header['rcode'] != 0 and resp.header['rcode'] != 3:
                 raise IOError('Error: ' + resp.header['status'] + '  RCODE: ' + str(resp.header['rcode']))
-        timer += resp.args['elapsed']/1000 # elapsed is in milliseconds
-        return [((a['name'], a['typename']), a['data']) for a in resp.answers], timer
+        return [((a['name'], a['typename']), a['data']) for a in resp.answers]
     except IOError as x:
         raise TempError('DNS ' + str(x))
     except DNS.DNSError as x:
@@ -217,6 +223,7 @@ MAX_PTR = 10 #RFC 4408 Para 10.1
 MAX_CNAME = 10 # analogous interpretation to MAX_PTR
 MAX_RECURSION = 20
 MAX_GLOBAL_TIME = 20 # RFC 4408 Para 10.1
+MAX_PER_LOOKUP_TIME = 30 # Long standing pyspf default
 
 ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
 COMMON_MISTAKES = {
@@ -324,7 +331,7 @@ class query(object):
     Also keeps cache: DNS cache.  
     """
     def __init__(self, i, s, h, local=None, receiver=None, strict=True,
-                timeout=MAX_GLOBAL_TIME,verbose=False):
+                timeout=MAX_PER_LOOKUP_TIME,verbose=False):
         self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
@@ -350,6 +357,12 @@ class query(object):
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
         self.timeout = timeout
+        if not self.strict:
+            self.querytime = 0 # Default to not using a global check timelimit
+                               # for backward compatibility in relaxed mode
+        else:
+            self.querytime = MAX_GLOBAL_TIME # Otherwise use the global value
+                                             # Default 20s per 4408
         self.timer = 0
         if i:
             self.set_ip(i)
@@ -1200,13 +1213,20 @@ class query(object):
 
         if not result:
             safe2cache = query.SAFE2CACHE
-            dns_result, self.timer = DNSLookup(name, qtype, self.strict, self.timeout, self.timer)
-            for k, v in dns_result:
+            if self.querytime < 0:
+                 raise TempError('DNS Error: exceeded max query lookup time')
+            if self.querytime < self.timeout and self.querytime > 0:
+                timeout = self.querytime
+            else:
+                timeout = self.timeout
+            timethen = time.time()
+            for k, v in DNSLookup(name, qtype, self.strict, timeout):
                 if k == (name, 'CNAME'):
                     cname = v
                 if (qtype,k[1]) in safe2cache:
                     self.cache.setdefault(k, []).append(v)
             result = self.cache.get( (name, qtype), [])
+            self.querytime = self.querytime - (time.time()-timethen)
         if not result and cname:
             if not cnames:
                 cnames = {}

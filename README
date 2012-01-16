@@ -163,8 +163,13 @@ options are:
     with input files developed to work with the original PERL and C spfquery
     implementations.
 
-Overall DNS lookup time limits can be controlled via spf.MAX_GLOBAL_TIME.  The
-default is 20 seconds.
+Overall per SPF check time limits can be controlled via spf.MAX_GLOBAL_TIME.
+Default is 20 seconds.  Alternately, if spf.MAX_GLOBAL_TIME is set to 0, then
+the overall time limit is disabled and the per DNS lookup limit is used
+instead.  This defaults to 30 seconds and can be controlled via
+spf.MAX_PER_LOOKUP_TIME.  This was the long standing pyspf default , but is
+inconsistent with RFC 4408.  It is still the default in relaxed processing
+(strict=False).
 
 License: Python Software Foundation License
 
