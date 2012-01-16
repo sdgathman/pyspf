@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.71  2012/01/16 06:19:31  kitterma
+#  * Refactor timeout changes to improve backward comaptibility (see CHANGELOG).
+#
 # Revision 1.108.2.70  2012/01/13 04:21:19  kitterma
 #   * Change timeouts to be global for all DNS lookups instead of per DNS lookup
 #     to match processing limits recommendation in RFC 4408 10.1
@@ -75,7 +78,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.7: Jan 12, 2012"
+__version__ = "2.0.7: Jan 16, 2012"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -131,7 +134,7 @@ def DNSLookup(name, qtype, strict=True, timeout=30):
             if strict > 1:
                 raise AmbiguityWarning('DNS: Truncated UDP Reply, SPF records should fit in a UDP packet, retrying TCP')
             try:
-                req = DNS.DnsRequest(name, qtype=qtype, protocol='tcp', timeout=(timeout-timer))
+                req = DNS.DnsRequest(name, qtype=qtype, protocol='tcp', timeout=(timeout))
                 resp = req.req()
             except DNS.DNSError as x:
                 raise TempError('DNS: TCP Fallback error: ' + str(x))
@@ -222,7 +225,6 @@ MAX_MX = 10 #RFC 4408 Para 10.1
 MAX_PTR = 10 #RFC 4408 Para 10.1
 MAX_CNAME = 10 # analogous interpretation to MAX_PTR
 MAX_RECURSION = 20
-MAX_GLOBAL_TIME = 20 # RFC 4408 Para 10.1
 MAX_PER_LOOKUP_TIME = 30 # Long standing pyspf default
 
 ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
@@ -268,13 +270,16 @@ class PermError(Exception):
             return '%s: %s'%(self.msg, self.mech)
         return self.msg
 
-def check2(i, s, h, local=None, receiver=None, timeout=MAX_GLOBAL_TIME, verbose=False):
+def check2(i, s, h, local=None, receiver=None, timeout=MAX_PER_LOOKUP_TIME, verbose=False, querytime=0):
     """Test an incoming MAIL FROM:<s>, from a client with ip address i.
     h is the HELO/EHLO domain name.  This is the RFC4408 compliant pySPF2.0
     interface.  The interface returns an SPF result and explanation only.
     SMTP response codes are not returned since RFC 4408 does not specify
     receiver policy.  Applications updated for RFC 4408 should use this
-    interface.
+    interface.  The maximum time, in seconds, this function is allowed to run
+    before a TempError is returned is controlled by querytime.  When set to 0
+    (default) the timeout parameter (default 30 seconds) controls the time
+    allowed for each DNS lookup.
 
     Returns (result, explanation) where result in
     ['pass', 'permerror', 'fail', 'temperror', 'softfail', 'none', 'neutral' ].
@@ -284,7 +289,7 @@ def check2(i, s, h, local=None, receiver=None, timeout=MAX_GLOBAL_TIME, verbose=
 
     """
     res,_,exp = query(i=i, s=s, h=h, local=local,
-        receiver=receiver,timeout=timeout,verbose=verbose).check()
+        receiver=receiver,timeout=timeout,verbose=verbose,querytime=querytime).check()
     return res,exp
 
 def check(i, s, h, local=None, receiver=None, verbose=False):
@@ -331,7 +336,7 @@ class query(object):
     Also keeps cache: DNS cache.  
     """
     def __init__(self, i, s, h, local=None, receiver=None, strict=True,
-                timeout=MAX_PER_LOOKUP_TIME,verbose=False):
+                timeout=MAX_PER_LOOKUP_TIME,verbose=False,querytime=0):
         self.s, self.h = s, h
         if not s and h:
             self.s = 'postmaster@' + h
@@ -357,12 +362,10 @@ class query(object):
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
         self.timeout = timeout
-        if not self.strict:
-            self.querytime = 0 # Default to not using a global check timelimit
-                               # for backward compatibility in relaxed mode
-        else:
-            self.querytime = MAX_GLOBAL_TIME # Otherwise use the global value
-                                             # Default 20s per 4408
+        self.querytime = querytime # Default to not using a global check
+                                   # timelimit since this is an RFC 4408 MAY
+        if querytime > 0:
+            self.timeout = querytime
         self.timer = 0
         if i:
             self.set_ip(i)
@@ -1226,7 +1229,8 @@ class query(object):
                 if (qtype,k[1]) in safe2cache:
                     self.cache.setdefault(k, []).append(v)
             result = self.cache.get( (name, qtype), [])
-            self.querytime = self.querytime - (time.time()-timethen)
+            if self.querytime > 0:
+                self.querytime = self.querytime - (time.time()-timethen)
         if not result and cname:
             if not cnames:
                 cnames = {}
