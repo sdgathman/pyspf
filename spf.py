@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.73  2012/01/19 06:22:35  kitterma
+#  * Accept TXT and SPF type records back from py(3)dns and deal with them regardless of type (string or bytes.
+#  * Update README
+#
 # Revision 1.108.2.72  2012/01/16 15:37:47  kitterma
 # Do away with default querytime, make it fully optional and by default completely backwards compatible.
 #
@@ -147,6 +151,16 @@ def DNSLookup(name, qtype, strict=True, timeout=30):
     except IOError as x:
         raise TempError('DNS ' + str(x))
     except DNS.DNSError as x:
+        raise TempError('DNS ' + str(x))
+    except DNS.ArgumentError as x:
+        raise TempError('DNS ' + str(x))
+    except DNS.SocketError as x:
+        raise TempError('DNS ' + str(x))
+    except DNS.TimeoutError as x:
+        raise TempError('DNS ' + str(x))
+    except DNS.ServerError as x:
+        raise TempError('DNS ' + str(x))
+    except DNS.IncompleteReplyError as x:
         raise TempError('DNS ' + str(x))
 
 RE_SPF = re.compile(r'^v=spf1$|^v=spf1 ',re.IGNORECASE)
