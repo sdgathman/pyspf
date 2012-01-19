@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.72  2012/01/16 15:37:47  kitterma
+# Do away with default querytime, make it fully optional and by default completely backwards compatible.
+#
 # Revision 1.108.2.71  2012/01/16 06:19:31  kitterma
 #  * Refactor timeout changes to improve backward comaptibility (see CHANGELOG).
 #
@@ -78,7 +81,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.7: Jan 16, 2012"
+__version__ = "2.0.7: Jan 19, 2012"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -916,7 +919,7 @@ class query(object):
             a = self.dns_txt(spec)
             if len(a) == 1:
                 try:
-                    return self.expand(a[0], stripdot=False)
+                    return str(self.expand(a[0], stripdot=False))
                 except PermError:
                     # RFC4408 6.2/4 syntax errors cause exp= to be ignored
                     pass
@@ -1109,12 +1112,24 @@ class query(object):
     def dns_txt(self, domainname):
         "Get a list of TXT records for a domain name."
         if domainname:
-            return [''.join(a) for a in self.dns(domainname, 'TXT')]
+            txtlist = []
+            for recordbytes in self.dns(domainname, 'TXT'):
+                recordascii = ''
+                for segment in recordbytes:
+                    recordascii += segment.decode("ascii")
+                txtlist.append(recordascii)
+            return txtlist
         return []
     def dns_99(self, domainname):
         "Get a list of type SPF=99 records for a domain name."
         if domainname:
-            return [''.join(a) for a in self.dns(domainname, 'SPF')]
+            txtlist = []
+            for recordbytes in self.dns(domainname, 'SPF'):
+                recordascii = ''
+                for segment in recordbytes:
+                    recordascii += segment.decode("ascii")
+                txtlist.append(recordascii)
+            return txtlist
         return []
 
     def dns_mx(self, domainname):

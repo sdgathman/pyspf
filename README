@@ -20,7 +20,8 @@ specific Python extension directory::
 	# python setup.py install
 
 The minimum Python version required is python2.6.  The spf module in this
-version has been tested with python3.2 using 2to3.
+version has been tested with python3.2 and does not require using 2to3. It
+will work with all versions of pydns or py3dns.
 
 Testing
 -------
@@ -50,7 +51,8 @@ command line.
 If you're running on Mac OS X, and it looks like DNS.DiscoverNameServers()
 is failing, you'll need to edit your /etc/resolv.conf and specify a
 domain name.  For some reason, OS X writes out resolv.conf with a single
-'domain' line, which isn't good at all.
+'domain' line, which isn't good at all.  Later versions of py3dns have been
+updated to better support Max OS X.
 
 
 Description
