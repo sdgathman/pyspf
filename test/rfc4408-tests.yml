@@ -1723,6 +1723,26 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e20.example.com
     result: neutral
+  non-ascii-exp:
+    description: >-
+      SPF explanation text is restricted to 7-bit ascii.
+    comment: >-
+      Checking a possibly different code path for non-ascii chars.
+    spec: 6.2/5
+    helo: hosed
+    host: 1.2.3.4
+    mailfrom: "foobar@nonascii.example.com"
+    result: fail
+    explanation: DEFAULT
+  two-exp-records:
+    description: >-
+      Must ignore exp= if DNS returns more than one TXT record.
+    spec: 6.2/4
+    helo: hosed
+    host: 1.2.3.4
+    mailfrom: "foobar@tworecs.example.com"
+    result: fail
+    explanation: DEFAULT
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -1785,6 +1805,15 @@ zonedata:
     - TIMEOUT
   e22.example.com:
     - SPF: v=spf1 exp=mail.example.com -all
+  nonascii.example.com:
+    - SPF: v=spf1 exp=badexp.example.com -all
+  badexp.example.com:
+    - TXT: "\xEF\xBB\xBFExplanation"
+  tworecs.example.com:
+    - SPF: v=spf1 exp=twoexp.example.com -all
+  twoexp.example.com:
+    - TXT: "one"
+    - TXT: "two"
 ---
 description: Macro expansion rules
 tests:
