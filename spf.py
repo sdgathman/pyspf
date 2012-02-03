@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.74  2012/01/19 06:40:24  kitterma
+#   * Accounts for new py3dns error classes coming in py3dns 3.0.2 (but fully
+#     backward compatible with earlier versions)
+#
 # Revision 1.108.2.73  2012/01/19 06:22:35  kitterma
 #  * Accept TXT and SPF type records back from py(3)dns and deal with them regardless of type (string or bytes.
 #  * Update README
@@ -104,7 +108,6 @@ To test this script (and to output this usage message):
     % python spf.py
 """
 
-import sys
 import re
 import socket  # for inet_ntoa() and inet_aton()
 import struct  # for pack() and unpack()
@@ -147,20 +150,13 @@ def DNSLookup(name, qtype, strict=True, timeout=30):
                 raise TempError('DNS: TCP Fallback error: ' + str(x))
             if resp.header['rcode'] != 0 and resp.header['rcode'] != 3:
                 raise IOError('Error: ' + resp.header['status'] + '  RCODE: ' + str(resp.header['rcode']))
-        return [((a['name'], a['typename']), a['data']) for a in resp.answers]
+        return [((a['name'], a['typename']), a['data'])
+                for a in resp.answers] \
+             + [((a['name'], a['typename']), a['data'])
+                for a in resp.additional]
     except IOError as x:
         raise TempError('DNS ' + str(x))
     except DNS.DNSError as x:
-        raise TempError('DNS ' + str(x))
-    except DNS.ArgumentError as x:
-        raise TempError('DNS ' + str(x))
-    except DNS.SocketError as x:
-        raise TempError('DNS ' + str(x))
-    except DNS.TimeoutError as x:
-        raise TempError('DNS ' + str(x))
-    except DNS.ServerError as x:
-        raise TempError('DNS ' + str(x))
-    except DNS.IncompleteReplyError as x:
         raise TempError('DNS ' + str(x))
 
 RE_SPF = re.compile(r'^v=spf1$|^v=spf1 ',re.IGNORECASE)
@@ -188,6 +184,7 @@ RE_TOPLAB = re.compile(
 RE_DOT_ATOM = re.compile(r'%(atext)s+([.]%(atext)s+)*$' % {
     'atext': r"[0-9a-z!#$%&'*+/=?^_`{}|~-]" }, re.IGNORECASE)
 
+# Derived from RFC 3986 appendix A
 RE_IP6 = re.compile(                 '(?:%(hex4)s:){6}%(ls32)s$'
                    '|::(?:%(hex4)s:){5}%(ls32)s$'
                   '|(?:%(hex4)s)?::(?:%(hex4)s:){4}%(ls32)s$'
@@ -843,7 +840,6 @@ class query(object):
                 self.check_lookups()
                 d = self.dns_spf(arg)
                 if self.verbose: self.log("include",arg,d)
-                #print "%s: %s"%(arg,d)
                 res, code, txt = self.check1(d,arg, recursion + 1)
                 if res == 'pass':
                     break
@@ -930,14 +926,14 @@ class query(object):
     def get_explanation(self, spec):
         """Expand an explanation."""
         if spec:
-            a = self.dns_txt(spec)
-            if len(a) == 1:
-                try:
+            try:
+                a = self.dns_txt(spec)
+                if len(a) == 1:
                     return str(self.expand(a[0], stripdot=False))
-                except PermError:
-                    # RFC4408 6.2/4 syntax errors cause exp= to be ignored
-                    pass
-        if self.strict > 1:
+            except PermError:
+                # RFC4408 6.2/4 syntax errors cause exp= to be ignored
+                pass
+        elif self.strict > 1:
             raise PermError('Empty domain-spec on exp=')
         # RFC4408 6.2/4 empty domain spec is ignored
         # (unless you give precedence to the grammar).
@@ -1126,24 +1122,20 @@ class query(object):
     def dns_txt(self, domainname):
         "Get a list of TXT records for a domain name."
         if domainname:
-            txtlist = []
-            for recordbytes in self.dns(domainname, 'TXT'):
-                recordascii = ''
-                for segment in recordbytes:
-                    recordascii += segment.decode("ascii")
-                txtlist.append(recordascii)
-            return txtlist
+            try:
+                return [''.join(s.decode("ascii") for s in a)
+                    for a in self.dns(domainname, 'TXT')]
+            except UnicodeEncodeError:
+                raise PermError('Non-ascii character in SPF TXT record.')
         return []
     def dns_99(self, domainname):
         "Get a list of type SPF=99 records for a domain name."
         if domainname:
-            txtlist = []
-            for recordbytes in self.dns(domainname, 'SPF'):
-                recordascii = ''
-                for segment in recordbytes:
-                    recordascii += segment.decode("ascii")
-                txtlist.append(recordascii)
-            return txtlist
+            try:
+                return [''.join(s.decode("ascii") for s in a)
+                    for a in self.dns(domainname, 'SPF')]
+            except UnicodeEncodeError:
+                raise PermError('Non-ascii character in SPF record.')
         return []
 
     def dns_mx(self, domainname):
@@ -1216,7 +1208,6 @@ class query(object):
       ('MX','A'): None,
       ('MX','MX'): None,
       ('CNAME','A'): None,
-      ('CNAME','CNAME'): None,
       ('A','A'): None,
       ('AAAA','AAAA'): None,
       ('PTR','PTR'): None,
@@ -1238,12 +1229,17 @@ class query(object):
         pre: qtype in ['A', 'AAAA', 'MX', 'PTR', 'TXT', 'SPF']
         post: isinstance(__return__, types.ListType)
         """
+        if name.endswith('.'): name = name[:-1]
         if not reduce(lambda x,y:x and 0 < len(y) < 64, name.split('.'),True):
             return []   # invalid DNS name (too long or empty)
         result = self.cache.get( (name, qtype) )
-        cname = None
+        if result: return result
+        cnamek = (name,'CNAME')
+        cname = self.cache.get( cnamek )
 
-        if not result:
+        if cname:
+            cname = cname[0]
+        else:
             safe2cache = query.SAFE2CACHE
             if self.querytime < 0:
                  raise TempError('DNS Error: exceeded max query lookup time')
@@ -1253,10 +1249,12 @@ class query(object):
                 timeout = self.timeout
             timethen = time.time()
             for k, v in DNSLookup(name, qtype, self.strict, timeout):
-                if k == (name, 'CNAME'):
+                if k == cnamek:
                     cname = v
-                if (qtype,k[1]) in safe2cache:
+                if k[1] == 'CNAME' or (qtype,k[1]) in safe2cache:
                     self.cache.setdefault(k, []).append(v)
+                    #if ans and qtype == k[1]:
+                    #    self.cache.setdefault((name,qtype), []).append(v)
             result = self.cache.get( (name, qtype), [])
             if self.querytime > 0:
                 self.querytime = self.querytime - (time.time()-timethen)
@@ -1270,6 +1268,8 @@ class query(object):
             if cname in cnames:
                 raise PermError('CNAME loop')
             result = self.dns(cname, qtype, cnames=cnames)
+            if result:
+                self.cache[(name,qtype)] = result
         return result
 
     def cidrmatch(self, ipaddrs, n):
@@ -1962,8 +1962,11 @@ if __name__ == '__main__':
         except PermError as x:
             print("PermError: ", x)
     elif len(argv) == 3:
-        print(check(i=argv[0], s=argv[1], h=argv[2],
-            receiver=socket.gethostname(), verbose=verbose))
+        q = query(i=argv[0], s=argv[1], h=argv[2],
+            receiver=socket.gethostname(), verbose=verbose)
+        print q.check(),q.mechanism
+        if q.perm_error and q.perm_error.ext:
+            print q.perm_error.ext
     elif len(argv) == 4:
         i, s, h = argv[1:]
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
