@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.6
+Version:        2.0.7
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -13,7 +13,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
 #BuildRequires:  python-setuptools
-Requires:       python-pydns python
+Requires:       python-pydns python >= 2.6
 # Provide pyspf *only* if not using pyspf package for non-default python
 Provides:	pyspf
 
@@ -54,6 +54,15 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/spfquery
 
 %changelog
+* Fri Feb 03 2012 Stuart Gathman <stuart@bmsi.com> 2.0.7-1
+- fix CNAME chain duplicating TXT records
+- local test cases for CNAME chains
+- python3 compatibility changes e.g. print a -> print(a)
+- check for 7-bit ascii on TXT and SPF records
+- Use openspf.net for SPF web site instead of openspf.org
+- Support Authentication-Results header field
+- Support overall DNS timeout
+
 * Thu Oct 27 2011 Stuart Gathman <stuart@bmsi.com> 2.0.6-1
 - Python3 port (still requires 2to3 on spf.py)
 - Ensure Temperror for all DNS rcodes other than 0 and 3 per RFC 4408
