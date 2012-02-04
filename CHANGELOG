@@ -16,6 +16,8 @@ Version 2.0.7 - January 19, 2012
     as type bytes and not strings
   * Accounts for new py3dns error classes coming in py3dns 3.0.2 (but fully
     backward compatible with earlier versions)
+  * check for 7-bit ascii on TXT and SPF records
+  * fix CNAME chain duplicating TXT records
 
 Version 2.0.6 - October 27, 2011
   * Refactor code so that 2to3 will provide a working python3 module - Now
