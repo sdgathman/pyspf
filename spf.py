@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.75  2012/02/03 01:44:58  customdesigned
+# Fix CNAME duplicating DNS records.
+# Fix handling non-ascii chars in TXT/SPF records.
+#
 # Revision 1.108.2.74  2012/01/19 06:40:24  kitterma
 #   * Accounts for new py3dns error classes coming in py3dns 3.0.2 (but fully
 #     backward compatible with earlier versions)
@@ -1964,9 +1968,9 @@ if __name__ == '__main__':
     elif len(argv) == 3:
         q = query(i=argv[0], s=argv[1], h=argv[2],
             receiver=socket.gethostname(), verbose=verbose)
-        print q.check(),q.mechanism
+        printi(q.check(),q.mechanism)
         if q.perm_error and q.perm_error.ext:
-            print q.perm_error.ext
+            print(q.perm_error.ext)
     elif len(argv) == 4:
         i, s, h = argv[1:]
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
