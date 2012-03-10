@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.77  2012/02/09 22:13:42  kitterma
+# Fix stray character in last commit.
+# Start fixing python3 bytes issue - Now works, but fails the non-ASCII exp test.
+#
 # Revision 1.108.2.76  2012/02/05 05:50:39  kitterma
 # Fix a few stray print -> print() changes for python3 compatbility.
 #
@@ -1130,18 +1134,22 @@ class query(object):
         "Get a list of TXT records for a domain name."
         if domainname:
             dns_list = self.dns(domainname, 'TXT')
-            if type(dns_list) is 'bytes':
-                try:
-                    return [''.join(s.decode("ascii") for s in a)
-                        for a in dns_list]
-                except UnicodeEncodeError:
-                    raise PermError('Non-ascii character in SPF TXT record.')
-            else:
-                try:
-                    return [''.join(s for s in a)
-                        for a in dns_list]
-                except UnicodeEncodeError:
-                    raise PermError('Non-ascii character in SPF TXT record.')
+            try:
+                if type(dns_list[0][0]) is 'bytes':
+                    try:
+                        return [''.join(s.encode("ascii") for s in a)
+                            for a in dns_list]
+                    except UnicodeEncodeError:
+                        raise PermError('Non-ascii character in SPF TXT record.')
+                else:
+                    try:
+                        print(dns_list, str(dns_list[0][0]).encode("ascii"))
+                        return [''.join((str(s, "ascii")) for s in a)
+                            for a in dns_list]
+                    except UnicodeEncodeError:
+                        raise PermError('Non-ascii character in SPF TXT record.')
+            except IndexError:
+                pass # This means there's nothing returned
         return []
     def dns_99(self, domainname):
         "Get a list of type SPF=99 records for a domain name."
@@ -1149,13 +1157,13 @@ class query(object):
             dns_list = self.dns(domainname, 'SPF')
             if type(dns_list) is 'bytes':
                 try:
-                    return [''.join(s.decode("ascii") for s in a)
+                    return [''.join(s.encode("ascii") for s in a)
                         for a in dns_list]
                 except UnicodeEncodeError:
                     raise PermError('Non-ascii character in SPF type SPF record.')
             else:
                 try:
-                    return [''.join(s for s in a)
+                    return [''.join(str(s.encode("ascii")) for s in a)
                         for a in dns_list]
                 except UnicodeEncodeError:
                     raise PermError('Non-ascii character in SPF type SPF record.')
