@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.79  2012/03/10 00:19:44  kitterma
+# Add fixes for py3dns DNS return as type bytes - not complete.
+#
 # Revision 1.108.2.77  2012/02/09 22:13:42  kitterma
 # Fix stray character in last commit.
 # Start fixing python3 bytes issue - Now works, but fails the non-ASCII exp test.
@@ -1139,14 +1142,14 @@ class query(object):
                     try:
                         return [''.join(s.encode("ascii") for s in a)
                             for a in dns_list]
-                    except UnicodeEncodeError:
+                    except UnicodeError:
                         raise PermError('Non-ascii character in SPF TXT record.')
                 else:
                     try:
                         print(dns_list, str(dns_list[0][0]).encode("ascii"))
                         return [''.join((str(s, "ascii")) for s in a)
                             for a in dns_list]
-                    except UnicodeEncodeError:
+                    except UnicodeError:
                         raise PermError('Non-ascii character in SPF TXT record.')
             except IndexError:
                 pass # This means there's nothing returned
@@ -1159,13 +1162,13 @@ class query(object):
                 try:
                     return [''.join(s.encode("ascii") for s in a)
                         for a in dns_list]
-                except UnicodeEncodeError:
+                except UnicodeError:
                     raise PermError('Non-ascii character in SPF type SPF record.')
             else:
                 try:
                     return [''.join(str(s.encode("ascii")) for s in a)
                         for a in dns_list]
-                except UnicodeEncodeError:
+                except UnicodeError:
                     raise PermError('Non-ascii character in SPF type SPF record.')
         return []
 
