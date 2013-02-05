@@ -106,6 +106,16 @@ tests:
     host: 1.2.3.4
     mailfrom: "foobar@hosed2.example.com"
     result: permerror
+  non-ascii-result:
+    description: >-
+      SPF policies are restricted to 7-bit ascii.
+    comment: >-
+      Checking yet another code path for non-ascii chars.
+    spec: 3.1.1/1
+    helo: hosed
+    host: 1.2.3.4
+    mailfrom: "foobar@hosed3.example.com"
+    result: permerror
 zonedata:
   example.com:
     - TIMEOUT
@@ -121,6 +131,8 @@ zonedata:
     - SPF:  "v=spf1 a:\xEF\xBB\xBFgarbage.example.net -all"
   hosed2.example.com:
     - SPF:  "v=spf1 \x80a:example.net -all"
+  hosed3.example.com:
+    - SPF:  "v=spf1 a:example.net \x96all"
 ---
 description: Record lookup
 tests:
@@ -1244,15 +1256,57 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e3.example.com
     result: permerror
+  exists-ip4:
+    description: >-
+      mechanism matches if any DNS A RR exists
+    spec: 5.7/3
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e4.example.com
+    result: pass
+  exists-ip6:
+    description: >-
+      The lookup type is A even when the connection is ip6
+    spec: 5.7/3
+    helo: mail.example.com
+    host: CAFE:BABE::3
+    mailfrom: foo@e4.example.com
+    result: pass
+  exists-ip6only:
+    description: >-
+      The lookup type is A even when the connection is ip6
+    spec: 5.7/3
+    helo: mail.example.com
+    host: CAFE:BABE::3
+    mailfrom: foo@e5.example.com
+    result: fail
+  exists-dnserr:
+    description: >-
+      Result for DNS error is being clarified in spfbis
+    spec: 5.7/3
+    helo: mail.example.com
+    host: CAFE:BABE::3
+    mailfrom: foo@e6.example.com
+    result: [fail, temperror]
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
+  mail6.example.com:
+    - AAAA: CAFE:BABE::4
+  err.example.com:
+    - TIMEOUT
   e1.example.com:
     - SPF: "v=spf1 exists:"
   e2.example.com:
     - SPF: "v=spf1 exists"
   e3.example.com:
     - SPF: "v=spf1 exists:mail.example.com/24"
+  e4.example.com:
+    - SPF: "v=spf1 exists:mail.example.com"
+  e5.example.com:
+    - SPF: "v=spf1 exists:mail6.example.com -all"
+  e6.example.com:
+    - SPF: "v=spf1 exists:err.example.com -all"
 ---
 description: IP4 mechanism syntax
 tests:
