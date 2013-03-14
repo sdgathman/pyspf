@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.81  2013/03/14 21:03:25  customdesigned
+# Fix dns_txt and dns_spf - should hopefully still be correct for python3.
+#
 # Revision 1.108.2.80  2012/06/14 20:09:56  kitterma
 # Use the correct exception type to capture unicode in SPF records.
 #
@@ -1158,7 +1161,7 @@ class query(object):
                   return [''.join(str(s.encode("ascii")) for s in a)
                       for a in dns_list]
             except UnicodeError:
-              raise PermError('Non-ascii character in SPF type %s record.')
+              raise PermError('Non-ascii character in SPF type %s record.'%rr)
         return []
     def dns_99(self, domainname):
         "Get a list of type SPF=99 records for a domain name."
