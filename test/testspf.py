@@ -224,6 +224,6 @@ if __name__ == '__main__':
     try:
       zonedata = loadZone(next(yaml.safe_load_all(fp)))
     finally: fp.close()
-    #print zonedata
+    #print(zonedata)
     suite = suite()
     unittest.TextTestRunner().run(suite)
