@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.80  2012/06/14 20:09:56  kitterma
+# Use the correct exception type to capture unicode in SPF records.
+#
 # Revision 1.108.2.79  2012/03/10 00:19:44  kitterma
 # Add fixes for py3dns DNS return as type bytes - not complete.
 #
@@ -406,7 +409,14 @@ class query(object):
 
     def set_ip(self, i):
         "Set connect ip, and ip6 or ip4 mode."
-        if RE_IP4.match(i):
+        self.iplist = []
+        if i.lower() == 'list':
+            self.ip = None
+            ip6 = False
+        elif i.lower() == 'list6':
+            self.ip = None
+            ip6 = True
+        elif RE_IP4.match(i):
             self.ip = addr2bin(i)
             ip6 = False
         else:
@@ -418,15 +428,17 @@ class query(object):
                 ip6 = True
         # NOTE: self.A is not lowercase, so isn't a macro.  See query.expand()
         if ip6:
-            self.c = inet_ntop(
+            if self.ip:
+              self.c = inet_ntop(
                 struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFF))
-            self.i = '.'.join(list('%032X'%self.ip))
+              self.i = '.'.join(list('%032X'%self.ip))
             self.A = 'AAAA'
             self.v = 'ip6'
             self.cidrmax = 128
         else:
-            self.c = socket.inet_ntoa(struct.pack("!L", self.ip))
-            self.i = self.c
+            if self.ip:
+              self.c = socket.inet_ntoa(struct.pack("!L", self.ip))
+              self.i = self.c
             self.A = 'A'
             self.v = 'in-addr'
             self.cidrmax = 32
@@ -1133,44 +1145,24 @@ class query(object):
             if len(a) == 1: return to_ascii(a[0])
         return None
 
-    def dns_txt(self, domainname):
+    def dns_txt(self, domainname, rr='TXT'):
         "Get a list of TXT records for a domain name."
         if domainname:
-            dns_list = self.dns(domainname, 'TXT')
+          dns_list = self.dns(domainname, rr)
+          if dns_list:
             try:
-                if type(dns_list[0][0]) is 'bytes':
-                    try:
-                        return [''.join(s.encode("ascii") for s in a)
-                            for a in dns_list]
-                    except UnicodeError:
-                        raise PermError('Non-ascii character in SPF TXT record.')
-                else:
-                    try:
-                        print(dns_list, str(dns_list[0][0]).encode("ascii"))
-                        return [''.join((str(s, "ascii")) for s in a)
-                            for a in dns_list]
-                    except UnicodeError:
-                        raise PermError('Non-ascii character in SPF TXT record.')
-            except IndexError:
-                pass # This means there's nothing returned
+              if type(dns_list[0][0]) is 'bytes':
+                  return [''.join(s.decode("ascii") for s in a)
+                      for a in dns_list]
+              else:
+                  return [''.join(str(s.encode("ascii")) for s in a)
+                      for a in dns_list]
+            except UnicodeError:
+              raise PermError('Non-ascii character in SPF type %s record.')
         return []
     def dns_99(self, domainname):
         "Get a list of type SPF=99 records for a domain name."
-        if domainname:
-            dns_list = self.dns(domainname, 'SPF')
-            if type(dns_list) is 'bytes':
-                try:
-                    return [''.join(s.encode("ascii") for s in a)
-                        for a in dns_list]
-                except UnicodeError:
-                    raise PermError('Non-ascii character in SPF type SPF record.')
-            else:
-                try:
-                    return [''.join(str(s.encode("ascii")) for s in a)
-                        for a in dns_list]
-                except UnicodeError:
-                    raise PermError('Non-ascii character in SPF type SPF record.')
-        return []
+        return self.dns_txt(domainname,'SPF')
 
     def dns_mx(self, domainname):
         """Get a list of IP addresses for all MX exchanges for a
@@ -1308,7 +1300,8 @@ class query(object):
 
     def cidrmatch(self, ipaddrs, n):
         """Match connect IP against a list of other IP addresses."""
-        try:
+        if self.ip:
+          try:
             if self.v == 'ip6':
                 MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
                 bin = bin2long6
@@ -1318,7 +1311,15 @@ class query(object):
             c = ~(MASK >> n) & MASK & self.ip
             for ip in [bin(ip) for ip in ipaddrs]:
                 if c == ~(MASK >> n) & MASK & ip: return True
-        except socket.error: pass
+          except socket.error: pass
+        else:
+            for ip in ipaddrs:
+              if self.v == 'ip6':
+                ip = inet_ntop(ip)
+              if n < self.cidrmax:
+                self.iplist.append('%s/%d'%(ip,n))
+              else:
+                self.iplist.append(ip)
         return False
 
     def parse_header_ar(self, val):
@@ -1996,11 +1997,13 @@ if __name__ == '__main__':
         except PermError as x:
             print("PermError: ", x)
     elif len(argv) == 3:
-        q = query(i=argv[0], s=argv[1], h=argv[2],
-            receiver=socket.gethostname(), verbose=verbose)
+        i, s, h = argv
+        q = query(i=i, s=s, h=h,receiver=socket.gethostname(),verbose=verbose)
         print(q.check(),q.mechanism)
         if q.perm_error and q.perm_error.ext:
             print(q.perm_error.ext)
+        for ip in q.iplist:
+            print(ip)
     elif len(argv) == 4:
         i, s, h = argv[1:]
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
