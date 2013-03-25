@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.82  2013/03/14 21:13:06  customdesigned
+# Fix Non-ascii exception description.
+#
 # Revision 1.108.2.81  2013/03/14 21:03:25  customdesigned
 # Fix dns_txt and dns_spf - should hopefully still be correct for python3.
 #
@@ -1125,7 +1128,7 @@ class query(object):
         if self.strict > 1:
             #Only check for Type SPF in harsh mode until it is more popular.
             try:
-                b = [t for t in self.dns_99(domain) if RE_SPF.match(t)]
+                b = [t for t in self.dns_txt(domain,'SPF') if RE_SPF.match(t)]
             except TempError as x:
                 # some braindead DNS servers hang on type 99 query
                 if self.strict > 1: raise TempError(x)
@@ -1163,9 +1166,6 @@ class query(object):
             except UnicodeError:
               raise PermError('Non-ascii character in SPF type %s record.'%rr)
         return []
-    def dns_99(self, domainname):
-        "Get a list of type SPF=99 records for a domain name."
-        return self.dns_txt(domainname,'SPF')
 
     def dns_mx(self, domainname):
         """Get a list of IP addresses for all MX exchanges for a
@@ -1261,7 +1261,7 @@ class query(object):
         if name.endswith('.'): name = name[:-1]
         if not reduce(lambda x,y:x and 0 < len(y) < 64, name.split('.'),True):
             return []   # invalid DNS name (too long or empty)
-        result = self.cache.get( (name, qtype) )
+        result = self.cache.get( (name, qtype), [])
         if result: return result
         cnamek = (name,'CNAME')
         cname = self.cache.get( cnamek )
