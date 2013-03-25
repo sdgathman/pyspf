@@ -173,7 +173,7 @@ tests:
       pyspf was getting a type error for null CNAMEs
     helo: mail.example.com
     host: 1.2.3.4
-    mailfrom: bar@e4.example.com
+    mailfrom: bar@e3.example.com
     result: [fail, permerror]
 zonedata:
   mail.example.com:
@@ -190,10 +190,8 @@ zonedata:
   c2.example.com:
   - SPF: v=spf1 a a:c1.example.com -all
   - A: 1.2.3.4
-  e3.example.com:
-  - SPF: v=spf1 mx:mx1.example.com -all
   mx1.example.com:
-  - CNAME: '.'
-  e4.example.com:
+  - CNAME: ''
+  e3.example.com:
   - SPF: v=spf1 a:mx1.example.com mx:mx1.example.com -all
 
