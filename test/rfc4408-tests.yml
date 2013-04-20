@@ -651,6 +651,51 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e7.example.com
     result: permerror
+  a-dual-cidr-ip4-match:
+    description: |
+      A                = "a"      [ ":" domain-spec ] [ dual-cidr-length ]
+      dual-cidr-length = [ ip4-cidr-length ] [ "/" ip6-cidr-length ]
+    spec: 5.3/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e8.example.com
+    result: pass
+  a-dual-cidr-ip4-err:
+    description: |
+      A                = "a"      [ ":" domain-spec ] [ dual-cidr-length ]
+      dual-cidr-length = [ ip4-cidr-length ] [ "/" ip6-cidr-length ]
+    spec: 5.3/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e8e.example.com
+    result: permerror
+  a-dual-cidr-ip6-match:
+    description: |
+      A                = "a"      [ ":" domain-spec ] [ dual-cidr-length ]
+      dual-cidr-length = [ ip4-cidr-length ] [ "/" ip6-cidr-length ]
+    spec: 5.3/2
+    helo: mail.example.com
+    host: 2001:db8:1234::cafe:babe
+    mailfrom: foo@e8.example.com
+    result: pass
+  a-dual-cidr-ip4-default:
+    description: |
+      A                = "a"      [ ":" domain-spec ] [ dual-cidr-length ]
+      dual-cidr-length = [ ip4-cidr-length ] [ "/" ip6-cidr-length ]
+    spec: 5.3/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e8b.example.com
+    result: fail
+  a-dual-cidr-ip6-default:
+    description: |
+      A                = "a"      [ ":" domain-spec ] [ dual-cidr-length ]
+      dual-cidr-length = [ ip4-cidr-length ] [ "/" ip6-cidr-length ]
+    spec: 5.3/2
+    helo: mail.example.com
+    host: 2001:db8:1234::cafe:babe
+    mailfrom: foo@e8a.example.com
+    result: fail
   a-multi-ip1:
     description: >-
       A matches any returned IP.
@@ -870,6 +915,22 @@ zonedata:
     - SPF: v=spf1 a/33 -all
   e7.example.com:
     - SPF: v=spf1 a//129 -all
+  e8.example.com:
+    - A: 1.2.3.5
+    - AAAA: 2001:db8:1234::dead:beef
+    - SPF: v=spf1 a/24//64 -all
+  e8e.example.com:
+    - A: 1.2.3.5
+    - AAAA: 2001:db8:1234::dead:beef
+    - SPF: v=spf1 a/24/64 -all
+  e8a.example.com:
+    - A: 1.2.3.5
+    - AAAA: 2001:db8:1234::dead:beef
+    - SPF: v=spf1 a/24 -all
+  e8b.example.com:
+    - A: 1.2.3.5
+    - AAAA: 2001:db8:1234::dead:beef
+    - SPF: v=spf1 a//64 -all
   e9.example.com:
     - SPF: v=spf1 a:example.com:8080
   e10.example.com:
