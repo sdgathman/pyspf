@@ -30,6 +30,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.83  2013/03/25 22:51:37  customdesigned
+# Replace dns_99 method with dns_txt(type='SPF')
+# Fix null CNAME in cache bug.
+#
 # Revision 1.108.2.82  2013/03/14 21:13:06  customdesigned
 # Fix Non-ascii exception description.
 #
@@ -644,12 +648,15 @@ class query(object):
     ...           h='mx.example.org', i='192.0.2.3')
     >>> q.validate_mechanism('A')
     ('A', 'a', 'email.example.com', 32, 'pass')
-    
-    >>> q = query(s='strong-bad@email.example.com',
-    ...           h='mx.example.org', i='192.0.2.3')    
-    >>> q.validate_mechanism('A')
-    ('A', 'a', 'email.example.com', 32, 'pass')
 
+    >>> q = query(s='strong-bad@email.example.com',
+    ...           h='mx.example.org', i='192.0.2.3')
+    >>> q.validate_mechanism('A//64')
+    ('A//64', 'a', 'email.example.com', 32, 'pass')
+
+    >>> q.validate_mechanism('A/24//64')
+    ('A/24//64', 'a', 'email.example.com', 24, 'pass')
+    
     >>> q.validate_mechanism('?mx:%{d}/27')
     ('?mx:%{d}/27', 'mx', 'email.example.com', 27, 'neutral')
 
@@ -689,6 +696,18 @@ class query(object):
     >>> try: q.validate_mechanism('a:mail.example.com,')
     ... except PermError as x: print(x)
     Do not separate mechnisms with commas: a:mail.example.com,
+
+    >>> q = query(s='strong-bad@email.example.com',
+    ...           h='mx.example.org', i='2001:db8:1234::face:b007')    
+    >>> q.validate_mechanism('A//64')
+    ('A//64', 'a', 'email.example.com', 64, 'pass')
+
+    >>> q.validate_mechanism('A/16')
+    ('A/16', 'a', 'email.example.com', 128, 'pass')
+
+    >>> q.validate_mechanism('A/16//48')
+    ('A/16//48', 'a', 'email.example.com', 48, 'pass')
+
     """
         if mech.endswith( "," ):
             self.note_error('Do not separate mechnisms with commas', mech)
