@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.85  2013/05/25 00:06:03  kitterma
+# Fix return type detection for bytes/string for python3 compatibility in dns_txt.
+#
 # Revision 1.108.2.84  2013/04/20 20:49:13  customdesigned
 # Some dual-cidr doc tests
 #
@@ -139,6 +142,7 @@ To test this script (and to output this usage message):
 """
 
 import re
+import sys
 import socket  # for inet_ntoa() and inet_aton()
 import struct  # for pack() and unpack()
 import time    # for time()
@@ -152,6 +156,14 @@ try:
     from email.message import Message
 except ImportError:
     from email.Message import Message
+try:
+    # Python standard libarary as of python3.3
+    import ipaddress
+except ImportError:
+    try:
+        import ipaddr as ipaddress
+    except ImportError:
+        print('ipaddr module required: http://code.google.com/p/ipaddr-py/')
 
 import DNS    # http://pydns.sourceforge.net
 if not hasattr(DNS.Type, 'SPF'):
@@ -413,6 +425,13 @@ class query(object):
         self.timer = 0
         if i:
             self.set_ip(i)
+        # Document bits of the object model not set up here:
+        # self.i = string, expanded dot notation, suitable for PTR lookups
+        # self.c = string, human readable form of the connect IP address
+        # For IPv4, self.i = self.c, but not in IPv6
+        # self.iplist = list of IPv4/6 addresses that would pass, collected
+        #               when list or list6 is passed as 'i'
+        # self.addr = ipaddr/ipaddress object representing the connect IP 
         self.default_modifier = True
         self.verbose = verbose
         self.authserv = None # Only used in A-R header generation tests
@@ -422,36 +441,36 @@ class query(object):
 
     def set_ip(self, i):
         "Set connect ip, and ip6 or ip4 mode."
-        self.iplist = []
+        self.iplist = False
         if i.lower() == 'list':
-            self.ip = None
+            self.iplist = []
             ip6 = False
         elif i.lower() == 'list6':
-            self.ip = None
+            self.iplist = []
             ip6 = True
-        elif RE_IP4.match(i):
-            self.ip = addr2bin(i)
-            ip6 = False
         else:
-            self.ip = bin2long6(inet_pton(i))
-            if (self.ip >> 32) == 0xFFFF:       # IP4 mapped address
-                self.ip = self.ip & 0xFFFFFFFF
-                ip6 = False
-            else:
+            try:
+                self.ipaddr = ipaddress.ip_address(i)
+            except AttributeError:
+                self.ipaddr = ipaddress.IPAddress(i)
+            if isinstance(self.ipaddr, ipaddress.IPv6Address):
                 ip6 = True
+                if self.ipaddr.ipv4_mapped:
+                    self.ipaddr = ipaddress.IPv4Address(self.ipaddr.ipv4_mapped)
+                    ip6 = False
+                    self.i = self.ipaddr.exploded
+                else:
+                    self.i = '.'.join('.'.join(list(quad)) for quad in self.ipaddr.exploded.split(':'))[::1]
+            else:
+                ip6 = False
+                self.i = self.ipaddr.exploded
+            self.c = str(self.ipaddr)
         # NOTE: self.A is not lowercase, so isn't a macro.  See query.expand()
         if ip6:
-            if self.ip:
-              self.c = inet_ntop(
-                struct.pack("!QQ", self.ip>>64, self.ip&0xFFFFFFFFFFFFFFFF))
-              self.i = '.'.join(list('%032X'%self.ip))
             self.A = 'AAAA'
             self.v = 'ip6'
             self.cidrmax = 128
         else:
-            if self.ip:
-              self.c = socket.inet_ntoa(struct.pack("!L", self.ip))
-              self.i = self.c
             self.A = 'A'
             self.v = 'in-addr'
             self.cidrmax = 32
@@ -936,7 +955,8 @@ class query(object):
             elif m == 'ip6':
                 if self.v == 'ip6': # match own connection type only
                     try:
-                        arg = inet_pton(arg)
+                        if sys.version_info.major == 2:
+                            arg = inet_pton(arg)
                         if self.cidrmatch([arg], cidrlength): break
                     except socket.error:
                         raise PermError('syntax error', mech)
@@ -1233,14 +1253,14 @@ class query(object):
                     ptrnames = self.dns_ptr(self.i)
                     if len(ptrnames) > max:
                         warning = 'More than %d PTR records returned' % max
-                        raise AmbiguityWarning(warning, self.i)
+                        raise AmbiguityWarning(warning, self.c)
                     else:
                         if len(ptrnames) == 0:
                             raise AmbiguityWarning(
                                 'No PTR records found for ptr mechanism', self.c)
                 except:
                     raise AmbiguityWarning(
-                      'No PTR records found for ptr mechanism', self.i)
+                      'No PTR records found for ptr mechanism', self.c)
         else:
             max = MAX_PTR * 4
         cidrlength = self.cidrmax
@@ -1324,27 +1344,27 @@ class query(object):
         return result
 
     def cidrmatch(self, ipaddrs, n):
-        """Match connect IP against a list of other IP addresses."""
-        if self.ip:
-          try:
-            if self.v == 'ip6':
-                MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-                bin = bin2long6
+        """Match connect IP against a CIDR network of other IP addresses."""
+        try:
+            if self.v == 'ip6' and sys.version_info.major == 2:
+                bin = bin62str
             else:
-                MASK = 0xFFFFFFFF
-                bin = addr2bin
-            c = ~(MASK >> n) & MASK & self.ip
-            for ip in [bin(ip) for ip in ipaddrs]:
-                if c == ~(MASK >> n) & MASK & ip: return True
-          except socket.error: pass
-        else:
-            for ip in ipaddrs:
-              if self.v == 'ip6':
-                ip = inet_ntop(ip)
-              if n < self.cidrmax:
-                self.iplist.append('%s/%d'%(ip,n))
-              else:
-                self.iplist.append(ip)
+                bin = addr2addr
+        except socket.error: pass
+        for ip in [bin(ip) for ip in ipaddrs]:
+            netwrk = "{0}/{1}".format(ip, n)
+            try:
+                network = ipaddress.IPv4Network(netwrk, strict=False)
+            except ipaddress.AddressValueError:
+                network = ipaddress.IPv6Network(netwrk, strict=False)
+            if isinstance(self.iplist, bool):
+                if network.__contains__(self.ipaddr):
+                    return True
+            else:
+                if n < self.cidrmax:
+                    self.iplist.append(network)
+                else:
+                    self.iplist.append(network.ip)
         return False
 
     def parse_header_ar(self, val):
@@ -1561,14 +1581,14 @@ class query(object):
                     result_comment = comment, smtp_mailfrom = self.d, \
                     smtp_mailfrom_comment = \
                     'sender={0}; helo={1}; client-ip={2}; receiver={3}; mechanism={4}'.format(self.s, \
-                    self.h, self.i, self.r, mechanism))]))
+                    self.h, self.c, self.r, mechanism))]))
             else:
                 return str(authres.AuthenticationResultsHeader(authserv_id = aid, \
                     results = [authres.SPFAuthenticationResult(result = tag, \
                     result_comment = comment, smtp_helo = self.h, \
                     smtp_helo_comment = \
                     'sender={0}; client-ip={1}; receiver={2}; mechanism={3}'.format(self.s, \
-                    self.i, self.r, mechanism))]))
+                    self.c, self.r, mechanism))]))
         else:
             raise SyntaxError('Unknown results header type: {0}'.format(header_type))
 
@@ -1741,95 +1761,22 @@ def domainmatch(ptrs, domainsuffix):
     domainsuffix = domainsuffix.lower()
     for ptr in ptrs:
         ptr = ptr.lower()
-
         if ptr == domainsuffix or ptr.endswith('.' + domainsuffix):
             return True
 
     return False
 
-def addr2bin(str):
-    """Convert a string IPv4 address into an unsigned integer.
+def addr2addr(str):
+    return str
 
-    Examples::
-    >>> import sys
-    >>> if sys.version_info[0] == 2:
-    ...     print(long(addr2bin('127.0.0.1')))
-    ... else:
-    ...     print(addr2bin('127.0.0.1'))
-    2130706433
-
-    >>> addr2bin('127.0.0.1') == socket.INADDR_LOOPBACK
-    1
-
-    >>> print(addr2bin('255.255.255.254'))
-    4294967294
-
-    >>> print(addr2bin('192.168.0.1'))
-    3232235521
-
-    Unlike DNS.addr2bin, the n, n.n, and n.n.n forms for IP addresses
-    are handled as well::
-    >>> import sys
-    >>> if sys.version_info[0] == 2:
-    ...     print(long(addr2bin('10.65536')))
-    ... else:
-    ...     print(addr2bin('10.65536'))
-    167837696
-
-    >>> import sys
-    >>> if sys.version_info[0] == 2:
-    ...     print(long(addr2bin('10.93.512')))
-    ... else:
-    ...     print(addr2bin('10.93.512'))
-    173867520
-    """
-    return struct.unpack("!L", socket.inet_aton(str))[0]
-
-def bin2long6(str):
-    h, l = struct.unpack("!QQ", str)
-    return h << 64 | l
+def bin62str(bindata):
+    h, l = struct.unpack("!QQ", bytes(bindata))
+    return ipaddress.IPv6Address(h << 64 | l).compressed
 
 if hasattr(socket,'has_ipv6') and socket.has_ipv6:
-    def inet_ntop(s):
-        return socket.inet_ntop(socket.AF_INET6,s)
     def inet_pton(s):
         return socket.inet_pton(socket.AF_INET6,s)
 else:
-    def inet_ntop(s):
-      """Convert ip6 address to standard hex notation.
-      Examples:
-      >>> inet_ntop(struct.pack("!HHHHHHHH",0,0,0,0,0,0xFFFF,0x0102,0x0304))
-      '::FFFF:1.2.3.4'
-      >>> inet_ntop(struct.pack("!HHHHHHHH",0x1234,0x5678,0,0,0,0,0x0102,0x0304))
-      '1234:5678::102:304'
-      >>> inet_ntop(struct.pack("!HHHHHHHH",0,0,0,0x1234,0x5678,0,0x0102,0x0304))
-      '::1234:5678:0:102:304'
-      >>> inet_ntop(struct.pack("!HHHHHHHH",0x1234,0x5678,0,0x0102,0x0304,0,0,0))
-      '1234:5678:0:102:304::'
-      >>> inet_ntop(struct.pack("!HHHHHHHH",0,0,0,0,0,0,0,0))
-      '::'
-      """
-      # convert to 8 words
-      a = struct.unpack("!HHHHHHHH",s)
-      n = (0,0,0,0,0,0,0,0)     # null ip6
-      if a == n: return '::'
-      # check for ip4 mapped
-      if a[:5] == (0,0,0,0,0) and a[5] in (0,0xFFFF):
-        ip4 = '.'.join([str(i) for i in struct.unpack("!HHHHHHBBBB",s)[6:]])
-        if a[5]:
-          return "::FFFF:" + ip4
-        return "::" + ip4
-      # find index of longest sequence of 0
-      for l in (7,6,5,4,3,2,1):
-        e = n[:l]
-        for i in range(9-l):
-          if a[i:i+l] == e:
-            if i == 0:
-              return ':'+':%x'*(8-l) % a[l:]
-            if i == 8 - l:
-              return '%x:'*(8-l) % a[:-l] + ':'
-            return '%x:'*i % a[:i] + ':%x'*(8-l-i) % a[i+l:]
-      return "%x:%x:%x:%x:%x:%x:%x:%x" % a
 
     def inet_pton(p):
       """Convert ip6 standard hex notation to ip6 address.
@@ -2027,8 +1974,9 @@ if __name__ == '__main__':
         print(q.check(),q.mechanism)
         if q.perm_error and q.perm_error.ext:
             print(q.perm_error.ext)
-        for ip in q.iplist:
-            print(ip)
+        if q.iplist:
+            for ip in q.iplist:
+                print(ip)
     elif len(argv) == 4:
         i, s, h = argv[1:]
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),

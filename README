@@ -6,11 +6,15 @@ Quick Start
 
 Installation
 ------------
-This package requires PyDNS, available at http://pydns.sourceforge.net.
-Binary and source RPMs for PyDNS are also available from
-http://pymilter.sourceforge.net. This package requires authres from either
-pypi or http://launchpad.net/authentication-results-python to process and
-generate RFC 5451 Authentication Results headers.
+This package requires PyDNS (or Py3DNS for running with Python 3) and either
+the ipaddr or python3.3 and later.  PyDNS is available at
+http://pydns.sourceforge.net.  Binary and source RPMs for PyDNS are also
+available from http://pymilter.sourceforge.net.  Py3DNS is available on pypi
+and at https://launchpad.net/py3dns.  The ipaddr module is available from
+http://code.google.com/p/ipaddr-py or as part of the Python standard library
+starting with python3.3 (as ipaddress).  This package requires authres from
+either pypi or http://launchpad.net/authentication-results-python to process
+and generate RFC 5451 Authentication Results headers.
 
 After unpacking the source distribution, install this in your site-
 specific Python extension directory::
@@ -21,7 +25,8 @@ specific Python extension directory::
 
 The minimum Python version required is python2.6.  The spf module in this
 version has been tested with python3.2 and does not require using 2to3. It
-will work with all versions of pydns or py3dns.
+will work with all versions of pydns or py3dns.  It works either with the
+stand alone ipaddr module or the standard library ipaddress module.
 
 Testing
 -------
