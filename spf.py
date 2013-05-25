@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.6):
 # $Log$
+# Revision 1.108.2.84  2013/04/20 20:49:13  customdesigned
+# Some dual-cidr doc tests
+#
 # Revision 1.108.2.83  2013/03/25 22:51:37  customdesigned
 # Replace dns_99 method with dns_txt(type='SPF')
 # Fix null CNAME in cache bug.
@@ -1176,7 +1179,7 @@ class query(object):
           dns_list = self.dns(domainname, rr)
           if dns_list:
             try:
-              if type(dns_list[0][0]) is 'bytes':
+              if isinstance(dns_list[0][0], bytes):
                   return [''.join(s.decode("ascii") for s in a)
                       for a in dns_list]
               else:
