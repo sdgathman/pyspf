@@ -1,3 +1,9 @@
+Version 2.0.8 - May 25, 2013
+  * Use ipaddr/ipaddres module in place of custom IP processing code
+  * Numerous python3 compatibility fixes
+  * Improved unicode error detection in SPF records
+  * Fixed a bug caused by a null CNAME in cache
+
 Version 2.0.7 - January 19, 2012
   * Allow for timeouts to be global for all DNS lookups instead of per DNS lookup
     to allow for MAY processing time limitsin RFC 4408 10.1.  See README for

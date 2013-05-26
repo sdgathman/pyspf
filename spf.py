@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.87  2013/05/26 00:23:52  kitterma
+# Move old (pre-2.0.7) spf.py commit messages to pyspf_changelog.txt.
+#
 # Revision 1.108.2.86  2013/05/25 22:39:19  kitterma
 # Use ipaddr/ipaddress instead of custome code.
 #
@@ -66,7 +69,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.7: Jan 19, 2012"
+__version__ = "2.0.8: May 25, 2013"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
