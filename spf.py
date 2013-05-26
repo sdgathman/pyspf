@@ -28,8 +28,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
     http://www.wayforward.net/spf/
 """
 
-# CVS Commits since last release (2.0.6):
+# CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.86  2013/05/25 22:39:19  kitterma
+# Use ipaddr/ipaddress instead of custome code.
+#
 # Revision 1.108.2.85  2013/05/25 00:06:03  kitterma
 # Fix return type detection for bytes/string for python3 compatibility in dns_txt.
 #
@@ -58,65 +61,6 @@ For news, bugfixes, etc. visit the home page for this implementation at
 #
 # Revision 1.108.2.76  2012/02/05 05:50:39  kitterma
 # Fix a few stray print -> print() changes for python3 compatbility.
-#
-# Revision 1.108.2.75  2012/02/03 01:44:58  customdesigned
-# Fix CNAME duplicating DNS records.
-# Fix handling non-ascii chars in TXT/SPF records.
-#
-# Revision 1.108.2.74  2012/01/19 06:40:24  kitterma
-#   * Accounts for new py3dns error classes coming in py3dns 3.0.2 (but fully
-#     backward compatible with earlier versions)
-#
-# Revision 1.108.2.73  2012/01/19 06:22:35  kitterma
-#  * Accept TXT and SPF type records back from py(3)dns and deal with them regardless of type (string or bytes.
-#  * Update README
-#
-# Revision 1.108.2.72  2012/01/16 15:37:47  kitterma
-# Do away with default querytime, make it fully optional and by default completely backwards compatible.
-#
-# Revision 1.108.2.71  2012/01/16 06:19:31  kitterma
-#  * Refactor timeout changes to improve backward comaptibility (see CHANGELOG).
-#
-# Revision 1.108.2.70  2012/01/13 04:21:19  kitterma
-#   * Change timeouts to be global for all DNS lookups instead of per DNS lookup
-#     to match processing limits recommendation in RFC 4408 10.1
-#     - Default is 20 seconds for the global timer instead of 30 seconds per DNS
-#       lookup
-#     - This can be adjusted by changing spf.MAX_GLOBAL_TIME
-#
-# Revision 1.108.2.69  2012/01/10 06:13:18  kitterma
-#   * Finish Python3 port - works with python2.6/2.7/3.2 and 2to3 is no longer
-#     required.
-#
-# Revision 1.108.2.68  2012/01/10 05:56:16  kitterma
-# Update copyright years and fix date.
-#
-# Revision 1.108.2.67  2012/01/10 04:42:03  kitterma
-#   * Rework query.parse_header:
-#     - Make query.parse_header automatically select Received-DPF or
-#       Authentication Results header types and use them to collect SPF
-#       results from trusted relays
-#     - Add query.parse_header_spf and query.parse_header_ar functions for
-#       header type specific processing
-#   * Add 'Programming Language :: Python3' to setup.py
-#   * Bump release dates
-#
-# Revision 1.108.2.66  2012/01/10 00:17:09  kitterma
-# Fix authentication results support to provide similar comments as Received-SPF.
-#   
-# Revision 1.108.2.65  2011/11/08 07:38:37  kitterma
-# Extend query.get_header to return either Received-SPF (still default) or
-#     Authentication Results headers
-#
-# Revision 1.108.2.64  2011/11/08 05:11:56  kitterma
-# Add tests for query.get_header.
-#
-# Revision 1.108.2.63  2011/11/08 04:36:33  kitterma
-# Update CHANGELOG, setup.py, spf.py, and move old commit messages to
-# pyspf_changelog.txt to start on new version (2.0.7).
-#
-# Revision 1.108.2.62  2011/11/05 19:07:53  customdesigned
-# New website openspf.org -> openspf.net
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
