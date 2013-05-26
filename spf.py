@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.88  2013/05/26 00:30:12  kitterma
+# Bump versions to 2.0.8 and add CHANGELOG entries.
+#
 # Revision 1.108.2.87  2013/05/26 00:23:52  kitterma
 # Move old (pre-2.0.7) spf.py commit messages to pyspf_changelog.txt.
 #
@@ -902,7 +905,7 @@ class query(object):
             elif m == 'ip6':
                 if self.v == 'ip6': # match own connection type only
                     try:
-                        if sys.version_info.major == 2:
+                        if sys.version_info[0] == 2:
                             arg = inet_pton(arg)
                         if self.cidrmatch([arg], cidrlength): break
                     except socket.error:
@@ -1293,7 +1296,7 @@ class query(object):
     def cidrmatch(self, ipaddrs, n):
         """Match connect IP against a CIDR network of other IP addresses."""
         try:
-            if self.v == 'ip6' and sys.version_info.major == 2:
+            if self.v == 'ip6' and sys.version_info[0] == 2:
                 bin = bin62str
             else:
                 bin = addr2addr
