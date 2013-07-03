@@ -30,6 +30,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.90  2013/07/03 22:58:26  customdesigned
+# Clean up use of ipaddress module.  make %{i} upper case to match test suite
+# (test suite is incorrect requiring uppercase, but one thing at a time).
+# Remove no longer used inet_pton substitute.  But what if someone was using it?
+#
 # Revision 1.108.2.89  2013/05/26 03:32:19  kitterma
 # Syntax fix to maintain python2.6 compatibility.
 #
@@ -406,26 +411,26 @@ class query(object):
                 self.ipaddr = ipaddress.ip_address(i)
             except AttributeError:
                 self.ipaddr = ipaddress.IPAddress(i)
-            if isinstance(self.ipaddr, ipaddress.IPv6Address):
-                ip6 = True
-                if self.ipaddr.ipv4_mapped:
-                    self.ipaddr = ipaddress.IPv4Address(self.ipaddr.ipv4_mapped)
-                    ip6 = False
-                    self.i = self.ipaddr.exploded
-                else:
-                    self.i = '.'.join('.'.join(list(quad)) for quad in self.ipaddr.exploded.split(':'))[::1].upper()
+	    if self.ipaddr.version == 6:
+		if self.ipaddr.ipv4_mapped:
+		    self.ipaddr = ipaddress.IPv4Address(self.ipaddr.ipv4_mapped)
+		    ip6 = False
+		else:
+		    ip6 = True
             else:
                 ip6 = False
-                self.i = self.ipaddr.exploded
             self.c = str(self.ipaddr)
         # NOTE: self.A is not lowercase, so isn't a macro.  See query.expand()
         if ip6:
             self.A = 'AAAA'
             self.v = 'ip6'
+	    self.i = '.'.join('.'.join(list(quad))
+		for quad in self.ipaddr.exploded.split(':')).upper()
             self.cidrmax = 128
         else:
             self.A = 'A'
             self.v = 'in-addr'
+            self.i = self.ipaddr.exploded
             self.cidrmax = 32
 
     def set_default_explanation(self, exp):
@@ -1711,13 +1716,6 @@ def domainmatch(ptrs, domainsuffix):
             return True
 
     return False
-
-def addr2addr(str):
-    return str
-
-def bin62str(bindata):
-    h, l = struct.unpack("!QQ", bytes(bindata))
-    return ipaddress.IPv6Address(h << 64 | l).compressed
 
 def expand_one(expansion, str, joiner):
     if not str:
