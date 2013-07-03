@@ -51,9 +51,11 @@ def DNSLookup(name,qtype,strict=True,timeout=None):
         continue
       # keep test zonedata human readable, but translate to simulate pydns
       if t == 'AAAA':
-        v = spf.inet_pton(v)
-      elif type(v) == unicode:
-        v = v.encode('utf-8')
+        v = bytes(socket.inet_pton(socket.AF_INET6,v))
+      else:
+        try:
+          v = v #.encode('utf-8')
+        except: pass
       yield ((name,t),v)
   except KeyError:
     if name.startswith('error.'):
