@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.89  2013/05/26 03:32:19  kitterma
+# Syntax fix to maintain python2.6 compatibility.
+#
 # Revision 1.108.2.88  2013/05/26 00:30:12  kitterma
 # Bump versions to 2.0.8 and add CHANGELOG entries.
 #
@@ -410,7 +413,7 @@ class query(object):
                     ip6 = False
                     self.i = self.ipaddr.exploded
                 else:
-                    self.i = '.'.join('.'.join(list(quad)) for quad in self.ipaddr.exploded.split(':'))[::1]
+                    self.i = '.'.join('.'.join(list(quad)) for quad in self.ipaddr.exploded.split(':'))[::1].upper()
             else:
                 ip6 = False
                 self.i = self.ipaddr.exploded
@@ -905,8 +908,6 @@ class query(object):
             elif m == 'ip6':
                 if self.v == 'ip6': # match own connection type only
                     try:
-                        if sys.version_info[0] == 2:
-                            arg = inet_pton(arg)
                         if self.cidrmatch([arg], cidrlength): break
                     except socket.error:
                         raise PermError('syntax error', mech)
@@ -1177,6 +1178,7 @@ class query(object):
                         'No MX records found for mx mechanism', domainname)
         else:
             max = MAX_MX * 4
+        # FIXME: sort by priority before picking first max
         return [a for mx in mxnames[:max] for a in self.dns_a(mx[1],self.A)]
 
     def dns_a(self, domainname, A='A'):
@@ -1190,7 +1192,11 @@ class query(object):
                         'No %s records found for'%A, domainname)
             else:
                 return alist
-        return self.dns(domainname, A)
+        r = self.dns(domainname, A)
+        if A == 'AAAA' and bytes is str:
+          # work around pydns inconsistency plus python2 bytes/str ambiguity
+          return [ipaddress.Bytes(ip) for ip in r]
+        return r
 
     def validated_ptrs(self):
         """Figure out the validated PTR domain names for the connect IP."""
@@ -1295,18 +1301,8 @@ class query(object):
 
     def cidrmatch(self, ipaddrs, n):
         """Match connect IP against a CIDR network of other IP addresses."""
-        try:
-            if self.v == 'ip6' and sys.version_info[0] == 2:
-                bin = bin62str
-            else:
-                bin = addr2addr
-        except socket.error: pass
-        for ip in [bin(ip) for ip in ipaddrs]:
-            netwrk = "{0}/{1}".format(ip, n)
-            try:
-                network = ipaddress.IPv4Network(netwrk, strict=False)
-            except ipaddress.AddressValueError:
-                network = ipaddress.IPv6Network(netwrk, strict=False)
+        for netwrk in [ipaddress.IPNetwork(ip,strict=False) for ip in ipaddrs]:
+            network = netwrk.supernet(new_prefix=n)
             if isinstance(self.iplist, bool):
                 if network.__contains__(self.ipaddr):
                     return True
@@ -1365,14 +1361,14 @@ class query(object):
         ... receiver=mail.bmsi.com; mechanism=a; identity=mailfrom''')
         >>> q.get_header(q.result)
         'Pass (test) client-ip=70.98.79.77; envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com; receiver=mail.bmsi.com; mechanism=a; identity=mailfrom'
-	>>> p = q.parse_header_spf('''None (mail.bmsi.com: test)
-	... client-ip=163.247.46.150; envelope-from="admin@squiebras.cl";
-	... helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24;
-	... x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom''')
-	>>> q.get_header(q.result,**p)
-	'None (mail.bmsi.com: test) client-ip=163.247.46.150; envelope-from="admin@squiebras.cl"; helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24; x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom'
-	>>> p['bestguess']
-	'pass'
+        >>> p = q.parse_header_spf('''None (mail.bmsi.com: test)
+        ... client-ip=163.247.46.150; envelope-from="admin@squiebras.cl";
+        ... helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24;
+        ... x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom''')
+        >>> q.get_header(q.result,**p)
+        'None (mail.bmsi.com: test) client-ip=163.247.46.150; envelope-from="admin@squiebras.cl"; helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24; x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom'
+        >>> p['bestguess']
+        'pass'
         """
         a = val.split(None,1)
         self.result = a[0].lower()
@@ -1722,63 +1718,6 @@ def addr2addr(str):
 def bin62str(bindata):
     h, l = struct.unpack("!QQ", bytes(bindata))
     return ipaddress.IPv6Address(h << 64 | l).compressed
-
-if hasattr(socket,'has_ipv6') and socket.has_ipv6:
-    def inet_pton(s):
-        return socket.inet_pton(socket.AF_INET6,s)
-else:
-
-    def inet_pton(p):
-      """Convert ip6 standard hex notation to ip6 address.
-      Examples:
-      >>> struct.unpack('!HHHHHHHH',inet_pton('::'))
-      (0, 0, 0, 0, 0, 0, 0, 0)
-      >>> struct.unpack('!HHHHHHHH',inet_pton('::1234'))
-      (0, 0, 0, 0, 0, 0, 0, 4660)
-      >>> struct.unpack('!HHHHHHHH',inet_pton('1234::'))
-      (4660, 0, 0, 0, 0, 0, 0, 0)
-      >>> struct.unpack('!HHHHHHHH',inet_pton('1234::5678'))
-      (4660, 0, 0, 0, 0, 0, 0, 22136)
-      >>> struct.unpack('!HHHHHHHH',inet_pton('::FFFF:1.2.3.4'))
-      (0, 0, 0, 0, 0, 65535, 258, 772)
-      >>> struct.unpack('!HHHHHHHH',inet_pton('1.2.3.4'))
-      (0, 0, 0, 0, 0, 65535, 258, 772)
-      >>> try: inet_pton('::1.2.3.4.5')
-      ... except ValueError,x: print x
-      ::1.2.3.4.5
-      """
-      if p == '::':
-        return '\0'*16
-      s = p
-      m = RE_IP4.search(s)
-      try:
-          if m:
-              pos = m.start()
-              ip4 = [int(i) for i in s[pos:].split('.')]
-              if not pos:
-                  return struct.pack('!QLBBBB',0,65535,*ip4)
-              s = s[:pos]+'%x%02x:%x%02x'%tuple(ip4)
-          a = s.split('::')
-          if len(a) == 2:
-            l,r = a
-            if not l:
-              r = r.split(':')
-              return struct.pack('!HHHHHHHH',
-                *[0]*(8-len(r)) + [int(s,16) for s in r])
-            if not r:
-              l = l.split(':')
-              return struct.pack('!HHHHHHHH',
-                *[int(s,16) for s in l] + [0]*(8-len(l)))
-            l = l.split(':')
-            r = r.split(':')
-            return struct.pack('!HHHHHHHH',
-                *[int(s,16) for s in l] + [0]*(8-len(l)-len(r))
-                + [int(s,16) for s in r])
-          if len(a) == 1:
-            return struct.pack('!HHHHHHHH',
-                *[int(s,16) for s in a[0].split(':')])
-      except ValueError: pass
-      raise ValueError(p)
 
 def expand_one(expansion, str, joiner):
     if not str:
