@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.91  2013/07/03 23:38:39  customdesigned
+# Removed two more unused functions.
+#
 # Revision 1.108.2.90  2013/07/03 22:58:26  customdesigned
 # Clean up use of ipaddress module.  make %{i} upper case to match test suite
 # (test suite is incorrect requiring uppercase, but one thing at a time).
@@ -411,12 +414,12 @@ class query(object):
                 self.ipaddr = ipaddress.ip_address(i)
             except AttributeError:
                 self.ipaddr = ipaddress.IPAddress(i)
-	    if self.ipaddr.version == 6:
-		if self.ipaddr.ipv4_mapped:
-		    self.ipaddr = ipaddress.IPv4Address(self.ipaddr.ipv4_mapped)
-		    ip6 = False
-		else:
-		    ip6 = True
+            if self.ipaddr.version == 6:
+                if self.ipaddr.ipv4_mapped:
+                    self.ipaddr = ipaddress.IPv4Address(self.ipaddr.ipv4_mapped)
+                    ip6 = False
+                else:
+                    ip6 = True
             else:
                 ip6 = False
             self.c = str(self.ipaddr)
@@ -424,8 +427,8 @@ class query(object):
         if ip6:
             self.A = 'AAAA'
             self.v = 'ip6'
-	    self.i = '.'.join('.'.join(list(quad))
-		for quad in self.ipaddr.exploded.split(':')).upper()
+            self.i = '.'.join('.'.join(list(quad))
+                for quad in self.ipaddr.exploded.split(':')).upper()
             self.cidrmax = 128
         else:
             self.A = 'A'
