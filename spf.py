@@ -1309,16 +1309,28 @@ class query(object):
 
     def cidrmatch(self, ipaddrs, n):
         """Match connect IP against a CIDR network of other IP addresses."""
-        for netwrk in [ipaddress.IPNetwork(ip,strict=False) for ip in ipaddrs]:
-            network = netwrk.supernet(new_prefix=n)
-            if isinstance(self.iplist, bool):
-                if network.__contains__(self.ipaddr):
-                    return True
-            else:
-                if n < self.cidrmax:
-                    self.iplist.append(network)
+        try:
+            for netwrk in [ipaddress.ip_network(ip) for ip in ipaddrs]:
+                network = netwrk.supernet(new_prefix=n)
+                if isinstance(self.iplist, bool):
+                    if network.__contains__(self.ipaddr):
+                        return True
                 else:
-                    self.iplist.append(network.ip)
+                    if n < self.cidrmax:
+                        self.iplist.append(network)
+                    else:
+                        self.iplist.append(network.ip)
+        except AttributeError:
+            for netwrk in [ipaddress.IPNetwork(ip,strict=False) for ip in ipaddrs]:
+                network = netwrk.supernet(new_prefix=n)
+                if isinstance(self.iplist, bool):
+                    if network.__contains__(self.ipaddr):
+                        return True
+                else:
+                    if n < self.cidrmax:
+                        self.iplist.append(network)
+                    else:
+                        self.iplist.append(network.ip)
         return False
 
     def parse_header_ar(self, val):
