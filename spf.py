@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.93  2013/07/21 23:56:51  kitterma
+# Fix cidrmatch to work with both ipaddr and the python3.3 ipadrress versions of the module.
+#
 # Revision 1.108.2.91  2013/07/03 23:38:39  customdesigned
 # Removed two more unused functions.
 #
@@ -1308,7 +1311,33 @@ class query(object):
         return result
 
     def cidrmatch(self, ipaddrs, n):
-        """Match connect IP against a CIDR network of other IP addresses."""
+        """Match connect IP against a CIDR network of other IP addresses.
+
+        Examples:
+        >>> c = query(s='strong-bad@email.example.com',
+        ...           h='mx.example.org', i='192.0.2.3')
+        >>> c.p = 'mx.example.org'
+        >>> c.r = 'example.com'
+
+        >>> c.cidrmatch(['192.0.2.3'],32)
+        True
+        >>> c.cidrmatch(['192.0.2.2'],32)
+        False
+        >>> c.cidrmatch(['192.0.2.2'],31)
+        True
+
+        >>> six = query(s='strong-bad@email.example.com',
+        ...           h='mx.example.org', i='2001:0db8:0:0:0:0:0:0001')
+        >>> six.p = 'mx.example.org'
+        >>> six.r = 'example.com'
+
+        >>> six.cidrmatch(['2001:0DB8::'],127)
+        True
+        >>> six.cidrmatch(['2001:0DB8::'],128)
+        False
+        >>> six.cidrmatch(['2001:0DB8:0:0:0:0:0:0001'],128)
+        True
+        """
         try:
             for netwrk in [ipaddress.ip_network(ip) for ip in ipaddrs]:
                 network = netwrk.supernet(new_prefix=n)
