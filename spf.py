@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.95  2013/07/22 19:29:22  kitterma
+# Fix dns_txt to work if DNS data is not pure bytes for python3 compatibility.
+#
 # Revision 1.108.2.94  2013/07/22 02:44:39  kitterma
 # Add tests for cirdmatch.
 #
@@ -1413,13 +1416,13 @@ class query(object):
         ... receiver=mail.bmsi.com; mechanism=a; identity=mailfrom''')
         >>> q.get_header(q.result)
         'Pass (test) client-ip=70.98.79.77; envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com; receiver=mail.bmsi.com; mechanism=a; identity=mailfrom'
-        >>> p = q.parse_header_spf('''None (mail.bmsi.com: test)
+        >>> o = q.parse_header_spf('''None (mail.bmsi.com: test)
         ... client-ip=163.247.46.150; envelope-from="admin@squiebras.cl";
         ... helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24;
         ... x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom''')
-        >>> q.get_header(q.result,**p)
+        >>> q.get_header(q.result,**o)
         'None (mail.bmsi.com: test) client-ip=163.247.46.150; envelope-from="admin@squiebras.cl"; helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24; x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom'
-        >>> p['bestguess']
+        >>> o['bestguess']
         'pass'
         """
         a = val.split(None,1)
