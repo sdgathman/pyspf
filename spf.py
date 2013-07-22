@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.94  2013/07/22 02:44:39  kitterma
+# Add tests for cirdmatch.
+#
 # Revision 1.108.2.93  2013/07/21 23:56:51  kitterma
 # Fix cidrmatch to work with both ipaddr and the python3.3 ipadrress versions of the module.
 #
@@ -1165,7 +1168,7 @@ class query(object):
                   return [''.join(s.decode("ascii") for s in a)
                       for a in dns_list]
               else:
-                  return [''.join(str(s.encode("ascii")) for s in a)
+                  return [''.join(s.encode("ascii") if isinstance(s, bytes) else s for s in a)
                       for a in dns_list]
             except UnicodeError:
               raise PermError('Non-ascii character in SPF type %s record.'%rr)
@@ -1459,13 +1462,13 @@ class query(object):
         ... receiver=mail.bmsi.com; mechanism=a; identity=mailfrom''')
         >>> q.get_header(q.result)
         'Pass (test) client-ip=70.98.79.77; envelope-from="evelyn@subjectsthum.com"; helo=mail.subjectsthum.com; receiver=mail.bmsi.com; mechanism=a; identity=mailfrom'
-        >>> p = q.parse_header('''None (mail.bmsi.com: test)
+        >>> r = q.parse_header('''None (mail.bmsi.com: test)
         ... client-ip=163.247.46.150; envelope-from="admin@squiebras.cl";
         ... helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24;
         ... x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom''')
-        >>> q.get_header(q.result,**p)
+        >>> q.get_header(q.result,**r)
         'None (mail.bmsi.com: test) client-ip=163.247.46.150; envelope-from="admin@squiebras.cl"; helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24; x-bestguess=pass; x-helo-spf=neutral; identity=mailfrom'
-        >>> p['bestguess']
+        >>> r['bestguess']
         'pass'
         >>> q = query('192.0.2.3','strong-bad@email.example.com','mx.example.org')
         >>> q.mechanism = 'unknown'
