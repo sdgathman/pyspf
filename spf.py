@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.99  2013/07/23 02:40:54  customdesigned
+# Update __email__ and __author__
+#
 # Revision 1.108.2.98  2013/07/23 02:35:33  customdesigned
 # Release 2.0.8
 #
@@ -409,7 +412,7 @@ class query(object):
         # Document bits of the object model not set up here:
         # self.i = string, expanded dot notation, suitable for PTR lookups
         # self.c = string, human readable form of the connect IP address
-	# single letter lowercase variable names (e.g. self.i) are used for SPF macros
+        # single letter lowercase variable names (e.g. self.i) are used for SPF macros
         # For IPv4, self.i = self.c, but not in IPv6
         # self.iplist = list of IPv4/6 addresses that would pass, collected
         #               when list or list6 is passed as 'i'
@@ -1579,7 +1582,7 @@ class query(object):
                 'problem','mechanism'):
                 v = locals()[k]
                 if v: res.append('%s=%s;'%(k.replace('_','-'),v))
-            for k,v in list(kv.items()):
+            for k,v in sorted(list(kv.items())):
                 if v: res.append('x-%s=%s;'%(k.replace('_','-'),quote_value(v)))
             # do identity last so we can easily drop the trailing ';'
             res.append('%s=%s'%('identity',identity))
