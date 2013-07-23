@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.98  2013/07/23 02:35:33  customdesigned
+# Release 2.0.8
+#
 # Revision 1.108.2.97  2013/07/23 02:04:59  customdesigned
 # Release 2.0.8
 #
@@ -98,8 +101,8 @@ For news, bugfixes, etc. visit the home page for this implementation at
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
-__author__ = "Terence Way"
-__email__ = "terry@wayforward.net"
+__author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
+__email__ = "stuart@gathman.org"
 __version__ = "2.0.8: Jul 22, 2013"
 MODULE = 'spf'
 
