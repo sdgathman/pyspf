@@ -120,7 +120,7 @@ rm -rf $RPM_BUILD_ROOT
 - Full IP6 support
 - Fedora Core compatible RPM spec file
 - Update README, licenses
-* Wed Sep 26 2006 Stuart Gathman <stuart@bmsi.com> 1.8-1
+* Tue Sep 26 2006 Stuart Gathman <stuart@bmsi.com> 1.8-1
 - YAML test suite syntax
 - trailing dot support (RFC4408 8.1)
 * Tue Aug 29 2006 Sean Reifschneider <jafo@tummy.com> 1.7-1

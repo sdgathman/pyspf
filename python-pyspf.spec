@@ -52,6 +52,7 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/spf.py*
 /usr/bin/type99
 /usr/bin/spfquery
+/usr/lib/python2.7/site-packages/pyspf-%{version}-py2.7.egg-info
 
 %changelog
 * Mon Jul 22 2013 Stuart Gathman <stuart@gathman.org> 2.0.8-1
@@ -121,7 +122,7 @@ rm -rf $RPM_BUILD_ROOT
 - Fedora Core compatible RPM spec file
 - Update README, licenses
 
-* Wed Sep 26 2006 Stuart Gathman <stuart@bmsi.com> 1.8-1
+* Tue Sep 26 2006 Stuart Gathman <stuart@bmsi.com> 1.8-1
 - YAML test suite syntax
 - trailing dot support (RFC4408 8.1)
 
