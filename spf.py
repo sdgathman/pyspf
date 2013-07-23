@@ -1,9 +1,11 @@
 #!/usr/bin/python
 """SPF (Sender Policy Framework) implementation.
 
-Copyright (c) 2003, Terence Way
-Portions Copyright (c) 2004,2005,2006,2007,2008 Stuart Gathman <stuart@bmsi.com>
-Portions Copyright (c) 2005,2006,2007,2008,2011,2012 Scott Kitterman <scott@kitterman.com>
+Copyright (c) 2003 Terence Way <terry@wayforward.net>
+Portions Copyright(c) 2004,2005,2006,2007,2008,2011,2012 Stuart Gathman <stuart@bmsi.com>
+Portions Copyright(c) 2005,2006,2007,2008,2011,2012,2013 Scott Kitterman <scott@kitterman.com>
+Portions Copyright(c) 2013 Stuart Gathman <stuart@gathman.org>
+
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
 and disclaimer are retained in their original form.
@@ -30,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.97  2013/07/23 02:04:59  customdesigned
+# Release 2.0.8
+#
 # Revision 1.108.2.96  2013/07/22 22:59:58  kitterma
 # Give another header test it's own variable names.
 #

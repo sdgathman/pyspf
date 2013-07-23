@@ -1,5 +1,9 @@
 %define __python python2.6
+%if "%{dist}" == ".el4" || "%{dist}" == ".el5"
 %define pythonbase python26
+%else
+%define pythonbase python
+%endif
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           %{pythonbase}-pyspf
