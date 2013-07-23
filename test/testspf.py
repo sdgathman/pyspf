@@ -218,7 +218,7 @@ if __name__ == '__main__':
     if not tc:
       tc = SPFTestCase()
       t = loadYAML('rfc4408-tests.yml')
-      if not t.has_key(i):
+      if i not in t:
         t = loadYAML('test.yml')
     tc.runTest([t[i]])
   if not tc:

@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.102  2013/07/23 05:22:54  customdesigned
+# Check for non-ascii on explanation.
+#
 # Revision 1.108.2.101  2013/07/23 04:51:59  customdesigned
 # Functional alias for __email__
 #
@@ -1186,9 +1189,13 @@ class query(object):
     def dns_txt(self, domainname, rr='TXT'):
         "Get a list of TXT records for a domain name."
         if domainname:
-          dns_list = self.dns(domainname, rr)
-          if dns_list:
-              return [''.join(s for s in a) for a in dns_list]
+          try:
+              dns_list = self.dns(domainname, rr)
+              if dns_list:
+                  return [''.join(s for s in a) for a in dns_list]
+          # FIXME: workaround for py3dns error
+          except UnicodeDecodeError:
+              raise PermError('Non-ascii characters found in %s record for %s'%(rr,domainname))
         return []
 
     def dns_mx(self, domainname):
@@ -1877,12 +1884,16 @@ if sys.version_info[0] == 2:
         return s.encode('ascii')
       except UnicodeEncodeError:
         raise PermError('Non-ascii characters found',repr(s))
+      except UnicodeDecodeError:
+        raise PermError('Non-ascii characters found',repr(s))
 else:
   def to_ascii(s):
       "Raise PermError if arg is not 7-bit ascii."
       try:
         return bytes(s,'ascii').decode('ascii')
       except UnicodeEncodeError:
+        raise PermError('Non-ascii characters found',repr(s))
+      except UnicodeDecodeError:
         raise PermError('Non-ascii characters found',repr(s))
 
 def _test():
