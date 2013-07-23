@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.104  2013/07/23 06:20:18  kitterma
+# Consolidate code related to UnicodeDecodeError and UnicodeEncodeError into UnicodeError.
+#
 # Revision 1.108.2.103  2013/07/23 06:07:24  customdesigned
 # Test case and fix for allowing non-ascii in non-spf TXT records.
 #
@@ -1195,7 +1198,9 @@ class query(object):
           try:
               dns_list = self.dns(domainname, rr)
               if dns_list:
-                  return [''.join(s for s in a) for a in dns_list]
+                  return [''.join(s.decode("ascii") if isinstance(s, bytes) else s for s in a) 	 
+                      for a in dns_list]
+                  #return [''.join(s for s in a) for a in dns_list]
           # FIXME: workaround for py3dns error
           except UnicodeError:
               raise PermError('Non-ascii characters found in %s record for %s'%(rr,domainname))
