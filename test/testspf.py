@@ -23,7 +23,7 @@ zonedata = {}
 RE_IP4 = re.compile(r'\.'.join(
     [r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
 
-def DNSLookup(name,qtype,strict=True,timeout=None):
+def DNSLookup(name,qtype,strict=True,timeout=None,enc=(sys.version_info[0] == 2)):
   try:
     #print name,qtype
     timeout = True
@@ -52,9 +52,9 @@ def DNSLookup(name,qtype,strict=True,timeout=None):
       # keep test zonedata human readable, but translate to simulate pydns
       if t == 'AAAA':
         v = bytes(socket.inet_pton(socket.AF_INET6,v))
-      else:
+      elif enc:
         try:
-          v = v #.encode('utf-8')
+          v = v.encode('utf-8')
         except: pass
       yield ((name,t),v)
   except KeyError:
