@@ -8,7 +8,7 @@
 
 Name:           %{pythonbase}-pyspf
 Version:        2.0.8
-Release:        1
+Release:        2
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
 Group:          Development/Languages
@@ -56,7 +56,8 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/python2.6/site-packages/pyspf-%{version}-py2.6.egg-info
 
 %changelog
-* Mon Jul 22 2013 Stuart Gathman <stuart@gathman.org> 2.0.8-1
+* Tue Jul 23 2013 Stuart Gathman <stuart@gathman.org> 2.0.8-2
+- Test case and fix for PermError on non-ascii chars in TXT records unrelated to SPF
 - Use ipaddr/ipaddress module in place of custom IP processing code
 - Numerous python3 compatibility fixes
 - Improved unicode error detection in SPF records

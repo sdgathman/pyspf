@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.106  2013/07/23 06:32:58  kitterma
+# Post fix cleanup.
+#
 # Revision 1.108.2.105  2013/07/23 06:30:13  kitterma
 # Fix compatibility with py3dns versions that return type bytes.
 #
@@ -1201,8 +1204,7 @@ class query(object):
           try:
               dns_list = self.dns(domainname, rr)
               if dns_list:
-                  return [''.join(s.decode("ascii") if isinstance(s, bytes) else s for s in a) 	 
-                      for a in dns_list]
+                  return [''.join(a) for a in dns_list]
           # FIXME: workaround for py3dns error
           except UnicodeError:
               raise PermError('Non-ascii characters found in %s record for %s'%(rr,domainname))
