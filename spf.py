@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.101  2013/07/23 04:51:59  customdesigned
+# Functional alias for __email__
+#
 # Revision 1.108.2.100  2013/07/23 04:07:38  customdesigned
 # Sort unofficial keywords for consistent ordering.
 #
@@ -988,9 +991,11 @@ class query(object):
             try:
                 a = self.dns_txt(spec)
                 if len(a) == 1:
-                    return str(self.expand(a[0], stripdot=False))
+                    return str(self.expand(to_ascii(a[0]), stripdot=False))
             except PermError:
                 # RFC4408 6.2/4 syntax errors cause exp= to be ignored
+                if self.strict > 1:
+                    raise	# but report in harsh mode for record checking tools
                 pass
         elif self.strict > 1:
             raise PermError('Empty domain-spec on exp=')
@@ -1183,15 +1188,7 @@ class query(object):
         if domainname:
           dns_list = self.dns(domainname, rr)
           if dns_list:
-            try:
-              if isinstance(dns_list[0][0], bytes):
-                  return [''.join(s.decode("ascii") for s in a)
-                      for a in dns_list]
-              else:
-                  return [''.join(s.encode("ascii") if isinstance(s, bytes) else s for s in a)
-                      for a in dns_list]
-            except UnicodeError:
-              raise PermError('Non-ascii character in SPF type %s record.'%rr)
+              return [''.join(s for s in a) for a in dns_list]
         return []
 
     def dns_mx(self, domainname):
