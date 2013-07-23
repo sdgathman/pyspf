@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.7
+Version:        2.0.8
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 

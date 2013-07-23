@@ -30,6 +30,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.96  2013/07/22 22:59:58  kitterma
+# Give another header test it's own variable names.
+#
 # Revision 1.108.2.95  2013/07/22 19:29:22  kitterma
 # Fix dns_txt to work if DNS data is not pure bytes for python3 compatibility.
 #
@@ -92,7 +95,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way"
 __email__ = "terry@wayforward.net"
-__version__ = "2.0.8: May 25, 2013"
+__version__ = "2.0.8: Jul 22, 2013"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -398,6 +401,7 @@ class query(object):
         # Document bits of the object model not set up here:
         # self.i = string, expanded dot notation, suitable for PTR lookups
         # self.c = string, human readable form of the connect IP address
+	# single letter lowercase variable names (e.g. self.i) are used for SPF macros
         # For IPv4, self.i = self.c, but not in IPv6
         # self.iplist = list of IPv4/6 addresses that would pass, collected
         #               when list or list6 is passed as 'i'
@@ -436,8 +440,7 @@ class query(object):
         if ip6:
             self.A = 'AAAA'
             self.v = 'ip6'
-            self.i = '.'.join('.'.join(list(quad))
-                for quad in self.ipaddr.exploded.split(':')).upper()
+            self.i = '.'.join(list(self.ipaddr.exploded.replace(':','').upper()))
             self.cidrmax = 128
         else:
             self.A = 'A'
@@ -1195,7 +1198,7 @@ class query(object):
                         'No MX records found for mx mechanism', domainname)
         else:
             max = MAX_MX * 4
-        # FIXME: sort by priority before picking first max
+        mxnames.sort()
         return [a for mx in mxnames[:max] for a in self.dns_a(mx[1],self.A)]
 
     def dns_a(self, domainname, A='A'):
@@ -1259,6 +1262,7 @@ class query(object):
       ('SPF','SPF'): None
     }
 
+    # FIXME: move to dnsplug
     def dns(self, name, qtype, cnames=None):
         """DNS query.
 
@@ -1378,19 +1382,16 @@ class query(object):
         Examples:
         >>> q = query('192.0.2.3','strong-bad@email.example.com','mx.example.org')
         >>> q.mechanism = 'unknown'
-        >>> p = q.parse_header_ar('''Authentication-Results: bmsi.com; spf=neutral \\n     (abuse@kitterman.com: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) \\n     smtp.mailfrom=email.example.com \\n     (sender=strong-bad@email.example.com; helo=mx.example.org; client-ip=192.0.2.3; receiver=abuse@kitterman.com; mechanism=?all)''')
+        >>> p = q.parse_header_ar('''Authentication-Results: bmsi.com; spf=neutral \\n     (abuse@kitterman.com: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) \\n     smtp.mailfrom=email.example.com \\n    (sender=strong-bad@email.example.com; helo=mx.example.org; client-ip=192.0.2.3; receiver=abuse@kitterman.com; mechanism=?all)''')
         >>> q.get_header(q.result, header_type='authres', aid='bmsi.com')
         'Authentication-Results: bmsi.com; spf=neutral (unknown: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) smtp.mailfrom=email.example.com (sender=email.example.com; helo=mx.example.org; client-ip=192.0.2.3; receiver=unknown; mechanism=unknown)'
-        >>> p = q.parse_header_ar('''Authentication-Results: bmsi.com; spf=None (mail.bmsi.com: test; client-ip=163.247.46.150) smtp.mailfrom=admin@squiebras.cl (helo=mail.squiebras.cl; receiver=mail.bmsi.com; mechanism=mx/24)''')
+        >>> p = q.parse_header_ar('''Authentication-Results: bmsi.com; spf=None (mail.bmsi.com: test; client-ip=163.247.46.150) smtp.mailfrom=admin@squiebras.cl (helo=mail.squiebras.cl; receiver=mail.bmsi.com;\\n mechanism=mx/24)''')
         >>> q.get_header(q.result, header_type='authres', aid='bmsi.com')
         'Authentication-Results: bmsi.com; spf=none (unknown: 192.0.2.3 is neither permitted nor denied by domain of email.example.com) smtp.mailfrom=admin@squiebras.cl (sender=admin@squiebras.cl; helo=mx.example.org; client-ip=192.0.2.3; receiver=unknown; mechanism=unknown)'
         """
         import authres
-        # Authres expects unwrapped headers
-        unwrap = ''
-        valsplit = val.split('\n')
-        for element in valsplit:
-            unwrap += '{0} '.format(element.strip())
+        # Authres expects unwrapped headers according to docs
+        val = ' '.join(s.strip() for s in val.split('\n'))
         arobj = authres.AuthenticationResultsHeader.parse(val)
         # TODO extract and parse comments (not supported by authres)
         for resobj in arobj.results:
@@ -1860,18 +1861,18 @@ def insert_libspf_local_policy(spftxt, local=None):
 
 if sys.version_info[0] == 2:
   def to_ascii(s):
-      "Raise PermError is arg is not 7-bit ascii."
+      "Raise PermError if arg is not 7-bit ascii."
       try:
         return s.encode('ascii')
       except UnicodeEncodeError:
-        raise PermError('Non-ascii domain found',repr(s))
+        raise PermError('Non-ascii characters found',repr(s))
 else:
   def to_ascii(s):
-      "Raise PermError is arg is not 7-bit ascii."
+      "Raise PermError if arg is not 7-bit ascii."
       try:
         return bytes(s,'ascii').decode('ascii')
       except UnicodeEncodeError:
-        raise PermError('Non-ascii domain found',repr(s))
+        raise PermError('Non-ascii characters found',repr(s))
 
 def _test():
     import doctest, spf

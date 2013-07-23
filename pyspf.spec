@@ -3,7 +3,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           %{pythonbase}-pyspf
-Version:        2.0.7
+Version:        2.0.8
 Release:        1
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -49,7 +49,7 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/spf.py*
 /usr/bin/type99
 /usr/bin/spfquery
-/usr/lib/python2.6/site-packages/pyspf-2.0.7-py2.6.egg-info
+/usr/lib/python2.6/site-packages/pyspf-%{version}-py2.6.egg-info
 
 %changelog
 * Mon Jul 22 2013 Stuart Gathman <stuart@gathman.org> 2.0.8-1
