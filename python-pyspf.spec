@@ -12,8 +12,8 @@ Source0:        pyspf-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
-#BuildRequires:  python-setuptools
-Requires:       python-pydns python >= 2.6
+BuildRequires:  python-setuptools python-devel
+Requires:       python-pydns python >= 2.6 python-authres python-ipaddr >= 2.1.10
 # Provide pyspf *only* if not using pyspf package for non-default python
 Provides:	pyspf
 
@@ -54,6 +54,12 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/spfquery
 
 %changelog
+* Mon Jul 22 2013 Stuart Gathman <stuart@gathman.org> 2.0.8-1
+- Use ipaddr/ipaddress module in place of custom IP processing code
+- Numerous python3 compatibility fixes
+- Improved unicode error detection in SPF records
+- Fixed a bug caused by a null CNAME in cache
+
 * Fri Feb 03 2012 Stuart Gathman <stuart@bmsi.com> 2.0.7-1
 - fix CNAME chain duplicating TXT records
 - local test cases for CNAME chains
