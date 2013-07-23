@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.100  2013/07/23 04:07:38  customdesigned
+# Sort unofficial keywords for consistent ordering.
+#
 # Revision 1.108.2.99  2013/07/23 02:40:54  customdesigned
 # Update __email__ and __author__
 #
@@ -105,7 +108,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
-__email__ = "stuart@gathman.org"
+__email__ = "pyspf@openspf.org"
 __version__ = "2.0.8: Jul 22, 2013"
 MODULE = 'spf'
 
