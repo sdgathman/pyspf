@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.103  2013/07/23 06:07:24  customdesigned
+# Test case and fix for allowing non-ascii in non-spf TXT records.
+#
 # Revision 1.108.2.102  2013/07/23 05:22:54  customdesigned
 # Check for non-ascii on explanation.
 #
@@ -1194,7 +1197,7 @@ class query(object):
               if dns_list:
                   return [''.join(s for s in a) for a in dns_list]
           # FIXME: workaround for py3dns error
-          except UnicodeDecodeError:
+          except UnicodeError:
               raise PermError('Non-ascii characters found in %s record for %s'%(rr,domainname))
         return []
 
@@ -1882,18 +1885,14 @@ if sys.version_info[0] == 2:
       "Raise PermError if arg is not 7-bit ascii."
       try:
         return s.encode('ascii')
-      except UnicodeEncodeError:
-        raise PermError('Non-ascii characters found',repr(s))
-      except UnicodeDecodeError:
+      except UnicodeError:
         raise PermError('Non-ascii characters found',repr(s))
 else:
   def to_ascii(s):
       "Raise PermError if arg is not 7-bit ascii."
       try:
         return bytes(s,'ascii').decode('ascii')
-      except UnicodeEncodeError:
-        raise PermError('Non-ascii characters found',repr(s))
-      except UnicodeDecodeError:
+      except UnicodeError:
         raise PermError('Non-ascii characters found',repr(s))
 
 def _test():
