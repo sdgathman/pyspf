@@ -56,7 +56,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Tue Jul 23 2013 Stuart Gathman <stuart@gathman.org> 2.0.8-2
-- Test case and fix for PermError on non-ascii chars in TXT records unrelated to SPF
+- Test case and fix for PermError on non-ascii chars in non-SPF TXT records
 - Use ipaddr/ipaddress module in place of custom IP processing code
 - Numerous python3 compatibility fixes
 - Improved unicode error detection in SPF records

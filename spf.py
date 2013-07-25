@@ -32,6 +32,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.107  2013/07/23 18:37:17  customdesigned
+# Removed decode from dns_txt again, as it breaks python3, both with py3dns and test framework.
+# Need to identify exact situation in which it is needed to put it back.
+#
 # Revision 1.108.2.106  2013/07/23 06:32:58  kitterma
 # Post fix cleanup.
 #
@@ -206,7 +210,7 @@ def DNSLookup(name, qtype, strict=True, timeout=30):
     except DNS.DNSError as x:
         raise TempError('DNS ' + str(x))
 
-RE_SPF = re.compile(r'^v=spf1$|^v=spf1 ',re.IGNORECASE)
+RE_SPF = re.compile(br'^v=spf1$|^v=spf1 ',re.IGNORECASE)
 
 # Regular expression to look for modifiers
 RE_MODIFIER = re.compile(r'^([a-z][a-z0-9_\-\.]*)=', re.IGNORECASE)
@@ -1198,14 +1202,27 @@ class query(object):
             if len(a) == 1: return to_ascii(a[0])
         return None
 
+    ## Get list of TXT records for a domain name.
+    # Any DNS library *must* return bytes (same as str in python2) for TXT
+    # or SPF since there is no general decoding to unicode.  Py3dns-3.0.2
+    # incorrectly attempts to convert to str using idna encoding by default.
+    # We work around this by assuming any UnicodeErrors coming from py3dns
+    # are from a non-ascii SPF record (incorrect in general).  Packages
+    # should require py3dns != 3.0.2.
+    # 
+    # We cannot check for non-ascii here, because we must ignore non-SPF
+    # records - even when they are non-ascii.  So we return bytes.
+    # The caller does the ascii check for SPF records and explanations.
+    # 
     def dns_txt(self, domainname, rr='TXT'):
         "Get a list of TXT records for a domain name."
         if domainname:
           try:
               dns_list = self.dns(domainname, rr)
               if dns_list:
-                  return [''.join(a) for a in dns_list]
-          # FIXME: workaround for py3dns error
+	          # a[0][:0] is '' for py3dns-3.0.2, otherwise b''
+                  return [a[0][:0].join(a) for a in dns_list]
+          # FIXME: workaround for error in py3dns-3.0.2
           except UnicodeError:
               raise PermError('Non-ascii characters found in %s record for %s'%(rr,domainname))
         return []
@@ -1900,7 +1917,7 @@ else:
   def to_ascii(s):
       "Raise PermError if arg is not 7-bit ascii."
       try:
-        return bytes(s,'ascii').decode('ascii')
+        return s.decode('ascii')
       except UnicodeError:
         raise PermError('Non-ascii characters found',repr(s))
 
