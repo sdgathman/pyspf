@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.7):
 # $Log$
+# Revision 1.108.2.108  2013/07/25 01:29:07  customdesigned
+# The Final and Ultimate Solution to the String Problem for TXT records.
+#
 # Revision 1.108.2.107  2013/07/23 18:37:17  customdesigned
 # Removed decode from dns_txt again, as it breaks python3, both with py3dns and test framework.
 # Need to identify exact situation in which it is needed to put it back.
@@ -1220,11 +1223,16 @@ class query(object):
           try:
               dns_list = self.dns(domainname, rr)
               if dns_list:
-	          # a[0][:0] is '' for py3dns-3.0.2, otherwise b''
-                  return [a[0][:0].join(a) for a in dns_list]
+                  # a[0][:0] is '' for py3dns-3.0.2, otherwise b''
+                  a = [a[0][:0].join(a) for a in dns_list]
+                  # FIXME: workaround for error in py3dns-3.0.2
+                  if isinstance(a[0],bytes):
+                      return a
+                  return [s.encode('utf-8') for s in a]
           # FIXME: workaround for error in py3dns-3.0.2
           except UnicodeError:
-              raise PermError('Non-ascii characters found in %s record for %s'%(rr,domainname))
+              raise PermError('Non-ascii characters found in %s record for %s'
+                 %(rr,domainname))
         return []
 
     def dns_mx(self, domainname):
