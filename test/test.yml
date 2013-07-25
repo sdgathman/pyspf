@@ -171,10 +171,11 @@ tests:
   null-cname:
     comment: |
       pyspf was getting a type error for null CNAMEs
+      Thanks to Kazuhiro Ogura <kazuhiro.ogura@hde.co.jp>
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: bar@e3.example.com
-    result: [fail, permerror]
+    result: softfail
 zonedata:
   mail.example.com:
   - MX: [0, '']
@@ -193,5 +194,5 @@ zonedata:
   mx1.example.com:
   - CNAME: ''
   e3.example.com:
-  - SPF: v=spf1 a:mx1.example.com mx:mx1.example.com -all
+  - SPF: v=spf1 a:mx1.example.com mx:mx1.example.com ~all
 
