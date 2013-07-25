@@ -1,3 +1,103 @@
+# Revision 1.108.2.109  2013/07/25 01:51:24  customdesigned
+# Forgot to convert to bytes in py3dns-3.0.2 workaround.
+#
+# Revision 1.108.2.108  2013/07/25 01:29:07  customdesigned
+# The Final and Ultimate Solution to the String Problem for TXT records.
+#
+# Revision 1.108.2.107  2013/07/23 18:37:17  customdesigned
+# Removed decode from dns_txt again, as it breaks python3, both with py3dns and test framework.
+# Need to identify exact situation in which it is needed to put it back.
+#
+# Revision 1.108.2.106  2013/07/23 06:32:58  kitterma
+# Post fix cleanup.
+#
+# Revision 1.108.2.105  2013/07/23 06:30:13  kitterma
+# Fix compatibility with py3dns versions that return type bytes.
+#
+# Revision 1.108.2.104  2013/07/23 06:20:18  kitterma
+# Consolidate code related to UnicodeDecodeError and UnicodeEncodeError into UnicodeError.
+#
+# Revision 1.108.2.103  2013/07/23 06:07:24  customdesigned
+# Test case and fix for allowing non-ascii in non-spf TXT records.
+#
+# Revision 1.108.2.102  2013/07/23 05:22:54  customdesigned
+# Check for non-ascii on explanation.
+#
+# Revision 1.108.2.101  2013/07/23 04:51:59  customdesigned
+# Functional alias for __email__
+#
+# Revision 1.108.2.100  2013/07/23 04:07:38  customdesigned
+# Sort unofficial keywords for consistent ordering.
+#
+# Revision 1.108.2.99  2013/07/23 02:40:54  customdesigned
+# Update __email__ and __author__
+#
+# Revision 1.108.2.98  2013/07/23 02:35:33  customdesigned
+# Release 2.0.8
+#
+# Revision 1.108.2.97  2013/07/23 02:04:59  customdesigned
+# Release 2.0.8
+#
+# Revision 1.108.2.96  2013/07/22 22:59:58  kitterma
+# Give another header test it's own variable names.
+#
+# Revision 1.108.2.95  2013/07/22 19:29:22  kitterma
+# Fix dns_txt to work if DNS data is not pure bytes for python3 compatibility.
+#
+# Revision 1.108.2.94  2013/07/22 02:44:39  kitterma
+# Add tests for cirdmatch.
+#
+# Revision 1.108.2.93  2013/07/21 23:56:51  kitterma
+# Fix cidrmatch to work with both ipaddr and the python3.3 ipadrress versions of the module.
+#
+# Revision 1.108.2.91  2013/07/03 23:38:39  customdesigned
+# Removed two more unused functions.
+#
+# Revision 1.108.2.90  2013/07/03 22:58:26  customdesigned
+# Clean up use of ipaddress module.  make %{i} upper case to match test suite
+# (test suite is incorrect requiring uppercase, but one thing at a time).
+# Remove no longer used inet_pton substitute.  But what if someone was using it?
+#
+# Revision 1.108.2.89  2013/05/26 03:32:19  kitterma
+# Syntax fix to maintain python2.6 compatibility.
+#
+# Revision 1.108.2.88  2013/05/26 00:30:12  kitterma
+# Bump versions to 2.0.8 and add CHANGELOG entries.
+#
+# Revision 1.108.2.87  2013/05/26 00:23:52  kitterma
+# Move old (pre-2.0.7) spf.py commit messages to pyspf_changelog.txt.
+#
+# Revision 1.108.2.86  2013/05/25 22:39:19  kitterma
+# Use ipaddr/ipaddress instead of custome code.
+#
+# Revision 1.108.2.85  2013/05/25 00:06:03  kitterma
+# Fix return type detection for bytes/string for python3 compatibility in dns_txt.
+#
+# Revision 1.108.2.84  2013/04/20 20:49:13  customdesigned
+# Some dual-cidr doc tests
+#
+# Revision 1.108.2.83  2013/03/25 22:51:37  customdesigned
+# Replace dns_99 method with dns_txt(type='SPF')
+# Fix null CNAME in cache bug.
+#
+# Revision 1.108.2.82  2013/03/14 21:13:06  customdesigned
+# Fix Non-ascii exception description.
+#
+# Revision 1.108.2.81  2013/03/14 21:03:25  customdesigned
+# Fix dns_txt and dns_spf - should hopefully still be correct for python3.
+#
+# Revision 1.108.2.80  2012/06/14 20:09:56  kitterma
+# Use the correct exception type to capture unicode in SPF records.
+#
+# Revision 1.108.2.79  2012/03/10 00:19:44  kitterma
+# Add fixes for py3dns DNS return as type bytes - not complete.
+#
+# Revision 1.108.2.77  2012/02/09 22:13:42  kitterma
+# Fix stray character in last commit.
+# Start fixing python3 bytes issue - Now works, but fails the non-ASCII exp test.
+#
+# Revision 1.108.2.76  2012/02/05 05:50:39  kitterma
+# Fix a few stray print -> print() changes for python3 compatbility.
 #
 # Revision 1.108.2.75  2012/02/03 01:44:58  customdesigned
 # Fix CNAME duplicating DNS records.
