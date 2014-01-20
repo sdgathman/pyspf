@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.111  2014/01/20 22:03:08  customdesigned
+# Test case and fix for more thorough macro syntax error detection.
+#
 # Revision 1.108.2.110  2013/07/25 21:21:49  kitterma
 # Archive previous commit messages for spf.py in pyspf_changelog.txt and bump version to 2.0.9 for start of follow on work.
 #
@@ -932,7 +935,7 @@ class query(object):
         # (unless you give precedence to the grammar).
         return None
 
-    def expand(self, str, stripdot=True): # macros='slodipvh'
+    def expand(self, s, stripdot=True): # macros='slodipvh'
         """Do SPF RFC macro expansion.
 
         Examples:
@@ -1018,17 +1021,18 @@ class query(object):
         'postmaster'
 
         """
+        # Check for invalid macro syntax
+        if s.find('%') >= 0:
+            regex = RE_INVALID_MACRO
+            for label in s.split('.'):
+                if regex.search(s):
+                    raise PermError ('invalid-macro-char ', label)
+        # expand macros
         end = 0
         result = ''
-        macro_count = str.count('%')
-        if macro_count != 0:
-            labels = str.split('.')
-            for label in labels:
-                if RE_INVALID_MACRO.search(label):
-                    raise PermError ('invalid-macro-char ', label)
-        for i in RE_CHAR.finditer(str):
-            result += str[end:i.start()]
-            macro = str[i.start():i.end()]
+        for i in RE_CHAR.finditer(s):
+            result += s[end:i.start()]
+            macro = s[i.start():i.end()]
             if macro == '%%':
                 result += '%'
             elif macro == '%_':
@@ -1053,7 +1057,7 @@ class query(object):
                     result += e
 
             end = i.end()
-        result += str[end:]
+        result += s[end:]
         if stripdot and result.endswith('.'):
             result =  result[:-1]
         if result.count('.') != 0:
