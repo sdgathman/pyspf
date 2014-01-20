@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.110  2013/07/25 21:21:49  kitterma
+# Archive previous commit messages for spf.py in pyspf_changelog.txt and bump version to 2.0.9 for start of follow on work.
+#
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
@@ -124,6 +127,7 @@ RE_MODIFIER = re.compile(r'^([a-z][a-z0-9_\-\.]*)=', re.IGNORECASE)
 # Regular expression to find macro expansions
 PAT_CHAR = r'%(%|_|-|(\{[^\}]*\}))'
 RE_CHAR = re.compile(PAT_CHAR)
+RE_INVALID_MACRO = re.compile(r'(?<!%)%[^{%_-]|%$')
 
 # Regular expression to break up a macro expansion
 RE_ARGS = re.compile(r'([0-9]*)(r?)([^0-9a-zA-Z]*)')
@@ -1014,22 +1018,14 @@ class query(object):
         'postmaster'
 
         """
-        macro_delimiters = ['{', '%', '-', '_']
         end = 0
         result = ''
         macro_count = str.count('%')
         if macro_count != 0:
             labels = str.split('.')
             for label in labels:
-                is_macro = False
-                if len(label) > 1:
-                    if label[0] == '%':
-                        for delimit in macro_delimiters:
-                            if label[1] == delimit:
-                                is_macro = True
-                        if not is_macro:
-                            raise PermError ('invalid-macro-char ', label)
-                            break
+                if RE_INVALID_MACRO.search(label):
+                    raise PermError ('invalid-macro-char ', label)
         for i in RE_CHAR.finditer(str):
             result += str[end:i.start()]
             macro = str[i.start():i.end()]

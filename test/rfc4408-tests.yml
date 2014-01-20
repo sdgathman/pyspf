@@ -1984,6 +1984,24 @@ tests:
     host: 192.168.218.40
     mailfrom: test@e1.example.com
     result: permerror
+  invalid-embedded-macro-char:
+    spec: 8.1/9
+    description: >-
+      A '%' character not followed by a '{', '%', '-', or '_' character
+      is a syntax error.
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.40
+    mailfrom: test@e1e.example.com
+    result: permerror
+  invalid-trailing-macro-char:
+    spec: 8.1/9
+    description: >-
+      A '%' character not followed by a '{', '%', '-', or '_' character
+      is a syntax error.
+    helo: msgbas2x.cos.example.com
+    host: 192.168.218.40
+    mailfrom: test@e1t.example.com
+    result: permerror
   macro-mania-in-domain:
     description: >-
       macro-encoded percents (%%), spaces (%_), and URL-percent-encoded
@@ -2181,6 +2199,10 @@ zonedata:
     - TXT: This is a test.
   e1.example.com:
     - SPF: v=spf1 -exists:%(ir).sbl.example.com ?all
+  e1e.example.com:
+    - SPF: v=spf1 exists:foo%(ir).sbl.example.com ?all
+  e1t.example.com:
+    - SPF: v=spf1 exists:foo%.sbl.example.com ?all
   e1a.example.com:
     - SPF: "v=spf1 a:macro%%percent%_%_space%-url-space.example.com -all"
   "macro%percent  space%20url-space.example.com":
