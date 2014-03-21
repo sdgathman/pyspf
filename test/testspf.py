@@ -144,53 +144,59 @@ def loadYAML(fname):
 oldresults = { 'unknown': 'permerror', 'error': 'temperror' }
 
 verbose = 0
+warnings = []
 
 class SPFTestCase(unittest.TestCase):
+
+  def __init__(self,t):
+    self._spftest = t
+    self._testMethodName = 'runTest'
+    self._testMethodDoc = t.spec
+
+  def id(self):
+    t = self._spftest
+    return t.id + ' in ' + t.scenario.filename
 
   def setUp(self):
     global zonedata
     self.savezonedata = zonedata
+
   def tearDown(self):
     global zonedata
     zonedata = self.savezonedata
 
-  def runTest(self,tests):
+  def warn(self,msg):
+    global warnings
+    warnings.append(msg)
+
+  def runTest(self):
     global zonedata
-    passed,failed = 0,0
-    for t in tests:
-      zonedata = t.scenario.zonedata
-      q = spf.query(i=t.host, s=t.mailfrom, h=t.helo, strict=t.strict)
-      q.set_default_explanation('DEFAULT')
-      res,code,exp = q.check()
-      if res in oldresults:
-        res = oldresults[res]
-      ok = True
-      if res != t.result and res not in t.result:
-        if verbose: print(t.result,'!=',res)
-        ok = False
-      elif res != t.result and res != t.result[0]:
-        print("WARN: %s in %s, %s: %s preferred to %s" % (
-            t.id,t.scenario.filename,t.spec,t.result[0],res))
-      if t.explanation is not None and t.explanation != exp:
-        if verbose: print(t.explanation,'!=',exp)
-        ok = False
-      if t.header:
-        self.assertEqual(t.header,q.get_header(res,receiver=t.receiver))
-      if ok:
-        passed += 1
-      else:
-        failed += 1
-        print("%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec))
-        if verbose and not t.explanation: print(exp)
-        if verbose > 1: print(t.scenario.zonedata)
-    if failed:
-      print("%d passed" % passed,"%d failed" % failed)
+    t = self._spftest
+    zonedata = t.scenario.zonedata
+    q = spf.query(i=t.host, s=t.mailfrom, h=t.helo, strict=t.strict)
+    q.set_default_explanation('DEFAULT')
+    res,code,exp = q.check()
+    if res in oldresults:
+      res = oldresults[res]
+    ok = True
+    msg = ''
+    if res != t.result and res not in t.result:
+      if verbose: msg += ' '.join((t.result,'!=',res))+'\n'
+      ok = False
+    elif res != t.result and res != t.result[0]:
+      self.warn("WARN: %s in %s, %s: %s preferred to %s" % (
+	  t.id,t.scenario.filename,t.spec,t.result[0],res))
+    if t.explanation is not None and t.explanation != exp:
+      if verbose: msg += ' '.join((t.explanation,'!=',exp))+'\n'
+      ok = False
+    if t.header:
+      self.assertEqual(t.header,q.get_header(res,receiver=t.receiver))
+    if not ok:
+      if verbose and not t.explanation: msg += exp+'\n'
+      if verbose > 1: msg += t.scenario.zonedata
+      self.fail(msg+"%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec))
 
-  def testYAML(self):
-    self.runTest(list(loadYAML('test.yml').values()))
-
-  def testRFC(self):
-    self.runTest(list(loadYAML('rfc4408-tests.yml').values()))
+class SPFTestCases(unittest.TestCase):
 
   def testInvalidSPF(self):
     i, s, h = '1.2.3.4','sender@domain','helo'
@@ -201,8 +207,16 @@ class SPFTestCase(unittest.TestCase):
     res,code,txt = q.check('v=spf1...')
     self.assertEquals('ambiguous',res)
 
+def makeSuite(filename):
+  suite = unittest.TestSuite()
+  for t in loadYAML(filename).values():
+    suite.addTest(SPFTestCase(t))
+  return suite
+
 def suite(): 
-  suite = unittest.makeSuite(SPFTestCase,'test')
+  suite = unittest.makeSuite(SPFTestCases,'test')
+  suite.addTest(makeSuite('test.yml'))
+  suite.addTest(makeSuite('rfc4408-tests.yml'))
   import doctest
   suite.addTest(doctest.DocTestSuite(spf))
   return suite
@@ -213,17 +227,25 @@ if __name__ == '__main__':
     if i == '-v':
       verbose += 1
       continue
+    # a specific test selected by id from YAML files
     if not tc:
-      tc = SPFTestCase()
-      t = loadYAML('rfc4408-tests.yml')
-      if i not in t:
-        t = loadYAML('test.yml')
-    tc.runTest([t[i]])
+      tc = unittest.TestSuite()
+      t1 = loadYAML('rfc4408-tests.yml')
+      t2 = loadYAML('test.yml')
+    if i in t1:
+      tc.addTest(SPFTestCase(t1[i]))
+    elif i in t2:
+      tc.addTest(SPFTestCase(t2[i]))
   if not tc:
+    # load zonedata for doctests
     fp = open('doctest.yml','rb')
     try:
       zonedata = loadZone(next(yaml.safe_load_all(fp)))
     finally: fp.close()
-    #print(zonedata)
-    suite = suite()
-    unittest.TextTestRunner().run(suite)
+    tc = suite()	# all tests, including doctests
+  runner = unittest.TextTestRunner()
+  res = runner.run(tc)
+  for s in warnings:
+    print(s)
+  if not res.wasSuccessful():
+    sys.exit(1)
