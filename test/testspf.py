@@ -149,6 +149,7 @@ warnings = []
 class SPFTestCase(unittest.TestCase):
 
   def __init__(self,t):
+    unittest.TestCase.__init__(self)
     self._spftest = t
     self._testMethodName = 'runTest'
     self._testMethodDoc = t.spec
