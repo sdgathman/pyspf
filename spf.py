@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.118  2014/04/22 22:03:13  kitterma
+# Add processing for new void lookups processing limit.
+#
 # Revision 1.108.2.117  2014/04/22 20:54:42  kitterma
 # Adjust documentation of lookup limits to include RFC 7208
 # Add constants and variables for new void lookup limit
@@ -64,7 +67,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.9: TBD"
+__version__ = "2.0.9: TBD 2014"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:

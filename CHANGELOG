@@ -1,4 +1,12 @@
 Version 2.0.9 - UNRELEASED
+  * Update for new SPF standards track RFC 7208
+    - Add processing for new void lookups processing limit
+    - Default SPF process timeout limit to 20 seconds per RFC 7208 4.6.4
+    - Change default DNS timeout to 20 seconds in DNSLookup to better match
+      RFC 7208 4.6.4
+    - Make mx lookups > 10 a permerror per RFC 7208 and mx-limit test
+    - Add RFC 7208 specific test suite and make allowance for RFC 7208 changes
+      in RFC 4408 test suite
 
 Version 2.0.8 - July 24, 2013
   * Use ipaddr/ipaddres module in place of custom IP processing code
