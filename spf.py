@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.116  2014/04/22 17:10:54  kitterma
+# Default SPF process timeout limit to 20 seconds per RFC 7208 4.6.4.
+#
 # Revision 1.108.2.115  2014/04/22 17:02:55  kitterma
 # Change default DNS timeout to 20 seconds in DNSLookup to better match RFC
 # 7208 4.6.4.
@@ -212,12 +215,13 @@ DEFAULT_SPF = 'v=spf1 a/24 mx/24 ptr'
 TRUSTED_FORWARDERS = 'v=spf1 ?include:spf.trusted-forwarder.org -all'
 
 # maximum DNS lookups allowed
-MAX_LOOKUP = 10 #RFC 4408 Para 10.1
-MAX_MX = 10 #RFC 4408 Para 10.1
-MAX_PTR = 10 #RFC 4408 Para 10.1
+MAX_LOOKUP = 10 #RFC 4408 Para 10.1/RFC 7208 4.6.4
+MAX_MX = 10 #RFC 4408 Para 10.1/RFC 7208 4.6.4
+MAX_PTR = 10 #RFC 4408 Para 10.1/RFC 7208 4.6.4
 MAX_CNAME = 10 # analogous interpretation to MAX_PTR
 MAX_RECURSION = 20
-MAX_PER_LOOKUP_TIME = 30 # Long standing pyspf default
+MAX_PER_LOOKUP_TIME = 20 # Per RFC 7208 4.6.4
+MAX_VOID_LOOKUPS = 2 # RFC 7208 4.6.4
 
 ALL_MECHANISMS = ('a', 'mx', 'ptr', 'exists', 'include', 'ip4', 'ip6', 'all')
 COMMON_MISTAKES = {
@@ -354,6 +358,7 @@ class query(object):
         self.exps = dict(EXPLANATIONS)
         self.libspf_local = local    # local policy
         self.lookups = 0
+        self.void_lookups = 0
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
         self.timeout = timeout
@@ -1266,7 +1271,7 @@ class query(object):
         else:
             safe2cache = query.SAFE2CACHE
             if self.querytime < 0:
-                 raise TempError('DNS Error: exceeded max query lookup time')
+                raise TempError('DNS Error: exceeded max query lookup time')
             if self.querytime < self.timeout and self.querytime > 0:
                 timeout = self.querytime
             else:
