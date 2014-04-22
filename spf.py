@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.112  2014/01/20 22:16:38  customdesigned
+# Rename local var hiding str.
+#
 # Revision 1.108.2.111  2014/01/20 22:03:08  customdesigned
 # Test case and fix for more thorough macro syntax error detection.
 #
@@ -1142,15 +1145,16 @@ class query(object):
         """Get a list of IP addresses for all MX exchanges for a
         domain name.
         """
-        # RFC 4408 section 5.4 "mx"
+        # RFC 4408/7208 section 5.4 "mx"
         # To prevent DoS attacks, more than 10 MX names MUST NOT be looked up
+        # Changed to permerror if more than 10 exist in 7208
         mxnames = self.dns(domainname, 'MX')
         if self.strict:
             max = MAX_MX
+            if len(mxnames) > MAX_MX:
+                raise Permerror(
+                    'More than %d MX records returned'%MAX_MX)
             if self.strict > 1:
-                if len(mxnames) > MAX_MX:
-                    raise AmbiguityWarning(
-                        'More than %d MX records returned'%MAX_MX)
                 if len(mxnames) == 0:
                     raise AmbiguityWarning(
                         'No MX records found for mx mechanism', domainname)
