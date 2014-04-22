@@ -32,6 +32,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.117  2014/04/22 20:54:42  kitterma
+# Adjust documentation of lookup limits to include RFC 7208
+# Add constants and variables for new void lookup limit
+#
 # Revision 1.108.2.116  2014/04/22 17:10:54  kitterma
 # Default SPF process timeout limit to 20 seconds per RFC 7208 4.6.4.
 #
@@ -358,6 +362,7 @@ class query(object):
         self.exps = dict(EXPLANATIONS)
         self.libspf_local = local    # local policy
         self.lookups = 0
+        # New processing limit in RFC 7208, section 4.6.4
         self.void_lookups = 0
         # strict can be False, True, or 2 (numeric) for harsh
         self.strict = strict
@@ -531,7 +536,6 @@ class query(object):
 
         try:
             self.lookups = 0
-            self.timer = 0
             if not spf:
                 spf = self.dns_spf(self.d)
                 if self.verbose: self.log("top",self.d,spf)
@@ -1270,6 +1274,8 @@ class query(object):
             cname = cname[0]
         else:
             safe2cache = query.SAFE2CACHE
+            if self.void_lookups > MAX_VOID_LOOKUPS:
+                raise PermError('Void lookup limit of %d exceeded' % MAX_VOID_LOOKUPS)
             if self.querytime < 0:
                 raise TempError('DNS Error: exceeded max query lookup time')
             if self.querytime < self.timeout and self.querytime > 0:
@@ -1299,6 +1305,10 @@ class query(object):
             result = self.dns(cname, qtype, cnames=cnames)
             if result:
                 self.cache[(name,qtype)] = result
+        if not result:
+            self.void_lookups += 1
+            if self.void_lookups > MAX_VOID_LOOKUPS:
+                raise PermError('Void lookup limit of %d exceeded' % MAX_VOID_LOOKUPS)
         return result
 
     def cidrmatch(self, ipaddrs, n):
