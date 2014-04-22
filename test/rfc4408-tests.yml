@@ -2385,10 +2385,13 @@ zonedata:
     - A: 1.2.3.4
   e1.example.com:
     - SPF: v=spf1 ip4:1.1.1.1 redirect=e1.example.com
+    - A: 1.2.3.6
   e2.example.com:
     - SPF: v=spf1 include:e3.example.com
+    - A: 1.2.3.7
   e3.example.com:
     - SPF: v=spf1 include:e2.example.com
+    - A: 1.2.3.8
   e4.example.com:
     - SPF: v=spf1 mx
     - MX: [0, mail.example.com]
@@ -2420,14 +2423,20 @@ zonedata:
     - PTR: e5.example.com.
   e6.example.com:
     - SPF: v=spf1 a mx a mx a mx a mx a ptr ip4:1.2.3.4 -all
+    - A: 1.2.3.8
+    - MX: [10, e6.example.com]
   e7.example.com:
     - SPF: v=spf1 a mx a mx a mx a mx a ptr a ip4:1.2.3.4 -all
+    - A: 1.2.3.20
   e8.example.com:
     - SPF: v=spf1 a include:inc.example.com ip4:1.2.3.4 mx -all
+    - A: 1.2.3.4
   inc.example.com:
     - SPF: v=spf1 a a a a a a a a
+    - A: 1.2.3.10
   e9.example.com:
     - SPF: v=spf1 a include:inc.example.com a ip4:1.2.3.4 -all
+    - A: 1.2.3.21
   e10.example.com:
     - SPF: v=spf1 a -all
     - A: 1.2.3.1
