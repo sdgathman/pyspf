@@ -1300,15 +1300,15 @@ tests:
     result: fail
   exists-dnserr:
     description: >-
-      Result for DNS error clarified in RFC7208: If the server returns "domain
-      does not exist" (RCODE 3), then evaluation of the mechanism continues as
-      if the server returned no error (RCODE 0) and zero answer records.  In
-      this case, the exists can never match, fail is the only correct result.
+      Result for DNS error clarified in RFC7208: MTAs or other processors 
+      SHOULD impose a limit on the maximum amount of elapsed time to evaluate 
+      check_host().  Such a limit SHOULD allow at least 20 seconds.  If such 
+      a limit is exceeded, the result of authorization SHOULD be "temperror".
     spec: 5/8
     helo: mail.example.com
     host: CAFE:BABE::3
     mailfrom: foo@e6.example.com
-    result: fail
+    result: temperror
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
