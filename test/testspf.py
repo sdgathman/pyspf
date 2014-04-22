@@ -217,6 +217,7 @@ def makeSuite(filename):
 def suite(): 
   suite = unittest.makeSuite(SPFTestCases,'test')
   suite.addTest(makeSuite('test.yml'))
+  suite.addTest(makeSuite('rfc7208-tests.yml'))
   suite.addTest(makeSuite('rfc4408-tests.yml'))
   import doctest
   suite.addTest(doctest.DocTestSuite(spf))
@@ -231,9 +232,12 @@ if __name__ == '__main__':
     # a specific test selected by id from YAML files
     if not tc:
       tc = unittest.TestSuite()
+      t0 = loadYAML('rfc7208-tests.yml')
       t1 = loadYAML('rfc4408-tests.yml')
       t2 = loadYAML('test.yml')
-    if i in t1:
+    if i in t0:
+      tc.addTest(SPFTestCase(t0[i]))
+    elif i in t1:
       tc.addTest(SPFTestCase(t1[i]))
     elif i in t2:
       tc.addTest(SPFTestCase(t2[i]))
