@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.114  2014/04/22 04:56:38  kitterma
+# Add permerror to permitted mx-limit results for rfc4408 to fudge changes for 7208.
+#
 # Revision 1.108.2.113  2014/04/22 04:46:58  kitterma
 # Make mx > 10 a permerror per RFC 7208 and mx-limit test.
 #
@@ -99,7 +102,7 @@ if not hasattr(DNS.Type, 'SPF'):
     DNS.Type.typemap[99] = 'SPF'
     DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
 
-def DNSLookup(name, qtype, strict=True, timeout=30):
+def DNSLookup(name, qtype, strict=True, timeout=20):
     try:
         req = DNS.DnsRequest(name, qtype=qtype, timeout=timeout)
         resp = req.req()
