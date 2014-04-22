@@ -32,8 +32,13 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.115  2014/04/22 17:02:55  kitterma
+# Change default DNS timeout to 20 seconds in DNSLookup to better match RFC
+# 7208 4.6.4.
+#
 # Revision 1.108.2.114  2014/04/22 04:56:38  kitterma
-# Add permerror to permitted mx-limit results for rfc4408 to fudge changes for 7208.
+# Add permerror to permitted mx-limit results for rfc4408 to fudge changes for
+# RFC 7208.
 #
 # Revision 1.108.2.113  2014/04/22 04:46:58  kitterma
 # Make mx > 10 a permerror per RFC 7208 and mx-limit test.
@@ -257,16 +262,19 @@ class PermError(Exception):
             return '%s: %s'%(self.msg, self.mech)
         return self.msg
 
-def check2(i, s, h, local=None, receiver=None, timeout=MAX_PER_LOOKUP_TIME, verbose=False, querytime=0):
+def check2(i, s, h, local=None, receiver=None, timeout=MAX_PER_LOOKUP_TIME, verbose=False, querytime=20):
     """Test an incoming MAIL FROM:<s>, from a client with ip address i.
-    h is the HELO/EHLO domain name.  This is the RFC4408 compliant pySPF2.0
-    interface.  The interface returns an SPF result and explanation only.
-    SMTP response codes are not returned since RFC 4408 does not specify
-    receiver policy.  Applications updated for RFC 4408 should use this
-    interface.  The maximum time, in seconds, this function is allowed to run
-    before a TempError is returned is controlled by querytime.  When set to 0
-    (default) the timeout parameter (default 30 seconds) controls the time
-    allowed for each DNS lookup.
+    h is the HELO/EHLO domain name.  This is the RFC4408/7208 compliant
+    pySPF2.0 interface.  The interface returns an SPF result and explanation
+    only.  SMTP response codes are not returned since neither RFC 4408 nor RFC
+    7208 does specify receiver policy.  Applications updated for RFC 4408 and
+    RFC 7208 should use this interface.  The maximum time, in seconds, this
+    function is allowed to run before a TempError is returned is controlled by
+    querytime.  When set to 0 the timeout parameter (default 20 seconds)
+    controls the time allowed for each DNS lookup.  When set to a non-zero
+    value, it total time for all processing related to the SPF check is
+    limited to querytime (default 20 seconds as recommended in RFC 7208,
+    paragraph 4.6.4).
 
     Returns (result, explanation) where result in
     ['pass', 'permerror', 'fail', 'temperror', 'softfail', 'none', 'neutral' ].
