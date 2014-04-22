@@ -2306,7 +2306,7 @@ tests:
     helo: mail.example.com
     host: 1.2.3.5
     mailfrom: foo@e4.example.com
-    result: [neutral, pass]
+    result: [neutral, pass, permerror]
   ptr-limit:
     description: >-
       there MUST be a limit of no more than 10 PTR looked up and checked.

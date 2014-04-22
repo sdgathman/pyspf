@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.113  2014/04/22 04:46:58  kitterma
+# Make mx > 10 a permerror per RFC 7208 and mx-limit test.
+#
 # Revision 1.108.2.112  2014/01/20 22:16:38  customdesigned
 # Rename local var hiding str.
 #
@@ -1152,7 +1155,7 @@ class query(object):
         if self.strict:
             max = MAX_MX
             if len(mxnames) > MAX_MX:
-                raise Permerror(
+                raise PermError(
                     'More than %d MX records returned'%MAX_MX)
             if self.strict > 1:
                 if len(mxnames) == 0:
