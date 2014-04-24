@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.119  2014/04/22 23:03:42  kitterma
+# Update CHANGELOG to prepare for release.
+#
 # Revision 1.108.2.118  2014/04/22 22:03:13  kitterma
 # Add processing for new void lookups processing limit.
 #
@@ -1277,8 +1280,6 @@ class query(object):
             cname = cname[0]
         else:
             safe2cache = query.SAFE2CACHE
-            if self.void_lookups > MAX_VOID_LOOKUPS:
-                raise PermError('Void lookup limit of %d exceeded' % MAX_VOID_LOOKUPS)
             if self.querytime < 0:
                 raise TempError('DNS Error: exceeded max query lookup time')
             if self.querytime < self.timeout and self.querytime > 0:
