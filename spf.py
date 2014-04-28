@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.120  2014/04/24 23:02:15  kitterma
+# Remove redundant check of self.void_lookups.
+#
 # Revision 1.108.2.119  2014/04/22 23:03:42  kitterma
 # Update CHANGELOG to prepare for release.
 #
@@ -953,7 +956,7 @@ class query(object):
         """Expand an explanation."""
         if spec:
             try:
-                a = self.dns_txt(spec)
+                a = self.dns_txt(spec,ignore_void=True)
                 if len(a) == 1:
                     return str(self.expand(to_ascii(a[0]), stripdot=False))
             except PermError:
@@ -1117,7 +1120,8 @@ class query(object):
         if self.strict > 1:
             #Only check for Type SPF in harsh mode until it is more popular.
             try:
-                b = [t for t in self.dns_txt(domain,'SPF') if RE_SPF.match(t)]
+                b = [t for t in self.dns_txt(domain,'SPF',ignore_void=True)
+			if RE_SPF.match(t)]
             except TempError as x:
                 # some braindead DNS servers hang on type 99 query
                 if self.strict > 1: raise TempError(x)
@@ -1134,7 +1138,7 @@ class query(object):
             return to_ascii(a[0])    # return TXT if SPF wasn't found
         if DELEGATE:    # use local record if neither found
             a = [t
-              for t in self.dns_txt(domain+'._spf.'+DELEGATE)
+              for t in self.dns_txt(domain+'._spf.'+DELEGATE,ignore_void=True)
             if RE_SPF.match(t)
             ]
             if len(a) == 1: return to_ascii(a[0])
@@ -1152,11 +1156,11 @@ class query(object):
     # records - even when they are non-ascii.  So we return bytes.
     # The caller does the ascii check for SPF records and explanations.
     # 
-    def dns_txt(self, domainname, rr='TXT'):
+    def dns_txt(self, domainname, rr='TXT',ignore_void=False):
         "Get a list of TXT records for a domain name."
         if domainname:
           try:
-              dns_list = self.dns(domainname, rr)
+              dns_list = self.dns(domainname, rr,ignore_void=ignore_void)
               if dns_list:
                   # a[0][:0] is '' for py3dns-3.0.2, otherwise b''
                   a = [a[0][:0].join(a) for a in dns_list]
@@ -1254,7 +1258,7 @@ class query(object):
     }
 
     # FIXME: move to dnsplug
-    def dns(self, name, qtype, cnames=None):
+    def dns(self, name, qtype, cnames=None, ignore_void=False):
         """DNS query.
 
         If the result is in cache, return that.  Otherwise pull the
@@ -1309,7 +1313,7 @@ class query(object):
             result = self.dns(cname, qtype, cnames=cnames)
             if result:
                 self.cache[(name,qtype)] = result
-        if not result:
+        if not result and not ignore_void:
             self.void_lookups += 1
             if self.void_lookups > MAX_VOID_LOOKUPS:
                 raise PermError('Void lookup limit of %d exceeded' % MAX_VOID_LOOKUPS)
