@@ -427,7 +427,7 @@ tests:
       no-match.  RFC 7208 failed to agree on which result to use, and declares
       the situation undefined.  The preferred test result is therefore a matter
       of opinion.
-    spec: [4.3/1, 4.8/5, 5/10/3]
+    spec: 4.3/1, 4.8/5, 5/10/3
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@t10.example.com
@@ -445,7 +445,7 @@ tests:
       to 4.3/1 and 5/10/3, the mechanism could be treated as a no-match.  RFC
       7208 failed to agree on which result to use, and declares the situation
       undefined.  The preferred test result is therefore a matter of opinion.
-    spec: [4.3/1, 4.8/5, 5/10/3]
+    spec: 4.3/1, 4.8/5, 5/10/3
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@t11.example.com
@@ -464,7 +464,7 @@ tests:
       4.3/1 and 5/10/3, the mechanism could be treated as a no-match.  RFC 7208
       failed to agree on which result to use, and declares the situation
       undefined.  The preferred test result is therefore a matter of opinion.
-    spec: [4.3/1, 4.8/5, 5/10/3]
+    spec: 4.3/1, 4.8/5, 5/10/3
     helo: "%%%%%%%%%%%%%%%%%%%%%%"
     host: 1.2.3.4
     mailfrom: foo@t12.example.com
@@ -1872,7 +1872,7 @@ tests:
       Non-existent exp= domains MUST NOT count against the void lookup limit.
       Implementations should lookup any exp record at most once after computing
       the result.
-    spec: 6/2
+    spec: 4.6.4/1, 6/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e23.example.com
@@ -2170,7 +2170,7 @@ tests:
     mailfrom: test@e10.example.com
     result: fail
   macro-reverse-split-on-dash:
-    spec: [7.1/15, 7.1/16, 7.1/17, 7.1/18]
+    spec: 7.1/15, 7.1/16, 7.1/17, 7.1/18
     description: >-
       Macro value transformation (splitting on arbitrary characters, reversal,
       number of right-hand parts to use)
@@ -2179,7 +2179,7 @@ tests:
     mailfrom: philip-gladstone-test@e11.example.com
     result: pass
   macro-multiple-delimiters:
-    spec: [7.1/15, 7.1/16]
+    spec: 7.1/15, 7.1/16
     description: |-
       Multiple delimiters may be specified in a macro expression.
         macro-expand = ( "%{" macro-letter transformers *delimiter "}" )
