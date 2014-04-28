@@ -1865,6 +1865,18 @@ tests:
     mailfrom: "foobar@tworecs.example.com"
     result: fail
     explanation: DEFAULT
+  exp-void:
+    description: |
+      exp=nxdomain.tld
+    comment: >-
+      Non-existent exp= domains MUST NOT count against the void lookup limit.
+      Implementations should lookup any exp record at most once after computing
+      the result.
+    spec: 6/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e23.example.com
+    result: fail
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -1936,6 +1948,8 @@ zonedata:
   twoexp.example.com:
     - TXT: "one"
     - TXT: "two"
+  e23.example.com:
+    - SPF: v=spf1 a:erehwon.example.com a:foobar.com exp=nxdomain.com -all
 ---
 description: Macro expansion rules
 tests:
