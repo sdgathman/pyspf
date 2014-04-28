@@ -413,6 +413,62 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@t9.example.com
     result: permerror
+  invalid-domain-empty-label:
+    description: >-
+      target-name that is a valid domain-spec per RFC 4408 and RFC 7208 but an
+      invalid domain name per RFC 1035 (empty label) should be treated as
+      non-existent.
+    comment: >-
+      An empty domain label, i.e. two successive dots, in a mechanism
+      target-name is valid domain-spec syntax (perhaps formed from a macro
+      expansion), even though a DNS query cannot be composed from it.  The spec
+      being unclear about it, this could either be considered a syntax error,
+      or, by analogy to 4.3/1 and 5/10/3, the mechanism could be treated as a
+      no-match.  RFC 7208 failed to agree on which result to use, and declares
+      the situation undefined.  The preferred test result is therefore a matter
+      of opinion.
+    spec: [4.3/1, 4.8/5, 5/10/3]
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@t10.example.com
+    result: [fail, permerror]
+  invalid-domain-long:
+    description: >-
+      target-name that is a valid domain-spec per RFC 4408 and RFC 7208 but an
+      invalid domain name per RFC 1035 (long label) must be treated as
+      non-existent.
+    comment: >-
+      A domain label longer than 63 characters in a mechanism target-name is
+      valid domain-spec syntax (perhaps formed from a macro expansion), even
+      though a DNS query cannot be composed from it.  The spec being unclear
+      about it, this could either be considered a syntax error, or, by analogy
+      to 4.3/1 and 5/10/3, the mechanism could be treated as a no-match.  RFC
+      7208 failed to agree on which result to use, and declares the situation
+      undefined.  The preferred test result is therefore a matter of opinion.
+    spec: [4.3/1, 4.8/5, 5/10/3]
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@t11.example.com
+    result: [fail,permerror]
+  invalid-domain-long-via-macro:
+    description: >-
+      target-name that is a valid domain-spec per RFC 4408 and RFC 7208 but an
+      invalid domain name per RFC 1035 (long label) must be treated as
+      non-existent.
+    comment: >-
+      A domain label longer than 63 characters that results from macro
+      expansion in a mechanism target-name is valid domain-spec syntax (and is
+      not even subject to syntax checking after macro expansion), even though
+      a DNS query cannot be composed from it.  The spec being unclear about
+      it, this could either be considered a syntax error, or, by analogy to
+      4.3/1 and 5/10/3, the mechanism could be treated as a no-match.  RFC 7208
+      failed to agree on which result to use, and declares the situation
+      undefined.  The preferred test result is therefore a matter of opinion.
+    spec: [4.3/1, 4.8/5, 5/10/3]
+    helo: "%%%%%%%%%%%%%%%%%%%%%%"
+    host: 1.2.3.4
+    mailfrom: foo@t12.example.com
+    result: [fail,permerror]
 zonedata:
   mail.example.com:
     - A: 1.2.3.4

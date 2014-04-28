@@ -237,9 +237,9 @@ if __name__ == '__main__':
       t2 = loadYAML('test.yml')
     if i in t0:
       tc.addTest(SPFTestCase(t0[i]))
-    elif i in t1:
+    if i in t1:
       tc.addTest(SPFTestCase(t1[i]))
-    elif i in t2:
+    if i in t2:
       tc.addTest(SPFTestCase(t2[i]))
   if not tc:
     # load zonedata for doctests
