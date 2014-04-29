@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.121  2014/04/28 21:57:08  customdesigned
+# Ignore void lookups for explanation and type 99 lookup.
+#
 # Revision 1.108.2.120  2014/04/24 23:02:15  kitterma
 # Remove redundant check of self.void_lookups.
 #
@@ -73,7 +76,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.9: TBD 2014"
+__version__ = "2.0.9: Apr 29, 2014"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:

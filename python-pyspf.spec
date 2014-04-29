@@ -1,8 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.8
-Release:        2%{?dist}
+Version:        2.0.9
+Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
 Group:          Development/Languages
@@ -55,6 +55,11 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/python2.7/site-packages/pyspf-%{version}-py2.7.egg-info
 
 %changelog
+* Tue Apr 29 2014 Stuart Gathman <stuart@gathman.org> 2.0.9-1
+- RFC7208 support
+- void lookup limit and test cases
+- Convert YAML tests to TestCases, and have testspf.py return success/fail.
+
 * Tue Jul 23 2013 Stuart Gathman <stuart@gathman.org> 2.0.8-2
 - Test case and fix for PermError on non-ascii chars in non-SPF TXT records
 - Use ipaddr/ipaddress module in place of custom IP processing code
