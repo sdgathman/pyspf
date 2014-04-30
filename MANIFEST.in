@@ -8,5 +8,6 @@ include setup.py
 include setup.cfg
 include test/*.yml
 include test/*.LICENSE
+include test/*.CHANGES
 include test/testspf.py
 include *.spec

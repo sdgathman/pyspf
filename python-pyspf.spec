@@ -52,7 +52,7 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/spf.py*
 /usr/bin/type99
 /usr/bin/spfquery
-/usr/lib/python2.7/site-packages/pyspf-%{version}-py2.7.egg-info
+/usr/lib/python2.6/site-packages/pyspf-%{version}-py2.6.egg-info
 
 %changelog
 * Tue Apr 29 2014 Stuart Gathman <stuart@gathman.org> 2.0.9-1
