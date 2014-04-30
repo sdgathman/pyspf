@@ -90,8 +90,8 @@ Then the following command line would check if this is a valid sender:
 	% ./spf.py 69.55.226.139 terry@wayforward.net mx1.wayforward.net
 	('pass', 250, 'sender SPF authorized')
 
-Command line calls return RFC 4408 result codes, i.e. 'pass', 'fail', 'neutral', 
-'softfail, 'permerror', or 'temperror'.
+Command line calls return RFC 4408/7208 result codes, i.e. 'pass', 'fail',
+'neutral', 'softfail, 'permerror', or 'temperror'.
 
 The second way is via the module's APIs.
 
@@ -110,7 +110,7 @@ Note: SPF results alone are never sufficient to decide that a message should be
 accepted.  Accept, reject, or defer decisions are a function of local reciever
 policy.
 
-The RFC 4408 compliant API:
+The RFC 4408/7208 compliant API:
         >>> import spf
         >>> spf.check2(i='69.55.226.139',
         ...           s='terry@wayforward.net',
@@ -135,7 +135,9 @@ or
 python type99 - {File name}
 
 The input file format is a standard BIND Zone file.  The type99 script will add
-a Type99 record for each TXT record found in the file.
+a Type99 record for each TXT record found in the file.  Use of DNS type 99
+(type SPF) was removed from SPF in RFC 7208, so this script should be of
+historical interest only.
 
 The spfquery.py script is called with a number of possible options.  Options can
 either use standard '-' prefix or be PERL style long options, '--'.  Supported
@@ -155,7 +157,7 @@ options are:
 "--local" or "-local" {local policy SPF string}: Additional SPF mechanisms to be
     checked on the basis of local policy.  Note that local policy matches are 
     not strictly SPF results.  Local policy processing is not defined in RFC 
-    4408.  Result may vary among SPF implementations.
+    4408 or RFC 7208.  Result may vary among SPF implementations.
 
 "--rcpt-to" or "rcpt-to" {rcpt-to address - if available}: Receipt to address is
     not used for actual SPF processing, but if available it can be useful for 
@@ -172,12 +174,12 @@ options are:
 
 Overall per SPF check time limits can be controlled by passing querytime
 to the spf.check2 function or when initializing a spf.query object.
-It is disabled by default.  If querytime is set to 0 (default), then the
-overall time limit is disabled and the per DNS lookup limit is used
-instead.  This defaults to 30 seconds and can be controlled via
-spf.MAX_PER_LOOKUP_TIME.  This is the long standing pyspf default.  RFC 4408
-says that the overall limit MAY be used and recommends no less than 20
-seconds if it is.
+It is set to 20 seconds by default based on RFC 7208.  If querytime is set to
+0, then the overall time limit is disabled and the per DNS lookup limit is used
+instead.  This defaults to 20 seconds and can be controlled via
+spf.MAX_PER_LOOKUP_TIME.  RFC 4408 says that the overall limit MAY be used and
+recommends no less than 20 seconds if it is. RFC 7208 is stronger, so a
+default limit aligned to the RFC requirements is now used.
 
 License: Python Software Foundation License
 
