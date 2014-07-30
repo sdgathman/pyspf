@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.8):
 # $Log$
+# Revision 1.108.2.122  2014/04/29 22:56:48  customdesigned
+# Release 2.0.9
+#
 # Revision 1.108.2.121  2014/04/28 21:57:08  customdesigned
 # Ignore void lookups for explanation and type 99 lookup.
 #
@@ -1203,14 +1206,10 @@ class query(object):
         """Get a list of IP addresses for a domainname.
         """
         if not domainname: return []
-        if self.strict > 1:
-            alist = self.dns(domainname, A)
-            if len(alist) == 0:
-                raise AmbiguityWarning(
-                        'No %s records found for'%A, domainname)
-            else:
-                return alist
         r = self.dns(domainname, A)
+        if self.strict > 1 and len(r) == 0:
+            raise AmbiguityWarning(
+                    'No %s records found for'%A, domainname)
         if A == 'AAAA' and bytes is str:
           # work around pydns inconsistency plus python2 bytes/str ambiguity
           return [ipaddress.Bytes(ip) for ip in r]
@@ -1885,15 +1884,19 @@ DNS.DiscoverNameServers() # Fails on Mac OS X? Add domain to /etc/resolv.conf
 if __name__ == '__main__':
     import getopt
     try:
-       opts,argv = getopt.getopt(sys.argv[1:],"hv",["help","verbose"])
+       opts,argv = getopt.getopt(sys.argv[1:],"hvs:",
+        ["help","verbose","strict"])
     except getopt.GetoptError as err:
        print(str(err))
        print(USAGE)
        sys.exit(2)
     verbose = False
+    strict = True
     for o,a in opts:
         if o in ('-v','--verbose'):
            verbose = True
+        if o in ('-s','--strict'):
+           strict = int(a)
         elif o in ('-h','--help'):
            print(USAGE)
     if len(argv) == 0:
@@ -1910,7 +1913,8 @@ if __name__ == '__main__':
             print("PermError: ", x)
     elif len(argv) == 3:
         i, s, h = argv
-        q = query(i=i, s=s, h=h,receiver=socket.gethostname(),verbose=verbose)
+        q = query(i=i, s=s, h=h,receiver=socket.gethostname(),verbose=verbose,
+                strict=strict)
         print(q.check(),q.mechanism)
         if q.perm_error and q.perm_error.ext:
             print(q.perm_error.ext)
