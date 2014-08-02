@@ -177,6 +177,7 @@ class SPFTestCase(unittest.TestCase):
     q = spf.query(i=t.host, s=t.mailfrom, h=t.helo, strict=t.strict)
     q.set_default_explanation('DEFAULT')
     res,code,exp = q.check()
+    #print q.mechanism
     if res in oldresults:
       res = oldresults[res]
     ok = True

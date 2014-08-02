@@ -1144,7 +1144,7 @@ tests:
     result: pass
   mx-cidr4-0-ip6:
     description: >-
-      Matches if any A records for any MX records are present in DNS.
+      cidr4 doesn't apply to IP6 connections.
     spec: 5.4/3
     helo: mail.example.com
     host: 1234::1
