@@ -32,6 +32,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.9):
 # $Log$
+# Revision 1.108.2.125  2014/08/02 04:36:48  kitterma
+#   * Fix bug in SPF record parsing that caused all 'whitespace' characters to
+#     be considered valid term separators and not just spaces
+#
 # Revision 1.108.2.124  2014/08/02 04:32:36  kitterma
 # Archive previous commit messages for spf.py in pyspf_changelog.txt and bumpi
 # version to 2.0.10 for start of follow on work.
@@ -1060,9 +1064,8 @@ class query(object):
                         raise PermError('Unknown Macro Encountered', macro) 
                     e = expand_one(expansion, macro[3:-1], JOINERS.get(letter))
                     if letter != macro[2]:
-                        e = urllibparse.quote(e)
+                        e = urllibparse.quote(e,'~')
                     result += e
-
             end = i.end()
         result += s[end:]
         if stripdot and result.endswith('.'):
