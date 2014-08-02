@@ -32,6 +32,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.9):
 # $Log$
+# Revision 1.108.2.124  2014/08/02 04:32:36  kitterma
+# Archive previous commit messages for spf.py in pyspf_changelog.txt and bumpi
+# version to 2.0.10 for start of follow on work.
+#
 # Revision 1.108.2.123  2014/07/30 18:41:18  customdesigned
 # Fix flagging AAAA records in dns_a.  Add --strict option to CLI
 #
@@ -755,8 +759,10 @@ class query(object):
         if not spf:
             return ('none', 250, EXPLANATIONS['none'])
 
-        # split string by whitespace, drop the 'v=spf1'
-        spf = spf.split()
+        # Split string by space, drop the 'v=spf1'.  Split by all whitespace
+        # casuses things like carriage returns being treated as valid space
+        # separators, so split() is not sufficient.
+        spf = spf.split(' ')
         # Catch case where SPF record has no spaces.
         # Can never happen with conforming dns_spf(), however
         # in the future we might want to give warnings
