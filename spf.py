@@ -30,56 +30,16 @@ For news, bugfixes, etc. visit the home page for this implementation at
     http://www.wayforward.net/spf/
 """
 
-# CVS Commits since last release (2.0.8):
+# CVS Commits since last release (2.0.9):
 # $Log$
-# Revision 1.108.2.122  2014/04/29 22:56:48  customdesigned
-# Release 2.0.9
-#
-# Revision 1.108.2.121  2014/04/28 21:57:08  customdesigned
-# Ignore void lookups for explanation and type 99 lookup.
-#
-# Revision 1.108.2.120  2014/04/24 23:02:15  kitterma
-# Remove redundant check of self.void_lookups.
-#
-# Revision 1.108.2.119  2014/04/22 23:03:42  kitterma
-# Update CHANGELOG to prepare for release.
-#
-# Revision 1.108.2.118  2014/04/22 22:03:13  kitterma
-# Add processing for new void lookups processing limit.
-#
-# Revision 1.108.2.117  2014/04/22 20:54:42  kitterma
-# Adjust documentation of lookup limits to include RFC 7208
-# Add constants and variables for new void lookup limit
-#
-# Revision 1.108.2.116  2014/04/22 17:10:54  kitterma
-# Default SPF process timeout limit to 20 seconds per RFC 7208 4.6.4.
-#
-# Revision 1.108.2.115  2014/04/22 17:02:55  kitterma
-# Change default DNS timeout to 20 seconds in DNSLookup to better match RFC
-# 7208 4.6.4.
-#
-# Revision 1.108.2.114  2014/04/22 04:56:38  kitterma
-# Add permerror to permitted mx-limit results for rfc4408 to fudge changes for
-# RFC 7208.
-#
-# Revision 1.108.2.113  2014/04/22 04:46:58  kitterma
-# Make mx > 10 a permerror per RFC 7208 and mx-limit test.
-#
-# Revision 1.108.2.112  2014/01/20 22:16:38  customdesigned
-# Rename local var hiding str.
-#
-# Revision 1.108.2.111  2014/01/20 22:03:08  customdesigned
-# Test case and fix for more thorough macro syntax error detection.
-#
-# Revision 1.108.2.110  2013/07/25 21:21:49  kitterma
-# Archive previous commit messages for spf.py in pyspf_changelog.txt and bump version to 2.0.9 for start of follow on work.
-#
+# Revision 1.108.2.123  2014/07/30 18:41:18  customdesigned
+# Fix flagging AAAA records in dns_a.  Add --strict option to CLI
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.9: Apr 29, 2014"
+__version__ = "2.0.10: UNRELEASED"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
