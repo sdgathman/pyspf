@@ -26,6 +26,9 @@
 # duplication of SPF to TXT records (by test suite drivers) to test all
 # implementation types with one specification.
 #
+# All new tests should use Documentation IPs for both IP4 and IP6.  I was
+# stupid to use 1.2.3.4 - that is a real global IP (although it doesn't ping).
+#
 ---
 description: Initial processing
 tests:
@@ -119,10 +122,10 @@ tests:
     explanation: DEFAULT
   control-char-policy:
     description: >-
-      Mechanisms are separated by only spaces
+      Mechanisms are separated by spaces only, not any control char.
     spec: 4.6.1/2
     helo: hosed
-    host: 1.2.3.4
+    host: 192.0.2.3
     mailfrom: "foobar@ctrl.example.com"
     result: permerror
 zonedata:
@@ -147,7 +150,7 @@ zonedata:
     - SPF:  "\x96"
   ctrl.example.com:
     - SPF:  "v=spf1 a:ctrl.example.com\x0dptr -all"
-    - A: 1.2.3.4
+    - A: 192.0.2.3
 ---
 description: Record lookup
 tests:
@@ -1155,6 +1158,8 @@ tests:
   mx-cidr4-0-ip6:
     description: >-
       cidr4 doesn't apply to IP6 connections.
+    comment: >-
+      The IP6 CIDR starts with a double slash.
     spec: 5.4/3
     helo: mail.example.com
     host: 1234::1
@@ -1881,13 +1886,21 @@ tests:
       exp=nxdomain.tld
     comment: >-
       Non-existent exp= domains MUST NOT count against the void lookup limit.
-      Implementations should lookup any exp record at most once after computing
-      the result.
+      Implementations should lookup any exp record at most once after
+      computing the result.
     spec: 4.6.4/1, 6/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e23.example.com
     result: fail
+  redirect-implicit:
+    description: |
+      redirect changes implicit domain
+    spec: 6.1/4
+    helo: e24.example.com
+    host: 192.0.2.2
+    mailfrom: bar@e24.example.com
+    result: pass
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -1961,6 +1974,12 @@ zonedata:
     - TXT: "two"
   e23.example.com:
     - SPF: v=spf1 a:erehwon.example.com a:foobar.com exp=nxdomain.com -all
+  e24.example.com:
+    - SPF: v=spf1 redirect=testimplicit.example.com
+    - A: 192.0.2.1
+  testimplicit.example.com:
+    - SPF: v=spf1 a -all
+    - A: 192.0.2.2
 ---
 description: Macro expansion rules
 tests:
@@ -2135,12 +2154,15 @@ tests:
     spec: 7.1/26
     description: >-
       Uppercased macros expand exactly as their lowercased equivalents,
-      and are then URL escaped.
+      and are then URL escaped.  All chars not in the unreserved set
+      MUST be escaped.
+    comment: |
+      unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
     helo: msgbas2x.cos.example.com
     host: 192.168.218.42
-    mailfrom: jack&jill=up@e8.example.com
+    mailfrom: ~jack&jill=up-a_b3.c@e8.example.com
     result: fail
-    explanation: http://example.com/why.html?l=jack%26jill%3Dup
+    explanation: http://example.com/why.html?l=~jack%26jill%3Dup-a_b3.c
   hello-macro:
     spec: 7.1/6
     description: |-
@@ -2496,6 +2518,9 @@ tests:
   bytes-bug:
     description: >-
       Bytes vs str bug from pyspf.
+    comment: >-
+      Pyspf failed with strict=2 only.  Other implementations may ignore
+      the strict parameter.
     spec: 5.4/4
     helo: example.org
     host: 2001:db8:ff0:100::2
