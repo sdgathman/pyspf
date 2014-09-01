@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.9):
 # $Log$
+# Revision 1.108.2.126  2014/08/02 18:35:50  customdesigned
+# '~' is also an unreserved char in rfc7208.
+#
 # Revision 1.108.2.125  2014/08/02 04:36:48  kitterma
 #   * Fix bug in SPF record parsing that caused all 'whitespace' characters to
 #     be considered valid term separators and not just spaces
@@ -121,6 +124,8 @@ def DNSLookup(name, qtype, strict=True, timeout=20):
                 for a in resp.answers] \
              + [((a['name'], a['typename']), a['data'])
                 for a in resp.additional]
+    except AttributeError as x:
+        raise TempError('DNS ' + str(x))
     except IOError as x:
         raise TempError('DNS ' + str(x))
     except DNS.DNSError as x:
@@ -233,12 +238,12 @@ class TempError(Exception):
     "Temporary SPF error"
     def __init__(self, msg, mech=None, ext=None):
         Exception.__init__(self, msg, mech)
-        self.msg = msg
+        self.msg = str(msg)
         self.mech = mech
         self.ext = ext
     def __str__(self):
         if self.mech:
-            return '%s: %s '%(self.msg, self.mech)
+            return '%s: %s'%(self.msg, self.mech)
         return self.msg
 
 class PermError(Exception):
