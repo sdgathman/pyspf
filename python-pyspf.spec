@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.9
+Version:        2.0.10
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -55,6 +55,12 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/python2.6/site-packages/pyspf-%{version}-py2.6.egg-info
 
 %changelog
+* Tue Sep  2 2014 Stuart Gathman <stuart@gathman.org> 2.0.10-1
+- Fix AAAA not flagged as bytes when strict=2 
+- Split mechanisms by space only, not by whitespace
+- include '~' as safe char in url quoted macro expansion
+- treat AttributeError from pydns as TempError
+
 * Tue Apr 29 2014 Stuart Gathman <stuart@gathman.org> 2.0.9-1
 - RFC7208 support
 - void lookup limit and test cases

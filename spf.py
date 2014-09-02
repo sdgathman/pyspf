@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.9):
 # $Log$
+# Revision 1.108.2.127  2014/09/01 21:17:13  kitterma
+# Fix TempError handling of errors from the DNS module.
+#
 # Revision 1.108.2.126  2014/08/02 18:35:50  customdesigned
 # '~' is also an unreserved char in rfc7208.
 #
@@ -50,7 +53,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.10: UNRELEASED"
+__version__ = "2.0.10: Sep 2, 2014"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
