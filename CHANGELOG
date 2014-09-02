@@ -1,6 +1,8 @@
-Version 2.0.10 - UNRELEASED
+Version 2.0.10 - September 2. 2014
   * Fix bug in SPF record parsing that caused all 'whitespace' characters to
     be considered valid term separators and not just spaces
+  * Fixed multiple bugs in temperror processing that would lead to tracebacks
+    instead of correct error processing
 
 Version 2.0.9 - April 29, 2014
   * Update for new SPF standards track RFC 7208
