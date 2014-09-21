@@ -128,6 +128,14 @@ tests:
     host: 192.0.2.3
     mailfrom: "foobar@ctrl.example.com"
     result: permerror
+  two-spaces:
+    description: >-
+      ABNF for term separation is one or more spaces, not just one.
+    spec: 4.6.1
+    helo: hosed
+    host: 1.2.3.4
+    mailfrom: "actually@fine.example.com"
+    result: fai
 zonedata:
   example.com:
     - TIMEOUT
@@ -151,6 +159,8 @@ zonedata:
   ctrl.example.com:
     - SPF:  "v=spf1 a:ctrl.example.com\x0dptr -all"
     - A: 192.0.2.3
+  fine.example.com:
+    - TXT: "v=spf1 a  -all"
 ---
 description: Record lookup
 tests:

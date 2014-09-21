@@ -127,6 +127,14 @@ tests:
     mailfrom: "foobar@nothosed.example.com"
     result: fail
     explanation: DEFAULT
+  two-spaces:
+    description: >-
+      ABNF for term separation is one or more spaces, not just one.
+    spec: 4.6.1
+    helo: hosed
+    host: 1.2.3.4
+    mailfrom: "actually@fine.example.com"
+    result: fail
 zonedata:
   example.com:
     - TIMEOUT
@@ -147,6 +155,8 @@ zonedata:
   nothosed.example.com:
     - SPF:  "v=spf1 a:example.net -all"
     - SPF:  "\x96"
+  fine.example.com:
+    - TXT: "v=spf1 a  -all"
 ---
 description: Record lookup
 tests:
