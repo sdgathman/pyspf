@@ -1,3 +1,23 @@
+# Revision 1.108.2.128  2014/09/02 17:31:53  customdesigned
+# Release 2.0.10
+#
+# Revision 1.108.2.127  2014/09/01 21:17:13  kitterma
+# Fix TempError handling of errors from the DNS module.
+#
+# Revision 1.108.2.126  2014/08/02 18:35:50  customdesigned
+# '~' is also an unreserved char in rfc7208.
+#
+# Revision 1.108.2.125  2014/08/02 04:36:48  kitterma
+#   * Fix bug in SPF record parsing that caused all 'whitespace' characters to
+#     be considered valid term separators and not just spaces
+#
+# Revision 1.108.2.124  2014/08/02 04:32:36  kitterma
+# Archive previous commit messages for spf.py in pyspf_changelog.txt and bumpi
+# version to 2.0.10 for start of follow on work.
+#
+# Revision 1.108.2.123  2014/07/30 18:41:18  customdesigned
+# Fix flagging AAAA records in dns_a.  Add --strict option to CLI
+#
 # Revision 1.108.2.122  2014/04/29 22:56:48  customdesigned
 # Release 2.0.9
 #

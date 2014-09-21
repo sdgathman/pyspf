@@ -30,30 +30,14 @@ For news, bugfixes, etc. visit the home page for this implementation at
     http://www.wayforward.net/spf/
 """
 
-# CVS Commits since last release (2.0.9):
+# CVS Commits since last release (2.0.10):
 # $Log$
-# Revision 1.108.2.127  2014/09/01 21:17:13  kitterma
-# Fix TempError handling of errors from the DNS module.
-#
-# Revision 1.108.2.126  2014/08/02 18:35:50  customdesigned
-# '~' is also an unreserved char in rfc7208.
-#
-# Revision 1.108.2.125  2014/08/02 04:36:48  kitterma
-#   * Fix bug in SPF record parsing that caused all 'whitespace' characters to
-#     be considered valid term separators and not just spaces
-#
-# Revision 1.108.2.124  2014/08/02 04:32:36  kitterma
-# Archive previous commit messages for spf.py in pyspf_changelog.txt and bumpi
-# version to 2.0.10 for start of follow on work.
-#
-# Revision 1.108.2.123  2014/07/30 18:41:18  customdesigned
-# Fix flagging AAAA records in dns_a.  Add --strict option to CLI
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.10: Sep 2, 2014"
+__version__ = "2.0.11: UNRELEASED"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -773,8 +757,12 @@ class query(object):
 
         # Split string by space, drop the 'v=spf1'.  Split by all whitespace
         # casuses things like carriage returns being treated as valid space
-        # separators, so split() is not sufficient.
-        spf = spf.split(' ')
+        # separators, so split() is not sufficient.  Just to make it even more
+        # fun, the relevant piece of the ABNF for term separations is
+        # *( 1*SP ( directive / modifier ) ), so it's one or more spaces, not
+        # just one.  The re removes multiple spaces and then the split splits
+        # on the single remaining space. 
+        spf = re.sub(r' {2,}' , ' ', spf).split(' ')
         # Catch case where SPF record has no spaces.
         # Can never happen with conforming dns_spf(), however
         # in the future we might want to give warnings

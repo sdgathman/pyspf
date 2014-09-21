@@ -135,7 +135,7 @@ tests:
     helo: hosed
     host: 1.2.3.4
     mailfrom: "actually@fine.example.com"
-    result: fai
+    result: fail
 zonedata:
   example.com:
     - TIMEOUT
