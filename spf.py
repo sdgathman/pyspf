@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.10):
 # $Log$
+# Revision 1.108.2.130  2014/09/22 17:13:53  customdesigned
+# Cleaner fix for multiple spaces.
+#
 # Revision 1.108.2.129  2014/09/21 21:11:47  kitterma
 #  * Reset to start 2.0.11 development
 #  * Fixed bug where multiple spaces between terms causes pyspf to think they were unknown mechanisms
@@ -761,11 +764,7 @@ class query(object):
 
         # Split string by space, drop the 'v=spf1'.  Split by all whitespace
         # casuses things like carriage returns being treated as valid space
-        # separators, so split() is not sufficient.  Just to make it even more
-        # fun, the relevant piece of the ABNF for term separations is
-        # *( 1*SP ( directive / modifier ) ), so it's one or more spaces, not
-        # just one.  The re removes multiple spaces and then the split splits
-        # on the single remaining space. 
+        # separators, so split() is not sufficient.  
         spf = spf.split(' ')
         # Catch case where SPF record has no spaces.
         # Can never happen with conforming dns_spf(), however
@@ -776,6 +775,9 @@ class query(object):
             if self.strict > 1:
                 raise AmbiguityWarning('Invalid SPF record in', self.d)
             return ('none', 250, EXPLANATIONS['none'])
+        # Just to make it even more fun, the relevant piece of the ABNF for
+        # term separations is *( 1*SP ( directive / modifier ) ), so it's one
+        # or more spaces, not just one.  So strip empty mechanisms.
         spf = [mech for mech in spf[1:] if mech]
 
         # copy of explanations to be modified by exp=
