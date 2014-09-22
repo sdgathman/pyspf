@@ -32,6 +32,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.10):
 # $Log$
+# Revision 1.108.2.129  2014/09/21 21:11:47  kitterma
+#  * Reset to start 2.0.11 development
+#  * Fixed bug where multiple spaces between terms causes pyspf to think they were unknown mechanisms
+#
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
@@ -762,7 +766,7 @@ class query(object):
         # *( 1*SP ( directive / modifier ) ), so it's one or more spaces, not
         # just one.  The re removes multiple spaces and then the split splits
         # on the single remaining space. 
-        spf = re.sub(r' {2,}' , ' ', spf).split(' ')
+        spf = spf.split(' ')
         # Catch case where SPF record has no spaces.
         # Can never happen with conforming dns_spf(), however
         # in the future we might want to give warnings
@@ -772,7 +776,7 @@ class query(object):
             if self.strict > 1:
                 raise AmbiguityWarning('Invalid SPF record in', self.d)
             return ('none', 250, EXPLANATIONS['none'])
-        spf = spf[1:]
+        spf = [mech for mech in spf[1:] if mech]
 
         # copy of explanations to be modified by exp=
         exps = self.exps
