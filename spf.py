@@ -3,8 +3,8 @@
 
 Copyright (c) 2003 Terence Way <terry@wayforward.net>
 Portions Copyright(c) 2004,2005,2006,2007,2008,2011,2012 Stuart Gathman <stuart@bmsi.com>
-Portions Copyright(c) 2005,2006,2007,2008,2011,2012,2013 Scott Kitterman <scott@kitterman.com>
-Portions Copyright(c) 2013 Stuart Gathman <stuart@gathman.org>
+Portions Copyright(c) 2005,2006,2007,2008,2011,2012,2013,2014 Scott Kitterman <scott@kitterman.com>
+Portions Copyright(c) 2013,2014 Stuart Gathman <stuart@gathman.org>
 
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
@@ -32,6 +32,10 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.10):
 # $Log$
+# Revision 1.108.2.132  2014/10/06 11:51:03  kitterma
+#   * Downcase IPv6 PTR results since case inconsistency can cause PTR match
+#     failures (patch thanks to Joni Fieggen)
+#
 # Revision 1.108.2.131  2014/09/22 17:20:33  customdesigned
 # Update comments
 #
@@ -40,7 +44,8 @@ For news, bugfixes, etc. visit the home page for this implementation at
 #
 # Revision 1.108.2.129  2014/09/21 21:11:47  kitterma
 #  * Reset to start 2.0.11 development
-#  * Fixed bug where multiple spaces between terms causes pyspf to think they were unknown mechanisms
+#  * Fixed bug where multiple spaces between terms causes pyspf to think they
+#    were unknown mechanisms
 #
 #
 # See pyspf_changelog.txt for earlier CVS commits.
