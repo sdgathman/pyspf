@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.10):
 # $Log$
+# Revision 1.108.2.131  2014/09/22 17:20:33  customdesigned
+# Update comments
+#
 # Revision 1.108.2.130  2014/09/22 17:13:53  customdesigned
 # Cleaner fix for multiple spaces.
 #
@@ -1213,6 +1216,7 @@ class query(object):
 
     def dns_ptr(self, i):
         """Get a list of domain names for an IP address."""
+        i = i.lower()
         return self.dns('%s.%s.arpa'%(reverse_dots(i),self.v), 'PTR')
 
     # We have to be careful which additional DNS RRs we cache.  For
@@ -1265,6 +1269,8 @@ class query(object):
                 timeout = self.timeout
             timethen = time.time()
             for k, v in DNSLookup(name, qtype, self.strict, timeout):
+                if qtype == 'PTR':
+                    k = (k[0].lower(), k[1]) # force case insensitivity in cache
                 if k == cnamek:
                     cname = v
                 if k[1] == 'CNAME' or (qtype,k[1]) in safe2cache:
