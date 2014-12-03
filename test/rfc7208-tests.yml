@@ -637,9 +637,24 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e5.example.com
     result: permerror
+  ptr-case-change:
+    description: >-
+      arpa domain is case insensitive.
+    comment: >-
+      Some DNS servers have random case in the domain part of returned
+      answers, especially for PTR records.  For example, a query for
+      1.2.6.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.F.0.0.4.F.1.1.1.0.1.0.A.2.ip6.arpa
+      may return
+      1.2.6.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.F.0.0.4.F.1.1.1.0.1.0.a.2.ip6.arpa
+    spec: 5.5/2
+    helo: mail.example.com
+    host: 2001:db8::1
+    mailfrom: bar@e6.example.com
+    result: pass
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
+    - AAAA: 2001:db8::1
   e1.example.com:
     - SPF: v=spf1 ptr/0 -all
   e2.example.com:
@@ -650,6 +665,8 @@ zonedata:
     - PTR: mail.example.com
   1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa:
     - PTR: e3.example.com
+  1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.D.0.1.0.0.2.ip6.arpa:
+    - PTR: mail.example.com
   e3.example.com:
     - SPF: v=spf1 ptr -all
     - A: 1.2.3.4
@@ -658,6 +675,8 @@ zonedata:
     - SPF: v=spf1 ptr -all
   e5.example.com:
     - SPF: "v=spf1 ptr:"
+  e6.example.com:
+    - SPF: "v=spf1 ptr:Example.com -all"
 ---
 description: A mechanism syntax
 tests:

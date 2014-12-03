@@ -42,7 +42,7 @@ def DNSLookup(name,qtype,strict=True,timeout=None):
         if timeout:
           raise spf.TempError('DNS timeout')
         return
-      t,v = i
+      t,v,n = i
       if t == qtype:
         timeout = False
       if v == 'TIMEOUT':
@@ -54,7 +54,10 @@ def DNSLookup(name,qtype,strict=True,timeout=None):
         v = bytes(socket.inet_pton(socket.AF_INET6,v))
       elif t in ('TXT','SPF'):
         v = tuple([s.encode('utf-8') for s in v])
-      yield ((name,t),v)
+      if t == 'PTR':
+        yield ((n,t),v)
+      else:
+        yield ((name,t),v)
   except KeyError:
     if name.startswith('error.'):
       raise spf.TempError('DNS timeout')
@@ -78,7 +81,7 @@ class SPFTest(object):
     if type(self.comment) is str:
       self.comment = self.comment.splitlines()
 
-def getrdata(r):
+def getrdata(r,name):
   "Unpack rdata given as list of maps to list of tuples."
   txt = []        # generated TXT records
   gen = True
@@ -89,12 +92,12 @@ def getrdata(r):
         if t == 'TXT':
           gen = False # no generated TXT records
         elif t == 'SPF' and gen:
-          txt.append(('TXT',v))
+          txt.append(('TXT',v,name))
         if v != 'NONE':
           if t in ('TXT','SPF') and type(v) == str:
-            yield (t,(v,))
+            yield (t,(v,),name)
           else:
-            yield i
+            yield (t,v,name)
     except:
       yield m
   if gen:
@@ -103,7 +106,7 @@ def getrdata(r):
 
 def loadZone(data):
   return dict([
-    (d.lower(), list(getrdata(r))) for d,r in list(data['zonedata'].items())
+    (d.lower(), list(getrdata(r,d))) for d,r in list(data['zonedata'].items())
   ])
 
 class SPFScenario(object):
@@ -152,7 +155,7 @@ class SPFTestCase(unittest.TestCase):
     unittest.TestCase.__init__(self)
     self._spftest = t
     self._testMethodName = 'runTest'
-    self._testMethodDoc = t.spec
+    self._testMethodDoc = str(t.spec)
 
   def id(self):
     t = self._spftest

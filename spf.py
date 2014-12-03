@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.10):
 # $Log$
+# Revision 1.108.2.133  2014/10/06 11:54:11  kitterma
+# *** empty log message ***
+#
 # Revision 1.108.2.132  2014/10/06 11:51:03  kitterma
 #   * Downcase IPv6 PTR results since case inconsistency can cause PTR match
 #     failures (patch thanks to Joni Fieggen)
@@ -1221,8 +1224,7 @@ class query(object):
 
     def dns_ptr(self, i):
         """Get a list of domain names for an IP address."""
-        i = i.lower()
-        return self.dns('%s.%s.arpa'%(reverse_dots(i),self.v), 'PTR')
+        return self.dns('%s.%s.arpa'%(reverse_dots(i.lower()),self.v), 'PTR')
 
     # We have to be careful which additional DNS RRs we cache.  For
     # instance, PTR records are controlled by the connecting IP, and they
@@ -1274,8 +1276,8 @@ class query(object):
                 timeout = self.timeout
             timethen = time.time()
             for k, v in DNSLookup(name, qtype, self.strict, timeout):
-                if qtype == 'PTR':
-                    k = (k[0].lower(), k[1]) # force case insensitivity in cache
+                if True and qtype == 'PTR':
+                  k = (k[0].lower(), k[1]) # force case insensitivity in cache
                 if k == cnamek:
                     cname = v
                 if k[1] == 'CNAME' or (qtype,k[1]) in safe2cache:
