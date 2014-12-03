@@ -54,10 +54,7 @@ def DNSLookup(name,qtype,strict=True,timeout=None):
         v = bytes(socket.inet_pton(socket.AF_INET6,v))
       elif t in ('TXT','SPF'):
         v = tuple([s.encode('utf-8') for s in v])
-      if t == 'PTR':
-        yield ((n,t),v)
-      else:
-        yield ((name,t),v)
+      yield ((n,t),v)
   except KeyError:
     if name.startswith('error.'):
       raise spf.TempError('DNS timeout')

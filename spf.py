@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.10):
 # $Log$
+# Revision 1.108.2.134  2014/12/03 01:01:24  customdesigned
+# PTR case change fix with test case
+#
 # Revision 1.108.2.133  2014/10/06 11:54:11  kitterma
 # *** empty log message ***
 #
@@ -1224,7 +1227,7 @@ class query(object):
 
     def dns_ptr(self, i):
         """Get a list of domain names for an IP address."""
-        return self.dns('%s.%s.arpa'%(reverse_dots(i.lower()),self.v), 'PTR')
+        return self.dns('%s.%s.arpa'%(reverse_dots(i),self.v), 'PTR')
 
     # We have to be careful which additional DNS RRs we cache.  For
     # instance, PTR records are controlled by the connecting IP, and they
@@ -1259,6 +1262,7 @@ class query(object):
         if name.endswith('.'): name = name[:-1]
         if not reduce(lambda x,y:x and 0 < len(y) < 64, name.split('.'),True):
             return []   # invalid DNS name (too long or empty)
+        name = name.lower()
         result = self.cache.get( (name, qtype), [])
         if result: return result
         cnamek = (name,'CNAME')
@@ -1276,8 +1280,9 @@ class query(object):
                 timeout = self.timeout
             timethen = time.time()
             for k, v in DNSLookup(name, qtype, self.strict, timeout):
-                if True and qtype == 'PTR':
-                  k = (k[0].lower(), k[1]) # force case insensitivity in cache
+                # Force case insensitivity in cache, DNS servers often
+                # return random case in domain part of answers.
+                k = (k[0].lower(), k[1]) 
                 if k == cnamek:
                     cname = v
                 if k[1] == 'CNAME' or (qtype,k[1]) in safe2cache:
