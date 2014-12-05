@@ -56,6 +56,13 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/python2.6/site-packages/pyspf-%{version}-py2.6.egg-info
 
 %changelog
+* Fri Dec  5 2014 Stuart Gathman <stuart@gathman.org> 2.0.11-1
+- Fix another bug in SPF record parsing that caused records with terms
+  separated by multple spaces as invalid, but they are fine per the ABNF
+- Downcase names in additional answers returned by DNS before adding
+  to cache, since case inconsistency can cause PTR match failures (initial
+  patch thanks to Joni Fieggen) and other problems.
+
 * Tue Sep  2 2014 Stuart Gathman <stuart@gathman.org> 2.0.10-1
 - Fix AAAA not flagged as bytes when strict=2 
 - Split mechanisms by space only, not by whitespace

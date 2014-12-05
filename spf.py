@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.10):
 # $Log$
+# Revision 1.108.2.135  2014/12/03 01:11:09  customdesigned
+# Fold case of domain for all cache entries.
+#
 # Revision 1.108.2.134  2014/12/03 01:01:24  customdesigned
 # PTR case change fix with test case
 #
@@ -58,7 +61,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.11: UNRELEASED"
+__version__ = "2.0.11: Dec 5, 2014"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
