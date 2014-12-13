@@ -666,7 +666,7 @@ zonedata:
   1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa:
     - PTR: e3.example.com
   1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.D.0.1.0.0.2.ip6.arpa:
-    - PTR: mail.example.com
+    - PTR: mail.Example.com
   e3.example.com:
     - SPF: v=spf1 ptr -all
     - A: 1.2.3.4
@@ -676,7 +676,7 @@ zonedata:
   e5.example.com:
     - SPF: "v=spf1 ptr:"
   e6.example.com:
-    - SPF: "v=spf1 ptr:Example.com -all"
+    - SPF: "v=spf1 ptr:example.Com -all"
 ---
 description: A mechanism syntax
 tests:

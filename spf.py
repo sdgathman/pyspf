@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.10):
 # $Log$
+# Revision 1.108.2.136  2014/12/05 16:20:07  customdesigned
+# Release 2.0.11
+#
 # Revision 1.108.2.135  2014/12/03 01:11:09  customdesigned
 # Fold case of domain for all cache entries.
 #
@@ -98,9 +101,12 @@ except ImportError:
 try:
     # Python standard libarary as of python3.3
     import ipaddress
+    if bytes is str:
+      from ipaddress import Bytes
 except ImportError:
     try:
         import ipaddr as ipaddress
+        from ipaddr import Bytes
     except ImportError:
         print('ipaddr module required: http://code.google.com/p/ipaddr-py/')
 
@@ -1200,7 +1206,7 @@ class query(object):
                     'No %s records found for'%A, domainname)
         if A == 'AAAA' and bytes is str:
           # work around pydns inconsistency plus python2 bytes/str ambiguity
-          return [ipaddress.Bytes(ip) for ip in r]
+          return [Bytes(ip) for ip in r]
         return r
 
     def validated_ptrs(self):
