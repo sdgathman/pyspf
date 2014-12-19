@@ -32,39 +32,14 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.10):
 # $Log$
-# Revision 1.108.2.136  2014/12/05 16:20:07  customdesigned
-# Release 2.0.11
-#
-# Revision 1.108.2.135  2014/12/03 01:11:09  customdesigned
-# Fold case of domain for all cache entries.
-#
-# Revision 1.108.2.134  2014/12/03 01:01:24  customdesigned
-# PTR case change fix with test case
-#
-# Revision 1.108.2.133  2014/10/06 11:54:11  kitterma
-# *** empty log message ***
-#
-# Revision 1.108.2.132  2014/10/06 11:51:03  kitterma
-#   * Downcase IPv6 PTR results since case inconsistency can cause PTR match
-#     failures (patch thanks to Joni Fieggen)
-#
-# Revision 1.108.2.131  2014/09/22 17:20:33  customdesigned
-# Update comments
-#
-# Revision 1.108.2.130  2014/09/22 17:13:53  customdesigned
-# Cleaner fix for multiple spaces.
-#
-# Revision 1.108.2.129  2014/09/21 21:11:47  kitterma
-#  * Reset to start 2.0.11 development
-#  * Fixed bug where multiple spaces between terms causes pyspf to think they
-#    were unknown mechanisms
-#
+# Revision 1.108.2.137  2014/12/13 15:39:27  customdesigned
+# Require ipaddress/ipaddr backport with Bytes for python2.
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.11: Dec 5, 2014"
+__version__ = "2.0.12: UNRELEASED"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
