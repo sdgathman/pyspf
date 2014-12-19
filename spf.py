@@ -30,8 +30,11 @@ For news, bugfixes, etc. visit the home page for this implementation at
     http://www.wayforward.net/spf/
 """
 
-# CVS Commits since last release (2.0.10):
+# CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.138  2014/12/19 00:15:12  kitterma
+# Bump versions, etc. to start 2.0.12 development.
+#
 # Revision 1.108.2.137  2014/12/13 15:39:27  customdesigned
 # Require ipaddress/ipaddr backport with Bytes for python2.
 #
