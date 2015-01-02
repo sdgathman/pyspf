@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.140  2015/01/02 00:26:08  customdesigned
+# Make CNAME loop check case insensitive.
+#
 # Revision 1.108.2.139  2014/12/19 00:16:12  kitterma
 # Missed a spot bumping to 2.0.12.
 #
@@ -1289,7 +1292,7 @@ class query(object):
                 #return result    # if too many == NX_DOMAIN
                 raise PermError('Length of CNAME chain exceeds %d' % MAX_CNAME)
             cnames[name] = cname
-            if cname.lower() in cnames:
+            if cname.lower().rstrip('.') in cnames:
                 raise PermError('CNAME loop')
             result = self.dns(cname, qtype, cnames=cnames)
             if result:

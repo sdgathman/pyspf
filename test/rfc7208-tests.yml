@@ -651,6 +651,13 @@ tests:
     host: 2001:db8::1
     mailfrom: bar@e6.example.com
     result: pass
+  ptr-cname-loop:
+    description: >-
+      a PTR with CNAME loop
+    helo: loop.example.com
+    host: 192.0.2.4
+    mailfrom: postmaster@loop.example.com
+    result: permerror
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -677,6 +684,15 @@ zonedata:
     - SPF: "v=spf1 ptr:"
   e6.example.com:
     - SPF: "v=spf1 ptr:example.Com -all"
+  loop.example.com:
+    - SPF: "v=spf1 ptr"
+  4.2.0.192.in-addr.arpa:
+    - PTR: "loop4.example.com."
+  loop4.example.com:
+    - CNAME: "CNAME.example.com."
+  cname.example.com:
+    - CNAME: "CNAME.example.com."
+
 ---
 description: A mechanism syntax
 tests:
