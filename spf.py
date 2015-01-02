@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.139  2014/12/19 00:16:12  kitterma
+# Missed a spot bumping to 2.0.12.
+#
 # Revision 1.108.2.138  2014/12/19 00:15:12  kitterma
 # Bump versions, etc. to start 2.0.12 development.
 #
@@ -1286,7 +1289,7 @@ class query(object):
                 #return result    # if too many == NX_DOMAIN
                 raise PermError('Length of CNAME chain exceeds %d' % MAX_CNAME)
             cnames[name] = cname
-            if cname in cnames:
+            if cname.lower() in cnames:
                 raise PermError('CNAME loop')
             result = self.dns(cname, qtype, cnames=cnames)
             if result:
