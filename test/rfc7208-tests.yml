@@ -657,7 +657,7 @@ tests:
     helo: loop.example.com
     host: 192.0.2.4
     mailfrom: postmaster@loop.example.com
-    result: permerror
+    result: neutral
 zonedata:
   mail.example.com:
     - A: 1.2.3.4

@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.141  2015/01/02 01:08:18  customdesigned
+# Test case and fix for mixed case CNAME loop.
+#
 # Revision 1.108.2.140  2015/01/02 00:26:08  customdesigned
 # Make CNAME loop check case insensitive.
 #
@@ -1293,10 +1296,11 @@ class query(object):
                 raise PermError('Length of CNAME chain exceeds %d' % MAX_CNAME)
             cnames[name] = cname
             if cname.lower().rstrip('.') in cnames:
-                raise PermError('CNAME loop')
-            result = self.dns(cname, qtype, cnames=cnames)
-            if result:
-                self.cache[(name,qtype)] = result
+                if self.strict > 1: raise AmbiguityWarning('CNAME loop', cname)
+            else:
+                result = self.dns(cname, qtype, cnames=cnames)
+                if result:
+                    self.cache[(name,qtype)] = result
         if not result and not ignore_void:
             self.void_lookups += 1
             if self.void_lookups > MAX_VOID_LOOKUPS:
