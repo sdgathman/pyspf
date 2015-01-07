@@ -653,7 +653,13 @@ tests:
     result: pass
   ptr-cname-loop:
     description: >-
-      a PTR with CNAME loop
+      a PTR with CNAME loop and inconsistent case in domain.
+    comment: >-
+      RFC 1034 3.6.2/11 says, CNAME chains should be followed and CNAME loops
+      signalled as an error.  RFC 7208 5.5/7 says, If a DNS error occurs while
+      doing an A RR lookup, then that domain name is skipped and the search
+      continues.
+    spec: 5.5/7
     helo: loop.example.com
     host: 192.0.2.4
     mailfrom: postmaster@loop.example.com
