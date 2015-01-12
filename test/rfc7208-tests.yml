@@ -136,6 +136,14 @@ tests:
     host: 1.2.3.4
     mailfrom: "actually@fine.example.com"
     result: fail
+  trailing-space:
+    description: >-
+      ABNF for terms does not allow trailing spaces.
+    spec: 4.6.1/2
+    helo: hosed
+    host: 192.0.2.5
+    mailfrom: "silly@bad.example.com"
+    result: permerror
 zonedata:
   example.com:
     - TIMEOUT
@@ -160,7 +168,9 @@ zonedata:
     - SPF:  "v=spf1 a:ctrl.example.com\x0dptr -all"
     - A: 192.0.2.3
   fine.example.com:
-    - TXT: "v=spf1 a  -all"
+    - SPF: "v=spf1 a  -all"
+  bad.example.com:
+    - SPF: "v=spf1 a -all "
 ---
 description: Record lookup
 tests:

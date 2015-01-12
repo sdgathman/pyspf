@@ -66,6 +66,7 @@ class SPFTest(object):
     self.id = testid
     self.scenario = scenario
     self.explanation = None
+    self.bestguess = None
     self.spec = None
     self.header = None
     self.strict = True
@@ -193,6 +194,9 @@ class SPFTestCase(unittest.TestCase):
       ok = False
     if t.header:
       self.assertEqual(t.header,q.get_header(res,receiver=t.receiver))
+    if q.perm_error and t.bestguess is not None \
+        and q.perm_error.ext[0] != t.bestguess:
+      ok = False
     if not ok:
       if verbose and not t.explanation: msg += exp+'\n'
       if verbose > 1: msg += t.scenario.zonedata

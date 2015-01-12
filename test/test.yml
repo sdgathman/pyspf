@@ -153,6 +153,15 @@ tests:
     mailfrom: root@e1.example.com
     result: fail
     strict: 0
+  ignore-trailing-space:
+    comment: |
+      Ignore trailing spaces in lax mode.
+    helo: hosed
+    host: 192.0.2.5
+    mailfrom: "silly@bad.example.com"
+    result: permerror
+    strict: 0
+    bestguess: fail
   default-modifier-harsh:
     comment: |
       default modifier implemented in lax mode for compatibility
@@ -195,4 +204,5 @@ zonedata:
   - CNAME: ''
   e3.example.com:
   - SPF: v=spf1 a:mx1.example.com mx:mx1.example.com ~all
-
+  bad.example.com:
+  - SPF: "v=spf1 a  -all "
