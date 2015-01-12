@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.142  2015/01/06 14:13:50  customdesigned
+# Make CNAME loop result in unknown host.
+#
 # Revision 1.108.2.141  2015/01/02 01:08:18  customdesigned
 # Test case and fix for mixed case CNAME loop.
 #
@@ -788,6 +791,11 @@ class query(object):
         # Just to make it even more fun, the relevant piece of the ABNF for
         # term separations is *( 1*SP ( directive / modifier ) ), so it's one
         # or more spaces, not just one.  So strip empty mechanisms.
+        # BUT, trailing spaces are NOT allowed, so check that first.
+        if not spf[-1]:
+            self.note_error('Trailing spaces are not allowed')
+            # ignore trailing spaces for LAX mode
+            while not spf[-1]: del spf[-1]
         spf = [mech for mech in spf[1:] if mech]
 
         # copy of explanations to be modified by exp=
