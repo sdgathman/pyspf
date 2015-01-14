@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.144  2015/01/13 04:40:07  customdesigned
+# Trailing spaces *are* allowed by 4.5/2
+#
 # Revision 1.108.2.143  2015/01/12 22:51:56  customdesigned
 # Trailing space is PermError, but strip for extended result in lax mode.
 #
@@ -370,6 +373,7 @@ class query(object):
         if querytime > 0:
             self.timeout = querytime
         self.timer = 0
+        self.ipaddr = None
         if i:
             self.set_ip(i)
         # Document bits of the object model not set up here:
@@ -414,12 +418,14 @@ class query(object):
         if ip6:
             self.A = 'AAAA'
             self.v = 'ip6'
-            self.i = '.'.join(list(self.ipaddr.exploded.replace(':','').upper()))
+            if self.ipaddr:
+              self.i = '.'.join(list(self.ipaddr.exploded.replace(':','').upper()))
             self.cidrmax = 128
         else:
             self.A = 'A'
             self.v = 'in-addr'
-            self.i = self.ipaddr.exploded
+            if self.ipaddr:
+              self.i = self.ipaddr.exploded
             self.cidrmax = 32
 
     def set_default_explanation(self, exp):
