@@ -146,6 +146,16 @@ tests:
     host: 192.0.2.5
     mailfrom: "silly@trail.example.com"
     result: fail
+  null-text:
+    description: >-
+      Multiple strings are glued together with no separator.
+    comment: >-
+      Note that null text (no strings) is illegal, but SPF should not crash.
+    spec: 3.3
+    helo: hosed
+    host: 192.0.2.5
+    mailfrom: "silly@null.example.com"
+    result: pass
 zonedata:
   example.com:
     - TIMEOUT
@@ -173,6 +183,9 @@ zonedata:
     - SPF: "v=spf1 a  -all"
   trail.example.com:
     - SPF: "v=spf1 a -all "
+  null.example.com:
+    - SPF: [ "v=spf1 ip4:", "192.0.2.5 -all" ]
+    - SPF: [ ]
 ---
 description: Record lookup
 tests:

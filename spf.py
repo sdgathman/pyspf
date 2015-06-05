@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.145  2015/01/14 20:27:42  customdesigned
+# Fix list feature
+#
 # Revision 1.108.2.144  2015/01/13 04:40:07  customdesigned
 # Trailing spaces *are* allowed by 4.5/2
 #
@@ -1162,7 +1165,7 @@ class query(object):
               dns_list = self.dns(domainname, rr,ignore_void=ignore_void)
               if dns_list:
                   # a[0][:0] is '' for py3dns-3.0.2, otherwise b''
-                  a = [a[0][:0].join(a) for a in dns_list]
+                  a = [a[0][:0].join(a) for a in dns_list if a]
                   # FIXME: workaround for error in py3dns-3.0.2
                   if isinstance(a[0],bytes):
                       return a
