@@ -33,6 +33,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.149  2015/08/05 13:07:09  customdesigned
+# Release 2.0.12
+#
 # Revision 1.108.2.148  2015/08/05 04:49:48  customdesigned
 # Reset void_lookups at top of check()
 #
@@ -479,15 +482,15 @@ class query(object):
         """
         if RE_TOPLAB.split(self.d)[-1]:
             return ('none', 250, '')
-	pe = self.perm_error
+        pe = self.perm_error
         r,c,e = self.check(spf)
-	if r == 'permerror':	# permerror not useful for bestguess
-	  if self.perm_error and self.perm_error.ext:
-	    r,c,e = self.perm_error.ext
-	  else:
-	    r,c = 'neutral',250
-	  self.perm_error = pe
-	return r,c,e
+        if r == 'permerror':	# permerror not useful for bestguess
+          if self.perm_error and self.perm_error.ext:
+            r,c,e = self.perm_error.ext
+          else:
+            r,c = 'neutral',250
+          self.perm_error = pe
+        return r,c,e
 
     def check(self, spf=None):
         """
@@ -1935,10 +1938,10 @@ if __name__ == '__main__':
         i, s, h = argv
         q = query(i=i, s=s, h=h,receiver=socket.gethostname(),verbose=verbose,
                 strict=strict)
-	r = q.check()
+        r = q.check()
         print('result:',r,q.mechanism)
-	if r[0] == 'none':
-	  print('guessed:',q.best_guess(),q.mechanism)
+        if r[0] == 'none':
+          print('guessed:',q.best_guess(),q.mechanism)
         if q.perm_error and q.perm_error.ext:
             print('lax:',q.perm_error.ext)
         if q.iplist:
@@ -1948,10 +1951,10 @@ if __name__ == '__main__':
         i, s, h = argv[1:]
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
             strict=False, verbose=verbose)
-	r = q.check(argv[0])
+        r = q.check(argv[0])
         print('result:',r,q.mechanism)
-	if r[0] == 'none':
-	  print('guessed:',q.best_guess(),q.mechanism)
+        if r[0] == 'none':
+          print('guessed:',q.best_guess(),q.mechanism)
         if q.perm_error and q.perm_error.ext:
             print('lax:',q.perm_error.ext)
     else:
