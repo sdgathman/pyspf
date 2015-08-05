@@ -32,6 +32,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.146  2015/06/05 15:58:18  customdesigned
+# Don't crash on null TXT record.
+#
 # Revision 1.108.2.145  2015/01/14 20:27:42  customdesigned
 # Fix list feature
 #
@@ -469,7 +472,12 @@ class query(object):
         """
         if RE_TOPLAB.split(self.d)[-1]:
             return ('none', 250, '')
-        return self.check(spf)
+	pe = self.perm_error
+        r,c,e = self.check(spf)
+	if r == 'permerror':
+	  self.perm_error = pe
+	  r = 'neutral'	# permerror not useful for bestguess
+	return r
 
     def check(self, spf=None):
         """
