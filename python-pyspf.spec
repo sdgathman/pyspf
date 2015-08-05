@@ -55,6 +55,14 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/python2.6/site-packages/pyspf-%{version}-py2.6.egg-info
 
 %changelog
+* Wed Aug  5 2015 Stuart Gathman <stuart@gathman.org> 2.0.12-1
+- Reset void_lookups at top of check() to fix bogus permerror on best_guess()
+- Ignore permerror for best_guess()
+- Don't crash on null DNS TXT record (ignore): test case null-text
+- Trailing spaces are allowed by 4.5/2: test case trailing-space
+- Make CNAME loop result in unknown host: test case ptr-cname-loop
+- Test case and fix for mixed case CNAME loop, test case ptr-cname-loop
+
 * Fri Dec  5 2014 Stuart Gathman <stuart@gathman.org> 2.0.11-1
 - Fix another bug in SPF record parsing that caused records with terms
   separated by multple spaces as invalid, but they are fine per the ABNF

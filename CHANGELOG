@@ -1,4 +1,10 @@
-Version 2.0.12 - UNRELEASED
+Version 2.0.12 - August 5, 2015
+  * Reset void_lookups at top of check()
+  * Ignore permerror for best_guess()
+  * Don't crash on null DNS TXT record (ignore): test case null-text
+  * Trailing spaces are allowed by 4.5/2: test case trailing-space
+  * Make CNAME loop result in unknown host: test case ptr-cname-loop
+  * Test case and fix for mixed case CNAME loop, test case ptr-cname-loop
 
 Version 2.0.11 - December 5, 2014
   * Fix another bug in SPF record parsing that caused records with terms
