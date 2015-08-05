@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 """SPF (Sender Policy Framework) implementation.
 
 Copyright (c) 2003 Terence Way <terry@wayforward.net>
@@ -32,6 +33,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.148  2015/08/05 04:49:48  customdesigned
+# Reset void_lookups at top of check()
+#
 # Revision 1.108.2.147  2015/08/05 03:36:59  customdesigned
 # Ignore permerror for best_guess
 #
@@ -69,7 +73,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.12: UNRELEASED"
+__version__ = "2.0.12: Aug 5, 2015"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
@@ -1932,11 +1936,11 @@ if __name__ == '__main__':
         q = query(i=i, s=s, h=h,receiver=socket.gethostname(),verbose=verbose,
                 strict=strict)
 	r = q.check()
-        print(r,q.mechanism)
+        print('result:',r,q.mechanism)
 	if r[0] == 'none':
-	  print(q.best_guess(),q.mechanism)
+	  print('guessed:',q.best_guess(),q.mechanism)
         if q.perm_error and q.perm_error.ext:
-            print(q.perm_error.ext)
+            print('lax:',q.perm_error.ext)
         if q.iplist:
             for ip in q.iplist:
                 print(ip)
@@ -1945,10 +1949,10 @@ if __name__ == '__main__':
         q = query(i=i, s=s, h=h, receiver=socket.gethostname(),
             strict=False, verbose=verbose)
 	r = q.check(argv[0])
-        print(r,q.mechanism)
+        print('result:',r,q.mechanism)
 	if r[0] == 'none':
-	  print(q.best_guess(),q.mechanism)
+	  print('guessed:',q.best_guess(),q.mechanism)
         if q.perm_error and q.perm_error.ext:
-            print(q.perm_error.ext)
+            print('lax:',q.perm_error.ext)
     else:
         print(USAGE)
