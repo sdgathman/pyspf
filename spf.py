@@ -31,55 +31,17 @@ For news, bugfixes, etc. visit the home page for this implementation at
     http://www.wayforward.net/spf/
 """
 
-# CVS Commits since last release (2.0.11):
+# CVS Commits since last release (2.0.12):
 # $Log$
-# Revision 1.108.2.150  2015/08/05 13:49:45  customdesigned
-# Forgot tabnanny
-#
-# Revision 1.108.2.149  2015/08/05 13:07:09  customdesigned
-# Release 2.0.12
-#
-# Revision 1.108.2.148  2015/08/05 04:49:48  customdesigned
-# Reset void_lookups at top of check()
-#
-# Revision 1.108.2.147  2015/08/05 03:36:59  customdesigned
-# Ignore permerror for best_guess
-#
-# Revision 1.108.2.146  2015/06/05 15:58:18  customdesigned
-# Don't crash on null TXT record.
-#
-# Revision 1.108.2.145  2015/01/14 20:27:42  customdesigned
-# Fix list feature
-#
-# Revision 1.108.2.144  2015/01/13 04:40:07  customdesigned
-# Trailing spaces *are* allowed by 4.5/2
-#
-# Revision 1.108.2.143  2015/01/12 22:51:56  customdesigned
-# Trailing space is PermError, but strip for extended result in lax mode.
-#
-# Revision 1.108.2.142  2015/01/06 14:13:50  customdesigned
-# Make CNAME loop result in unknown host.
-#
-# Revision 1.108.2.141  2015/01/02 01:08:18  customdesigned
-# Test case and fix for mixed case CNAME loop.
-#
-# Revision 1.108.2.140  2015/01/02 00:26:08  customdesigned
-# Make CNAME loop check case insensitive.
-#
-# Revision 1.108.2.139  2014/12/19 00:16:12  kitterma
-# Missed a spot bumping to 2.0.12.
-#
-# Revision 1.108.2.138  2014/12/19 00:15:12  kitterma
-# Bump versions, etc. to start 2.0.12 development.
-#
-# Revision 1.108.2.137  2014/12/13 15:39:27  customdesigned
-# Require ipaddress/ipaddr backport with Bytes for python2.
+# Revision 1.108.2.151  2016/04/26 03:53:04  kitterma
+#   * Catch ValueError due to improper IP address in connect IP or in ip4/ip6
+#     mechanisms
 #
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.12: Aug 5, 2015"
+__version__ = "2.0.13: UNRELEASED"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:
