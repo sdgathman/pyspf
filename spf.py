@@ -33,6 +33,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.11):
 # $Log$
+# Revision 1.108.2.150  2015/08/05 13:49:45  customdesigned
+# Forgot tabnanny
+#
 # Revision 1.108.2.149  2015/08/05 13:07:09  customdesigned
 # Release 2.0.12
 #
@@ -418,9 +421,12 @@ class query(object):
             ip6 = True
         else:
             try:
-                self.ipaddr = ipaddress.ip_address(i)
-            except AttributeError:
-                self.ipaddr = ipaddress.IPAddress(i)
+                try:
+                    self.ipaddr = ipaddress.ip_address(i)
+                except AttributeError:
+                    self.ipaddr = ipaddress.IPAddress(i)
+            except ValueError as x:
+                raise PermError(str(x))
             if self.ipaddr.version == 6:
                 if self.ipaddr.ipv4_mapped:
                     self.ipaddr = ipaddress.IPv4Address(self.ipaddr.ipv4_mapped)
@@ -508,6 +514,12 @@ class query(object):
     
     >>> q.check(spf='v=spf1 ip4:192.0.0.0/8 ?all moo')
     ('permerror', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
+
+    >>> q.check(spf='v=spf1 ip4:192.0.0.n ?all')
+    ('permerror', 550, 'SPF Permanent Error: Invalid IP4 address: ip4:192.0.0.n')
+
+    >>> q.check(spf='v=spf1 ip6:2001:db8:ZZZZ:: ?all')
+    ('permerror', 550, 'SPF Permanent Error: Invalid IP6 address: ip6:2001:db8:ZZZZ::')
 
     >>> q.check(spf='v=spf1 =a ?all moo')
     ('permerror', 550, 'SPF Permanent Error: Unknown qualifier, RFC 4408 para 4.6.1, found in: =a')
@@ -1373,27 +1385,30 @@ class query(object):
         True
         """
         try:
-            for netwrk in [ipaddress.ip_network(ip) for ip in ipaddrs]:
-                network = netwrk.supernet(new_prefix=n)
-                if isinstance(self.iplist, bool):
-                    if network.__contains__(self.ipaddr):
-                        return True
-                else:
-                    if n < self.cidrmax:
-                        self.iplist.append(network)
+            try:
+                for netwrk in [ipaddress.ip_network(ip) for ip in ipaddrs]:
+                    network = netwrk.supernet(new_prefix=n)
+                    if isinstance(self.iplist, bool):
+                        if network.__contains__(self.ipaddr):
+                            return True
                     else:
-                        self.iplist.append(network.ip)
-        except AttributeError:
-            for netwrk in [ipaddress.IPNetwork(ip,strict=False) for ip in ipaddrs]:
-                network = netwrk.supernet(new_prefix=n)
-                if isinstance(self.iplist, bool):
-                    if network.__contains__(self.ipaddr):
-                        return True
-                else:
-                    if n < self.cidrmax:
-                        self.iplist.append(network)
+                        if n < self.cidrmax:
+                            self.iplist.append(network)
+                        else:
+                            self.iplist.append(network.ip)
+            except AttributeError:
+                for netwrk in [ipaddress.IPNetwork(ip,strict=False) for ip in ipaddrs]:
+                    network = netwrk.supernet(new_prefix=n)
+                    if isinstance(self.iplist, bool):
+                        if network.__contains__(self.ipaddr):
+                            return True
                     else:
-                        self.iplist.append(network.ip)
+                        if n < self.cidrmax:
+                            self.iplist.append(network)
+                        else:
+                            self.iplist.append(network.ip)
+        except ValueError as x:
+            raise PermError(str(x))
         return False
 
     def parse_header_ar(self, val):
