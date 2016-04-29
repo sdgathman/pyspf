@@ -33,6 +33,9 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 # CVS Commits since last release (2.0.12):
 # $Log$
+# Revision 1.108.2.152  2016/04/26 03:57:04  kitterma
+#   * Set version and update changelog for 2.0.13 development.
+#
 # Revision 1.108.2.151  2016/04/26 03:53:04  kitterma
 #   * Catch ValueError due to improper IP address in connect IP or in ip4/ip6
 #     mechanisms
@@ -478,6 +481,9 @@ class query(object):
     ('permerror', 550, 'SPF Permanent Error: Unknown mechanism found: moo')
 
     >>> q.check(spf='v=spf1 ip4:192.0.0.n ?all')
+    ('permerror', 550, 'SPF Permanent Error: Invalid IP4 address: ip4:192.0.0.n')
+
+    >>> q.check(spf='v=spf1 ip4:192.0.2.3 ip4:192.0.0.n ?all')
     ('permerror', 550, 'SPF Permanent Error: Invalid IP4 address: ip4:192.0.0.n')
 
     >>> q.check(spf='v=spf1 ip6:2001:db8:ZZZZ:: ?all')
