@@ -90,14 +90,9 @@ except ImportError:
     except ImportError:
         print('ipaddr module required: http://code.google.com/p/ipaddr-py/')
 
-import DNS    # http://pydns.sourceforge.net
-if not hasattr(DNS.Type, 'SPF'):
-    # patch in type99 support
-    DNS.Type.SPF = 99
-    DNS.Type.typemap[99] = 'SPF'
-    DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
 
-def DNSLookup(name, qtype, strict=True, timeout=20):
+def DNSLookup_pydns(name, qtype, tcpfallback=True, timeout=30):
+
     try:
         req = DNS.DnsRequest(name, qtype=qtype, timeout=timeout)
         resp = req.req()
@@ -127,6 +122,54 @@ def DNSLookup(name, qtype, strict=True, timeout=20):
         raise TempError('DNS ' + str(x))
     except DNS.DNSError as x:
         raise TempError('DNS ' + str(x))
+
+
+def DNSLookup_dnspython(name, qtype, tcpfallback=True, timeout=30):
+    retVal = []
+    try:
+        # FIXME: how to disable TCP fallback in dnspython if not tcpfallback?
+        answers = dns.resolver.query(name, qtype)
+        for rdata in answers:
+            if qtype == 'A' or qtype == 'AAAA':
+                retVal.append(((name, qtype), rdata.address))
+            elif qtype == 'MX':
+                retVal.append(((name, qtype), (rdata.preference, rdata.exchange)))
+            elif qtype == 'PTR':
+                retVal.append(((name, qtype), rdata.target.to_text(True)))
+            elif qtype == 'TXT' or qtype == 'SPF':
+                retVal.append(((name, qtype), rdata.strings))
+    except dns.resolver.NoAnswer:
+        pass
+    except dns.resolver.NXDOMAIN:
+        pass
+    return retVal
+
+
+try:
+    # prefer dnspython (the more complete library)
+    import dns
+    import dns.resolver  # http://www.dnspython.org
+    import dns.exception
+
+    if not hasattr(dns.rdatatype,'SPF'):
+      # patch in type99 support
+      dns.rdatatype.SPF = 99
+      dns.rdatatype._by_text['SPF'] = dns.rdatatype.SPF
+
+    DNSLookup = DNSLookup_dnspython
+except:
+    import DNS    # http://pydns.sourceforge.net
+
+    if not hasattr(DNS.Type, 'SPF'):
+        # patch in type99 support
+        DNS.Type.SPF = 99
+        DNS.Type.typemap[99] = 'SPF'
+        DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
+
+    # Fails on Mac OS X? Add domain to /etc/resolv.conf
+    DNS.DiscoverNameServers()
+    DNSLookup = DNSLookup_pydns
+
 
 RE_SPF = re.compile(br'^v=spf1$|^v=spf1 ',re.IGNORECASE)
 
