@@ -1928,7 +1928,6 @@ def _test():
     import doctest, spf
     return doctest.testmod(spf)
 
-DNS.DiscoverNameServers() # Fails on Mac OS X? Add domain to /etc/resolv.conf
 
 if __name__ == '__main__':
     import getopt
