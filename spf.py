@@ -1315,8 +1315,11 @@ class query(object):
         pre: qtype in ['A', 'AAAA', 'MX', 'PTR', 'TXT', 'SPF']
         post: isinstance(__return__, types.ListType)
         """
+        if not name:
+            raise Exception('Invalid query')
+        name = str(name)
         if name.endswith('.'): name = name[:-1]
-        if not reduce(lambda x,y:x and 0 < len(y) < 64, name.split('.'),True):
+        if not reduce(lambda x, y: x and 0 < len(y) < 64, name.split('.'), True):
             return []   # invalid DNS name (too long or empty)
         name = name.lower()
         result = self.cache.get( (name, qtype), [])
