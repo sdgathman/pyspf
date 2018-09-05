@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 from distutils.core import setup
+import sys
 
 DESC = """SPF (Sender Policy Framework) implemented in Python."""
 
@@ -10,8 +11,8 @@ setup(name='pyspf',
       author='Terence Way',
       author_email='terry@wayforward.net',
       maintainer="Stuart D. Gathman",
-      maintainer_email="stuart@bmsi.com",
-      url='http://pymilter.sourceforge.net/',
+      maintainer_email="stuart@gathman.org",
+      url='https://github.com/sdgathman/pyspf/',
       license='Python Software Foundation License',
       py_modules=['spf'], packages = ['SPF'],
       keywords = ['spf','email','forgery'],
@@ -24,9 +25,13 @@ setup(name='pyspf',
 	'Natural Language :: English',
 	'Operating System :: OS Independent',
 	'Programming Language :: Python',
+	'Programming Language :: Python :: 3',
 	'Topic :: Communications :: Email :: Mail Transport Agents',
 	'Topic :: Communications :: Email :: Filters',
 	'Topic :: Internet :: Name Service (DNS)',
 	'Topic :: Software Development :: Libraries :: Python Modules'
       ]
 )
+
+if sys.version_info < (2, 6):
+    raise Exception("pyspf 2.0.6 and later requires at least python2.6.")

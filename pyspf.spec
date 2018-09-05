@@ -1,8 +1,14 @@
+%define __python python2.6
+%if "%{dist}" == ".el4" || "%{dist}" == ".el5"
+%define pythonbase python26
+%else
+%define pythonbase python
+%endif
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
-Name:           python-pyspf
-Version:        2.1
-Release:        1%{?dist}
+Name:           %{pythonbase}-pyspf
+Version:        2.0.12
+Release:        1
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
 Group:          Development/Languages
@@ -12,10 +18,9 @@ Source0:        pyspf-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
-BuildRequires:  python-setuptools python-devel
-Requires:       python-pydns python >= 2.6 python-authres python-ipaddr >= 2.1.10
-# Provide pyspf *only* if not using pyspf package for non-default python
-Provides:	pyspf
+BuildRequires:  %{pythonbase}-devel
+Requires:       %{pythonbase}-pydns, %{pythonbase} >= 2.6
+Requires:       %{pythonbase}-authres %{pythonbase}-ipaddr >= 2.1.10
 
 %description
 SPF does email sender validation.  For more information about SPF,
@@ -25,14 +30,12 @@ This SPF client is intended to be installed on the border MTA, checking
 if incoming SMTP clients are permitted to send mail.  The SPF check
 should be done during the MAIL FROM:<...> command.
 
-%define namewithoutpythonprefix %(echo %{name} | sed 's/^python-//')
+%define namewithoutpythonprefix %(echo %{name} | sed 's/^%{pythonbase}-//')
 %prep
 %setup -q -n %{namewithoutpythonprefix}-%{version}
 
-
 %build
 %{__python} setup.py build
-
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -41,16 +44,13 @@ mv $RPM_BUILD_ROOT/usr/bin/type99.py $RPM_BUILD_ROOT/usr/bin/type99
 mv $RPM_BUILD_ROOT/usr/bin/spfquery.py $RPM_BUILD_ROOT/usr/bin/spfquery
 rm -f $RPM_BUILD_ROOT/usr/bin/*.py{o,c}
 
-
 %clean
 rm -rf $RPM_BUILD_ROOT
-
 
 %files
 %defattr(-,root,root,-)
 %doc CHANGELOG PKG-INFO README test
 %{python_sitelib}/spf.py*
-%{python_sitelib}/SPF
 /usr/bin/type99
 /usr/bin/spfquery
 /usr/lib/python2.6/site-packages/pyspf-%{version}-py2.6.egg-info
@@ -98,7 +98,7 @@ rm -rf $RPM_BUILD_ROOT
 - Support Authentication-Results header field
 - Support overall DNS timeout
 
-* Thu Oct 27 2011 Stuart Gathman <stuart@bmsi.com> 2.0.6-1
+* Thu Oct 27 2011 Stuart Gathman <stuart@bmsi.com> 2.0.6-2
 - Python3 port (still requires 2to3 on spf.py)
 - Ensure Temperror for all DNS rcodes other than 0 and 3 per RFC 4408
 - Parse Received-SPF header
@@ -106,8 +106,10 @@ rm -rf $RPM_BUILD_ROOT
 - Handle invalid SPF record on command line
 - Add timeout to check2
 - Check for non-ascii policy
+
+* Wed Mar 03 2011 Stuart Gathman <stuart@bmsi.com> 2.0.6-1
+- Python-2.6
 - parse_header method
-- python2.6
 
 * Wed Apr 02 2008 Stuart Gathman <stuart@bmsi.com> 2.0.5-1
 - Add timeout parameter to query ctor and DNSLookup
@@ -120,7 +122,6 @@ rm -rf $RPM_BUILD_ROOT
 - PTR validation processing cleanup
 - Improved detection of exp= errors
 - Keyword args for get_header, minor fixes
-
 * Mon Jan 15 2007 Stuart Gathman <stuart@bmsi.com> 2.0.3-1
 - pyspf requires pydns, python-pyspf requires python-pydns
 - Record matching mechanism and add to Received-SPF header.
@@ -128,7 +129,6 @@ rm -rf $RPM_BUILD_ROOT
 - Test for type SPF (type 99) by default in harsh mode only.
 - Permerror for more than one exp or redirect modifier.
 - Parse op= modifier
-
 * Sat Dec 30 2006 Stuart Gathman <stuart@bmsi.com> 2.0.2-1
 - Update openspf URLs
 - Update Readme to better describe available pyspf interfaces
@@ -137,28 +137,18 @@ rm -rf $RPM_BUILD_ROOT
 - Add spfquery.py usage instructions
 - Incorporate downstream feedback from Debian packager
 - Fix key-value quoting in get_header
-
 * Fri Dec 08 2006 Stuart Gathman <stuart@bmsi.com> 2.0.1-1
 - Prevent cache poisoning attack
 - Prevent malformed RR attack
 - Update license on a few files we missed last time
-
-* Sat Dec 16 2006 Stuart Gathman <stuart@bmsi.com> 2.1-1
-- Provide driver package and dnspython support.
-
 * Mon Nov 20 2006 Stuart Gathman <stuart@bmsi.com> 2.0-1
 - Completed RFC 4408 compliance
 - Added spf.check2 for RFC 4408 compatible result codes
 - Full IP6 support
 - Fedora Core compatible RPM spec file
 - Update README, licenses
-
-* Wed Nov  8 2006 Stuart Gathman <stuart@bmsi.com> 2.0.1-1
-- Fix cache poisoning attack
-
 * Tue Sep 26 2006 Stuart Gathman <stuart@bmsi.com> 1.8-1
 - YAML test suite syntax
 - trailing dot support (RFC4408 8.1)
-
 * Tue Aug 29 2006 Sean Reifschneider <jafo@tummy.com> 1.7-1
 - Initial RPM spec file.

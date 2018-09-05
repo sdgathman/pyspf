@@ -1,16 +1,14 @@
-# This is the openspf.org test suite (release 2009.10) based on RFC 4408.
+# This is the openspf.org test suite (release 2014.04) based on RFC 7208.
 # http://www.openspf.org/Test_Suite
 #
 # $Id$
 # vim:sw=2 sts=2 et
 #
-# See rfc4408-tests.CHANGES for a changelog.
+# See rfc7208-tests.CHANGES for a changelog.
 #
 # Contributors:
 #   Stuart D Gathman    90% of the tests
-#   Julian Mehnle       proofread YAML syntax, spelling, formal schema
-# Informal contributors (suggestions but no code):
-#   Craig Whitmore
+#   Julian Mehnle       some tests, proofread YAML syntax, formal schema
 #   Frank Ellermann
 #   Scott Kitterman
 #   Wayne Schlitt
@@ -19,24 +17,17 @@
 #   Mark Shewmaker
 #   Philip Gladstone
 #
-# While the test suite is designed for all types of implementations, it only
-# needs to explicitly concern itself with SPF-only (type 99) and TXT-only
-# implementations.  This is because while an implementation may support both,
-# it must use only one record type for a given query - see 4.5/5.  If an
-# implementation finds SPF (type 99) records and decides to use them, they
-# override TXT, and it must ignore any TXT records.  Note that an
-# implementation may decide whether to use SPF records on a case by case basis.
-# Maybe it looks TXT and SPF up in parallel and goes with the first result to
-# come back.  Or maybe one is cached already.  Or maybe it chooses at random.
-# Think of dual SPF/TXT implementations as a quantum superposition of SPF-only
-# and TXT-only.  It must collapse to one or the other on each observation to be
-# compliant.
+# For RFC 4408, the test suite was designed for use with SPF (type 99) and TXT
+# implementations.  In RFC 7208, use of type SPF has been removed.
 #
 # The "Selecting records" test section is the only one concerned with weeding
-# out (incorrect) mixed behaviour and checking for proper response to duplicate
-# or conflicting records.  Other sections rely on auto-magic duplication
-# of SPF to TXT records (by test suite drivers) to test all implementation
-# types with one specification.
+# out (incorrect) queries for type SPF of any kind or proper response to
+# duplicate or conflicting records.  Other sections rely on auto-magic
+# duplication of SPF to TXT records (by test suite drivers) to test all
+# implementation types with one specification.
+#
+# All new tests should use Documentation IPs for both IP4 and IP6.  I was
+# stupid to use 1.2.3.4 - that is a real global IP (although it doesn't ping).
 #
 ---
 description: Initial processing
@@ -93,7 +84,7 @@ tests:
   non-ascii-policy:
     description: >-
       SPF policies are restricted to 7-bit ascii.
-    spec: 3.1.1/1
+    spec: 3.1/1
     helo: hosed
     host: 1.2.3.4
     mailfrom: "foobar@hosed.example.com"
@@ -103,7 +94,7 @@ tests:
       SPF policies are restricted to 7-bit ascii.
     comment: >-
       Checking a possibly different code path for non-ascii chars.
-    spec: 3.1.1/1
+    spec: 3.1/1
     helo: hosed
     host: 1.2.3.4
     mailfrom: "foobar@hosed2.example.com"
@@ -113,7 +104,7 @@ tests:
       SPF policies are restricted to 7-bit ascii.
     comment: >-
       Checking yet another code path for non-ascii chars.
-    spec: 3.1.1/1
+    spec: 3.1/1
     helo: hosed
     host: 1.2.3.4
     mailfrom: "foobar@hosed3.example.com"
@@ -122,13 +113,21 @@ tests:
     description: >-
       Non-ascii content in non-SPF related records.
     comment: >-
-      Non-SPF related TXT records are none of our business.  (But what about SPF records?)
-    spec: 3.1.1/1
+      Non-SPF related TXT records are none of our business.
+    spec: 4.5/1
     helo: hosed
     host: 1.2.3.4
     mailfrom: "foobar@nothosed.example.com"
     result: fail
     explanation: DEFAULT
+  control-char-policy:
+    description: >-
+      Mechanisms are separated by spaces only, not any control char.
+    spec: 4.6.1/2
+    helo: hosed
+    host: 192.0.2.3
+    mailfrom: "foobar@ctrl.example.com"
+    result: permerror
   two-spaces:
     description: >-
       ABNF for term separation is one or more spaces, not just one.
@@ -137,6 +136,26 @@ tests:
     host: 1.2.3.4
     mailfrom: "actually@fine.example.com"
     result: fail
+  trailing-space:
+    description: >-
+      ABNF for record does allow trailing spaces.
+    comment: >-
+      record           = version terms *SP
+    spec: 4.5/2
+    helo: hosed
+    host: 192.0.2.5
+    mailfrom: "silly@trail.example.com"
+    result: fail
+  null-text:
+    description: >-
+      Multiple strings are glued together with no separator.
+    comment: >-
+      Note that null text (no strings) is illegal, but SPF should not crash.
+    spec: 3.3
+    helo: hosed
+    host: 192.0.2.5
+    mailfrom: "silly@null.example.com"
+    result: pass
 zonedata:
   example.com:
     - TIMEOUT
@@ -157,8 +176,16 @@ zonedata:
   nothosed.example.com:
     - SPF:  "v=spf1 a:example.net -all"
     - SPF:  "\x96"
+  ctrl.example.com:
+    - SPF:  "v=spf1 a:ctrl.example.com\x0dptr -all"
+    - A: 192.0.2.3
   fine.example.com:
-    - TXT: "v=spf1 a  -all"
+    - SPF: "v=spf1 a  -all"
+  trail.example.com:
+    - SPF: "v=spf1 a -all "
+  null.example.com:
+    - SPF: [ "v=spf1 ip4:", "192.0.2.5 -all" ]
+    - SPF: [ ]
 ---
 description: Record lookup
 tests:
@@ -169,30 +196,32 @@ tests:
     mailfrom: foo@both.example.net
     result: fail
   txtonly:
-    description: Result is none if checking SPF records only.
+    description: Result is none if checking SPF records only
+      (which you should not be doing).
     spec: 4.4/1
     helo: mail.example.net
     host: 1.2.3.4
     mailfrom: foo@txtonly.example.net
-    result: [fail, none]
+    result: fail
   spfonly:
     description: Result is none if checking TXT records only.
     spec: 4.4/1
     helo: mail.example.net
     host: 1.2.3.4
     mailfrom: foo@spfonly.example.net
-    result: [fail, none]
+    result: none
   spftimeout:
     description: >-
       TXT record present, but SPF lookup times out.
-      Result is temperror if checking SPF records only.
+      Result is temperror if checking SPF records only.  Fortunately,
+      we don't do type SPF anymore.
     comment: >-
       This actually happens for a popular braindead DNS server.
     spec: 4.4/1
     helo: mail.example.net
     host: 1.2.3.4
     mailfrom: foo@spftimeout.example.net
-    result: [fail, temperror]
+    result: fail
   txttimeout:
     description: >-
       SPF record present, but TXT lookup times out.
@@ -201,7 +230,7 @@ tests:
     helo: mail.example.net
     host: 1.2.3.4
     mailfrom: foo@txttimeout.example.net
-    result: [fail, temperror]
+    result: temperror
   nospftxttimeout:
     description: >-
       No SPF record present, and TXT lookup times out.
@@ -214,7 +243,7 @@ tests:
     helo: mail.example.net
     host: 1.2.3.4
     mailfrom: foo@nospftxttimeout.example.net
-    result: [temperror, none]
+    result: temperror
   alltimeout:
     description: Both TXT and SPF queries time out
     spec: 4.4/2
@@ -271,23 +300,21 @@ tests:
     result: pass
   spfoverride:
     description: >-
-      SPF records override TXT records.  Older implementation may
-      check TXT records only.
+      SPF records no longer used.
     spec: 4.5/5
     helo: mail.example1.com
     host: 1.2.3.4
     mailfrom: foo@example4.com
-    result: [pass, fail]
+    result: fail
   multitxt1:
     description: >-
-      Older implementations will give permerror/unknown because of
-      the conflicting TXT records.  However, RFC 4408 says the SPF
-      records overrides them.
+      Implementations should give permerror/unknown because of
+      the conflicting TXT records.
     spec: 4.5/5
     helo: mail.example1.com
     host: 1.2.3.4
     mailfrom: foo@example5.com
-    result: [pass, permerror]
+    result: permerror
   multitxt2:
     description: >-
       Multiple records is a permerror, v=spf1 is case insensitive
@@ -309,14 +336,13 @@ tests:
     result: [permerror, fail]
   multispf2:
     description: >-
-      Older implementations ignoring SPF-type records will give pass because
-      there is a (single) TXT record.  But RFC 4408 requires permerror because
-      the SPF records override and there are more than one.
+      Ignoring SPF-type records will give pass because there is a (single)
+      TXT record.
     spec: 4.5/6
     helo: mail.example1.com
     host: 1.2.3.4
     mailfrom: foo@example8.com
-    result: [permerror, pass]
+    result: pass
   nospf:
     spec: 4.5/7
     helo: mail.example1.com
@@ -431,57 +457,67 @@ tests:
   invalid-domain:
     description: >-
       Domain-spec must end in macro-expand or valid toplabel.
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@t9.example.com
     result: permerror
   invalid-domain-empty-label:
     description: >-
-      target-name that is a valid domain-spec per RFC 4408 but an invalid
-      domain name per RFC 1035 (empty label) must be treated as non-existent.
+      target-name that is a valid domain-spec per RFC 4408 and RFC 7208 but an
+      invalid domain name per RFC 1035 (empty label) should be treated as
+      non-existent.
     comment: >-
       An empty domain label, i.e. two successive dots, in a mechanism
-      target-name is valid domain-spec syntax, even though a DNS query cannot
-      be composed from it.  The spec being unclear about it, this could either
-      be considered a syntax error, or, by analogy to 4.3/1 and 5/10/3, the
-      mechanism chould be treated as a no-match.
-    spec: [4.3/1, 5/10/3]
+      target-name is valid domain-spec syntax (perhaps formed from a macro
+      expansion), even though a DNS query cannot be composed from it.  The spec
+      being unclear about it, this could either be considered a syntax error,
+      or, by analogy to 4.3/1 and 5/10/3, the mechanism could be treated as a
+      no-match.  RFC 7208 failed to agree on which result to use, and declares
+      the situation undefined.  The preferred test result is therefore a matter
+      of opinion.
+    spec: 4.3/1, 4.8/5, 5/10/3
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@t10.example.com
-    result: [permerror, fail]
+    result: [fail, permerror]
   invalid-domain-long:
     description: >-
-      target-name that is a valid domain-spec per RFC 4408 but an invalid
-      domain name per RFC 1035 (long label) must be treated as non-existent.
+      target-name that is a valid domain-spec per RFC 4408 and RFC 7208 but an
+      invalid domain name per RFC 1035 (long label) must be treated as
+      non-existent.
     comment: >-
       A domain label longer than 63 characters in a mechanism target-name is
-      valid domain-spec syntax, even though a DNS query cannot be composed
-      from it.  The spec being unclear about it, this could either be
-      considered a syntax error, or, by analogy to 4.3/1 and 5/10/3, the
-      mechanism chould be treated as a no-match.
-    spec: [4.3/1, 5/10/3]
+      valid domain-spec syntax (perhaps formed from a macro expansion), even
+      though a DNS query cannot be composed from it.  The spec being unclear
+      about it, this could either be considered a syntax error, or, by analogy
+      to 4.3/1 and 5/10/3, the mechanism could be treated as a no-match.  RFC
+      7208 failed to agree on which result to use, and declares the situation
+      undefined.  The preferred test result is therefore a matter of opinion.
+    spec: 4.3/1, 4.8/5, 5/10/3
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@t11.example.com
-    result: [permerror,fail]
+    result: [fail,permerror]
   invalid-domain-long-via-macro:
     description: >-
-      target-name that is a valid domain-spec per RFC 4408 but an invalid
-      domain name per RFC 1035 (long label) must be treated as non-existent.
+      target-name that is a valid domain-spec per RFC 4408 and RFC 7208 but an
+      invalid domain name per RFC 1035 (long label) must be treated as
+      non-existent.
     comment: >-
       A domain label longer than 63 characters that results from macro
       expansion in a mechanism target-name is valid domain-spec syntax (and is
       not even subject to syntax checking after macro expansion), even though
       a DNS query cannot be composed from it.  The spec being unclear about
       it, this could either be considered a syntax error, or, by analogy to
-      4.3/1 and 5/10/3, the mechanism chould be treated as a no-match.
-    spec: [4.3/1, 5/10/3]
+      4.3/1 and 5/10/3, the mechanism could be treated as a no-match.  RFC 7208
+      failed to agree on which result to use, and declares the situation
+      undefined.  The preferred test result is therefore a matter of opinion.
+    spec: 4.3/1, 4.8/5, 5/10/3
     helo: "%%%%%%%%%%%%%%%%%%%%%%"
     host: 1.2.3.4
     mailfrom: foo@t12.example.com
-    result: [permerror,fail]
+    result: [fail,permerror]
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -626,9 +662,37 @@ tests:
     host: 1.2.3.4
     mailfrom: foo@e5.example.com
     result: permerror
+  ptr-case-change:
+    description: >-
+      arpa domain is case insensitive.
+    comment: >-
+      Some DNS servers have random case in the domain part of returned
+      answers, especially for PTR records.  For example, a query for
+      1.2.6.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.F.0.0.4.F.1.1.1.0.1.0.A.2.ip6.arpa
+      may return
+      1.2.6.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.F.0.0.4.F.1.1.1.0.1.0.a.2.ip6.arpa
+    spec: 5.5/2
+    helo: mail.example.com
+    host: 2001:db8::1
+    mailfrom: bar@e6.example.com
+    result: pass
+  ptr-cname-loop:
+    description: >-
+      a PTR with CNAME loop and inconsistent case in domain.
+    comment: >-
+      RFC 1034 3.6.2/11 says, CNAME chains should be followed and CNAME loops
+      signalled as an error.  RFC 7208 5.5/7 says, If a DNS error occurs while
+      doing an A RR lookup, then that domain name is skipped and the search
+      continues.
+    spec: 5.5/7
+    helo: loop.example.com
+    host: 192.0.2.4
+    mailfrom: postmaster@loop.example.com
+    result: neutral
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
+    - AAAA: 2001:db8::1
   e1.example.com:
     - SPF: v=spf1 ptr/0 -all
   e2.example.com:
@@ -639,6 +703,8 @@ zonedata:
     - PTR: mail.example.com
   1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa:
     - PTR: e3.example.com
+  1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.D.0.1.0.0.2.ip6.arpa:
+    - PTR: mail.Example.com
   e3.example.com:
     - SPF: v=spf1 ptr -all
     - A: 1.2.3.4
@@ -647,6 +713,17 @@ zonedata:
     - SPF: v=spf1 ptr -all
   e5.example.com:
     - SPF: "v=spf1 ptr:"
+  e6.example.com:
+    - SPF: "v=spf1 ptr:example.Com -all"
+  loop.example.com:
+    - SPF: "v=spf1 ptr"
+  4.2.0.192.in-addr.arpa:
+    - PTR: "loop4.example.com."
+  loop4.example.com:
+    - CNAME: "CNAME.example.com."
+  cname.example.com:
+    - CNAME: "CNAME.example.com."
+
 ---
 description: A mechanism syntax
 tests:
@@ -742,7 +819,7 @@ tests:
     description: >-
       domain-spec must pass basic syntax checks;
       a ':' may appear in domain-spec, but not in top-label
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e9.example.com
@@ -816,7 +893,7 @@ tests:
   a-null:
     description: >-
       Null octets not allowed in toplabel
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.5
     mailfrom: foo@e3.example.com
@@ -827,7 +904,7 @@ tests:
     comment: >-
       A common publishing mistake is using ip4 addresses with A mechanism.
       This should receive special diagnostic attention in the permerror.
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e4.example.com
@@ -835,7 +912,7 @@ tests:
   a-numeric-toplabel:
     description: >-
       toplabel may not be all numeric
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e5.example.com
@@ -851,7 +928,7 @@ tests:
       '( 1*alphanum "-" *( alphanum / "-" ) alphanum )', essentially causing
       a non-greedy, and thus, incomplete match.  Make sure a greedy match is
       performed!
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e14.example.com
@@ -859,7 +936,7 @@ tests:
   a-bad-toplabel:
     description: >-
       toplabel may not begin with a dash
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e12.example.com
@@ -867,7 +944,7 @@ tests:
   a-only-toplabel:
     description: >-
       domain-spec may not consist of only a toplabel.
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e5a.example.com
@@ -877,7 +954,7 @@ tests:
       domain-spec may not consist of only a toplabel.
     comment: >-
       "A trailing dot doesn't help."
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e5b.example.com
@@ -885,7 +962,7 @@ tests:
   a-colon-domain:
     description: >-
       domain-spec may contain any visible char except %
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e11.example.com
@@ -893,7 +970,7 @@ tests:
   a-colon-domain-ip4mapped:
     description: >-
       domain-spec may contain any visible char except %
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: ::FFFF:1.2.3.4
     mailfrom: foo@e11.example.com
@@ -1133,7 +1210,7 @@ tests:
       domain-spec must pass basic syntax checks
     comment: >-
       A ':' may appear in domain-spec, but not in top-label.
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e9.example.com
@@ -1157,6 +1234,8 @@ tests:
   mx-cidr4-0-ip6:
     description: >-
       cidr4 doesn't apply to IP6 connections.
+    comment: >-
+      The IP6 CIDR starts with a double slash.
     spec: 5.4/3
     helo: mail.example.com
     host: 1234::1
@@ -1199,7 +1278,7 @@ tests:
   mx-null:
     description: >-
       Null not allowed in top-label.
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.5
     mailfrom: foo@e3.example.com
@@ -1207,7 +1286,7 @@ tests:
   mx-numeric-top-label:
     description: >-
       Top-label may not be all numeric
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e5.example.com
@@ -1215,7 +1294,7 @@ tests:
   mx-colon-domain:
     description: >-
       Domain-spec may contain any visible char except %
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e11.example.com
@@ -1223,7 +1302,7 @@ tests:
   mx-colon-domain-ip4mapped:
     description: >-
       Domain-spec may contain any visible char except %
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: ::FFFF:1.2.3.4
     mailfrom: foo@e11.example.com
@@ -1231,7 +1310,7 @@ tests:
   mx-bad-toplab:
     description: >-
       Toplabel may not begin with -
-    spec: 8.1/2
+    spec: 7.1/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e12.example.com
@@ -1369,12 +1448,15 @@ tests:
     result: fail
   exists-dnserr:
     description: >-
-      Result for DNS error is being clarified in spfbis
-    spec: 5.7/3
+      Result for DNS error clarified in RFC7208: MTAs or other processors 
+      SHOULD impose a limit on the maximum amount of elapsed time to evaluate 
+      check_host().  Such a limit SHOULD allow at least 20 seconds.  If such 
+      a limit is exceeded, the result of authorization SHOULD be "temperror".
+    spec: 5/8
     helo: mail.example.com
     host: CAFE:BABE::3
     mailfrom: foo@e6.example.com
-    result: [fail, temperror]
+    result: temperror
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -1417,9 +1499,8 @@ tests:
     description: >-
       Invalid CIDR should get permerror.
     comment: >-
-      The RFC is silent on ip4 CIDR > 32 or ip6 CIDR > 128.  However,
-      since there is no reasonable interpretation (except a noop), we have
-      read between the lines to see a prohibition on invalid CIDR.
+      The RFC4408 was silent on ip4 CIDR > 32 or ip6 CIDR > 128, but RFC7208 
+      is explicit.  Invalid CIDR is prohibited.
     spec: 5.6/2
     helo: mail.example.com
     host: 1.2.3.4
@@ -1518,33 +1599,25 @@ tests:
     description: >-
       IP4 connections do not match ip6.
     comment: >-
-      There is controversy over ip4 mapped connections.  RFC4408 clearly
-      requires such connections to be considered as ip4.  However,
-      some interpret the RFC to mean that such connections should *also*
-      match appropriate ip6 mechanisms (but not, inexplicably, A or MX
-      mechanisms).  Until there is consensus, both
-      results are acceptable.
+      There was controversy over IPv4 mapped connections.  RFC7208 clearly
+      states IPv4 mapped addresses only match ip4: mechanisms.
     spec: 5/9/2
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e2.example.com
-    result: [neutral, pass]
+    result: neutral
   cidr6-ip4:
     description: >-
       Even if the SMTP connection is via IPv6, an IPv4-mapped IPv6 IP address
       (see RFC 3513, Section 2.5.5) MUST still be considered an IPv4 address.
     comment: >-
-      There is controversy over ip4 mapped connections.  RFC4408 clearly
-      requires such connections to be considered as ip4.  However,
-      some interpret the RFC to mean that such connections should *also*
-      match appropriate ip6 mechanisms (but not, inexplicably, A or MX
-      mechanisms).  Until there is consensus, both
-      results are acceptable.
+      There was controversy over ip4 mapped connections.  RFC7208 clearly
+      requires such connections to be considered as ip4 only.
     spec: 5/9/2
     helo: mail.example.com
     host: ::FFFF:1.2.3.4
     mailfrom: foo@e2.example.com
-    result: [neutral, pass]
+    result: neutral
   cidr6-0:
     description: >-
       Match any IP6
@@ -1610,7 +1683,7 @@ zonedata:
   e4.example.com:
     - SPF: v=spf1 ip6:::1.1.1.1//33
   e5.example.com:
-    - SPF: v=spf1 ip6:CAFE:BABE:8000::/33
+    - SPF: v=spf1 ip6:Cafe:Babe:8000::/33
   e6.example.com:
     - SPF: v=spf1 ip6::CAFE::BABE
 ---
@@ -1700,7 +1773,7 @@ tests:
       cannot check them all, but we can check this one.
     comment: >-
       Spaces are allowed in local-part.
-    spec: 8.1/6
+    spec: 7.1/6
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: "Macro Error@e8.example.com"
@@ -1884,6 +1957,26 @@ tests:
     mailfrom: "foobar@tworecs.example.com"
     result: fail
     explanation: DEFAULT
+  exp-void:
+    description: |
+      exp=nxdomain.tld
+    comment: >-
+      Non-existent exp= domains MUST NOT count against the void lookup limit.
+      Implementations should lookup any exp record at most once after
+      computing the result.
+    spec: 4.6.4/1, 6/2
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e23.example.com
+    result: fail
+  redirect-implicit:
+    description: |
+      redirect changes implicit domain
+    spec: 6.1/4
+    helo: e24.example.com
+    host: 192.0.2.2
+    mailfrom: bar@e24.example.com
+    result: pass
 zonedata:
   mail.example.com:
     - A: 1.2.3.4
@@ -1955,11 +2048,19 @@ zonedata:
   twoexp.example.com:
     - TXT: "one"
     - TXT: "two"
+  e23.example.com:
+    - SPF: v=spf1 a:erehwon.example.com a:foobar.com exp=nxdomain.com -all
+  e24.example.com:
+    - SPF: v=spf1 redirect=testimplicit.example.com
+    - A: 192.0.2.1
+  testimplicit.example.com:
+    - SPF: v=spf1 a -all
+    - A: 192.0.2.2
 ---
 description: Macro expansion rules
 tests:
   trailing-dot-domain:
-    spec: 8.1/16
+    spec: 7.1/16
     description: >-
       trailing dot is ignored for domains
     helo: msgbas2x.cos.example.com
@@ -1967,7 +2068,7 @@ tests:
     mailfrom: test@example.com
     result: pass
   trailing-dot-exp:
-    spec: 8.1
+    spec: 7.1
     description: >-
       trailing dot is not removed from explanation
     comment: >-
@@ -1980,7 +2081,7 @@ tests:
     result: fail
     explanation: This is a test.
   exp-only-macro-char:
-    spec: 8.1/8
+    spec: 7.1/8
     description: >-
       The following macro letters are allowed only in "exp" text: c, r, t
     helo: msgbas2x.cos.example.com
@@ -1988,7 +2089,7 @@ tests:
     mailfrom: test@e2.example.com
     result: permerror
   invalid-macro-char:
-    spec: 8.1/9
+    spec: 7.1/9
     description: >-
       A '%' character not followed by a '{', '%', '-', or '_' character
       is a syntax error.
@@ -1997,7 +2098,7 @@ tests:
     mailfrom: test@e1.example.com
     result: permerror
   invalid-embedded-macro-char:
-    spec: 8.1/9
+    spec: 7.1/9
     description: >-
       A '%' character not followed by a '{', '%', '-', or '_' character
       is a syntax error.
@@ -2006,7 +2107,7 @@ tests:
     mailfrom: test@e1e.example.com
     result: permerror
   invalid-trailing-macro-char:
-    spec: 8.1/9
+    spec: 7.1/9
     description: >-
       A '%' character not followed by a '{', '%', '-', or '_' character
       is a syntax error.
@@ -2018,13 +2119,13 @@ tests:
     description: >-
       macro-encoded percents (%%), spaces (%_), and URL-percent-encoded
       spaces (%-)
-    spec: 8.1/3, 8.1/4
+    spec: 7.1/3, 7.1/4
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: test@e1a.example.com
     result: pass
   exp-txt-macro-char:
-    spec: 8.1/20
+    spec: 7.1/20
     description: >-
       For IPv4 addresses, both the "i" and "c" macros expand
       to the standard dotted-quad format.
@@ -2034,7 +2135,7 @@ tests:
     result: fail
     explanation: Connections from 192.168.218.40 not authorized.
   domain-name-truncation:
-    spec: 8.1/25
+    spec: 7.1/25
     description: >-
       When the result of macro expansion is used in a domain name query, if the
       expanded domain name exceeds 253 characters, the left side is truncated
@@ -2046,7 +2147,7 @@ tests:
     result: fail
     explanation: Congratulations!  That was tricky.
   v-macro-ip4:
-    spec: 8.1/6
+    spec: 7.1/6
     description: |-
       v = the string "in-addr" if <ip> is ipv4, or "ip6" if <ip> is ipv6
     helo: msgbas2x.cos.example.com
@@ -2055,7 +2156,7 @@ tests:
     result: fail
     explanation: 192.168.218.40 is queried as 40.218.168.192.in-addr.arpa
   v-macro-ip6:
-    spec: 8.1/6
+    spec: 7.1/6
     description: |-
       v = the string "in-addr" if <ip> is ipv4, or "ip6" if <ip> is ipv6
     helo: msgbas2x.cos.example.com
@@ -2064,7 +2165,7 @@ tests:
     result: fail
     explanation: cafe:babe::1 is queried as 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.E.B.A.B.E.F.A.C.ip6.arpa
   undef-macro:
-    spec: 8.1/6
+    spec: 7.1/6
     description: >-
       Allowed macros chars are 'slodipvh' plus 'crt' in explanation.
     helo: msgbas2x.cos.example.com
@@ -2072,7 +2173,7 @@ tests:
     mailfrom: test@e5.example.com
     result: permerror
   p-macro-ip4-novalid:
-    spec: 8.1/22
+    spec: 7.1/22
     description: |-
       p = the validated domain name of <ip>
     comment: >-
@@ -2083,7 +2184,7 @@ tests:
     result: fail
     explanation: connect from unknown
   p-macro-ip4-valid:
-    spec: 8.1/22
+    spec: 7.1/22
     description: |-
       p = the validated domain name of <ip>
     comment: >-
@@ -2094,7 +2195,7 @@ tests:
     result: fail
     explanation: connect from mx.example.com
   p-macro-ip6-novalid:
-    spec: 8.1/22
+    spec: 7.1/22
     description: |-
       p = the validated domain name of <ip>
     comment: >-
@@ -2105,7 +2206,7 @@ tests:
     result: fail
     explanation: connect from unknown
   p-macro-ip6-valid:
-    spec: 8.1/22
+    spec: 7.1/22
     description: |-
       p = the validated domain name of <ip>
     comment: >-
@@ -2116,7 +2217,7 @@ tests:
     result: fail
     explanation: connect from mx.example.com
   p-macro-multiple:
-    spec: 8.1/22
+    spec: 7.1/22
     description: |-
       p = the validated domain name of <ip>
     comment: >-
@@ -2126,17 +2227,20 @@ tests:
     mailfrom: test@e7.example.com
     result: [pass, softfail]
   upper-macro:
-    spec: 8.1/26
+    spec: 7.1/26
     description: >-
       Uppercased macros expand exactly as their lowercased equivalents,
-      and are then URL escaped.
+      and are then URL escaped.  All chars not in the unreserved set
+      MUST be escaped.
+    comment: |
+      unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
     helo: msgbas2x.cos.example.com
     host: 192.168.218.42
-    mailfrom: jack&jill=up@e8.example.com
+    mailfrom: ~jack&jill=up-a_b3.c@e8.example.com
     result: fail
-    explanation: http://example.com/why.html?l=jack%26jill%3Dup
+    explanation: http://example.com/why.html?l=~jack%26jill%3Dup-a_b3.c
   hello-macro:
-    spec: 8.1/6
+    spec: 7.1/6
     description: |-
       h = HELO/EHLO domain
     helo: msgbas2x.cos.example.com
@@ -2144,7 +2248,7 @@ tests:
     mailfrom: test@e9.example.com
     result: pass
   invalid-hello-macro:
-    spec: 8.1/2
+    spec: 7.1/2
     description: |-
       h = HELO/EHLO domain, but HELO is invalid
     comment: >-
@@ -2155,7 +2259,7 @@ tests:
     mailfrom: test@e9.example.com
     result: fail
   hello-domain-literal:
-    spec: 8.1/2
+    spec: 7.1/2
     description: |-
       h = HELO/EHLO domain, but HELO is a domain literal
     comment: >-
@@ -2166,7 +2270,7 @@ tests:
     mailfrom: test@e9.example.com
     result: fail
   require-valid-helo:
-    spec: 8.1/6
+    spec: 7.1/6
     description: >-
       Example of requiring valid helo in sender policy.  This is a complex
       policy testing several points at once.
@@ -2175,7 +2279,7 @@ tests:
     mailfrom: test@e10.example.com
     result: fail
   macro-reverse-split-on-dash:
-    spec: [8.1/15, 8.1/16, 8.1/17, 8.1/18]
+    spec: 7.1/15, 7.1/16, 7.1/17, 7.1/18
     description: >-
       Macro value transformation (splitting on arbitrary characters, reversal,
       number of right-hand parts to use)
@@ -2184,7 +2288,7 @@ tests:
     mailfrom: philip-gladstone-test@e11.example.com
     result: pass
   macro-multiple-delimiters:
-    spec: [8.1/15, 8.1/16]
+    spec: 7.1/15, 7.1/16
     description: |-
       Multiple delimiters may be specified in a macro expression.
         macro-expand = ( "%{" macro-letter transformers *delimiter "}" )
@@ -2288,7 +2392,7 @@ tests:
     description: >-
       SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
-    spec: 10.1/6
+    spec: 4.6.4/1
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e1.example.com
@@ -2297,7 +2401,7 @@ tests:
     description: >-
       SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
-    spec: 10.1/6
+    spec: 4.6.4/1
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e2.example.com
@@ -2306,19 +2410,14 @@ tests:
     description: >-
       there MUST be a limit of no more than 10 MX looked up and checked.
     comment: >-
-      The required result for this test was the subject of much
-      controversy.  Many felt that the RFC *should* have specified
-      permerror, but the consensus was that it failed to actually do so.
-      The preferred result reflects evaluating the 10 allowed MX records in the
-      order returned by the test data - or sorted via priority.
-      If testing with live DNS, the MX order may be random, and a pass
-      result would still be compliant.  The SPF result is effectively
-      random.
-    spec: 10.1/7
+      The required result for this test was the subject of much controversy
+      with RFC4408.  For RFC7208 the ambiguity was resolved in favor of
+      producing a permerror result.
+    spec: 4.6.4/2
     helo: mail.example.com
     host: 1.2.3.5
     mailfrom: foo@e4.example.com
-    result: [neutral, pass, permerror]
+    result: permerror
   ptr-limit:
     description: >-
       there MUST be a limit of no more than 10 PTR looked up and checked.
@@ -2331,7 +2430,7 @@ tests:
       If testing with live DNS, the PTR order may be random, and a pass
       result would still be compliant.  The SPF result is effectively
       randomized.
-    spec: 10.1/7
+    spec: 4.6.4/3
     helo: mail.example.com
     host: 1.2.3.5
     mailfrom: foo@e5.example.com
@@ -2343,7 +2442,7 @@ tests:
       There seems to be a tendency for developers to want to limit
       A RRs in addition to MX and PTR.  These are IPs, not usable for
       3rd party DoS attacks, and hence need no low limit.
-    spec: 10.1/7
+    spec: 4.6.4
     helo: mail.example.com
     host: 1.2.3.12
     mailfrom: foo@e10.example.com
@@ -2352,7 +2451,7 @@ tests:
     description: >-
       SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
-    spec: 10.1/6
+    spec: 4.6.4/1
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e6.example.com
@@ -2364,7 +2463,7 @@ tests:
     comment: >-
       We do not check whether an implementation counts mechanisms before
       or after evaluation.  The RFC is not clear on this.
-    spec: 10.1/6
+    spec: 4.6.4/1
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e7.example.com
@@ -2375,10 +2474,9 @@ tests:
       that do DNS lookups to at most 10 per SPF check.
     comment: >-
       The part of the RFC that talks about MAY parse the entire record first
-      (4.6) is specific to syntax errors.  Processing limits is a different,
-      non-syntax issue.  Processing limits (10.1) specifically talks about
-      limits during a check.
-    spec: 10.1/6
+      (4.6) is specific to syntax errors.  In RFC7208, processing limits are
+      part of syntax checking (4.6).
+    spec: 4.6.4/1
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e8.example.com
@@ -2387,10 +2485,33 @@ tests:
     description: >-
       SPF implementations MUST limit the number of mechanisms and modifiers
       that do DNS lookups to at most 10 per SPF check.
-    spec: 10.1/6
+    spec: 4.6.4/1
     helo: mail.example.com
     host: 1.2.3.4
     mailfrom: foo@e9.example.com
+    result: permerror
+  void-at-limit:
+    description: >-
+      SPF implementations SHOULD limit "void lookups" to two.  An 
+      implementation MAY choose to make such a limit configurable.
+      In this case, a default of two is RECOMMENDED.
+    comment: >-
+      This is a new check in RFC7208, but it's been implemented in Mail::SPF
+      for years with no issues.
+    spec: 4.6.4/7
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e12.example.com
+    result: neutral
+  void-over-limit:
+    description: >-
+      SPF implementations SHOULD limit "void lookups" to two.  An
+      implementation MAY choose to make such a limit configurable.
+      In this case, a default of two is RECOMMENDED.
+    spec: 4.6.4/7
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e11.example.com
     result: permerror
 zonedata:
   mail.example.com:
@@ -2463,3 +2584,41 @@ zonedata:
     - A: 1.2.3.10
     - A: 1.2.3.11
     - A: 1.2.3.12
+  e11.example.com:
+    - TXT: v=spf1 a:err.example.com a:err1.example.com a:err2.example.com ?all
+  e12.example.com:
+    - TXT: v=spf1 a:err.example.com a:err1.example.com ?all
+---
+description: Test cases from implementation bugs
+tests:
+  bytes-bug:
+    description: >-
+      Bytes vs str bug from pyspf.
+    comment: >-
+      Pyspf failed with strict=2 only.  Other implementations may ignore
+      the strict parameter.
+    spec: 5.4/4
+    helo: example.org
+    host: 2001:db8:ff0:100::2
+    mailfrom: test@example.org
+    result: pass
+    strict: 2
+zonedata:
+  example.org:
+    - SPF: "v=spf1 mx redirect=_spf.example.com"
+    - MX: [10,smtp.example.org]
+    - MX: [10,smtp1.example.com]
+  smtp.example.org:
+    - A: 198.51.100.2
+    - AAAA: 2001:db8:ff0:100::3
+  smtp1.example.com:
+    - A: 192.0.2.26
+    - AAAA: 2001:db8:ff0:200::2
+  2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1.0.0.F.F.0.8.B.D.0.1.0.0.2.ip6.arpa:
+    - PTR: smtp6-v.fe.example.org
+  smtp6-v.fe.example.org:
+    - AAAA: 2001:db8:ff0:100::2
+  _spf.example.com:
+    - SPF: "v=spf1 ptr:fe.example.org ptr:sgp.example.com exp=_expspf.example.org -all"
+  _expspf.example.org:
+    - TXT: "Sender domain not allowed from this host. Please see http://www.openspf.org/Why?s=mfrom&id=%{S}&ip=%{C}&r=%{R}"

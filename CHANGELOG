@@ -1,19 +1,130 @@
-Version 2.0.2 
+Version 2.0.13 - UNRELEASED
+  * Catch ValueError due to improper IP address in connect IP or in ip4/ip6
+    mechanisms
+
+Version 2.0.12 - August 5, 2015
+  * Reset void_lookups at top of check()
+  * Ignore permerror for best_guess()
+  * Don't crash on null DNS TXT record (ignore): test case null-text
+  * Trailing spaces are allowed by 4.5/2: test case trailing-space
+  * Make CNAME loop result in unknown host: test case ptr-cname-loop
+  * Test case and fix for mixed case CNAME loop, test case ptr-cname-loop
+
+Version 2.0.11 - December 5, 2014
+  * Fix another bug in SPF record parsing that caused records with terms
+    separated by multple spaces as invalid, but they are fine per the ABNF
+  * Downcase names in additional answers returned by DNS before adding
+    to cache, since case inconsistency can cause PTR match failures (initial
+    patch thanks to Joni Fieggen) and other problems.
+
+Version 2.0.10 - September 2, 2014
+  * Fix bug in SPF record parsing that caused all 'whitespace' characters to
+    be considered valid term separators and not just spaces
+  * Fixed multiple bugs in temperror processing that would lead to tracebacks
+    instead of correct error processing
+  * Fix AAAA not flagged as bytes when strict=2 
+  * Include '~' as safe char in url quoted macro expansion
+
+Version 2.0.9 - April 29, 2014
+  * Update for new SPF standards track RFC 7208
+    - Add processing for new void lookups processing limit
+    - Default SPF process timeout limit to 20 seconds per RFC 7208 4.6.4
+    - Change default DNS timeout to 20 seconds in DNSLookup to better match
+      RFC 7208 4.6.4
+    - Make mx lookups > 10 a permerror per RFC 7208 and mx-limit test
+    - Add RFC 7208 specific test suite and make allowance for RFC 7208 changes
+      in RFC 4408 test suite
+    - Convert YAML tests to TestCases, and have testspf.py return success/fail.
+
+Version 2.0.8 - July 24, 2013
+  * Use ipaddr/ipaddres module in place of custom IP processing code
+  * Numerous python3 compatibility fixes
+  * Improved unicode error detection in SPF records
+  * Fixed a bug caused by a null CNAME in cache
+
+Version 2.0.7 - January 19, 2012
+  * Allow for timeouts to be global for all DNS lookups instead of per DNS lookup
+    to allow for MAY processing time limitsin RFC 4408 10.1.  See README for
+    details.
+  * Use openspf.net for SPF web site instead of openspf.org
+  * Extend query.get_header to return either Received-SPF (still default) or
+    RFC 5451 Authentication Results headers (needs authres 0.3 or later)
+  * Rework query.parse_header:
+    - Make query.parse_header automatically select Received-DPF or
+      Authentication Results header types and use them to collect SPF
+      results from trusted relays
+    - Add query.parse_header_spf and query.parse_header_ar functions for
+      header type specific processing
+  * Finish Python3 port - works with python2.6/2.7/3.2 and 2to3 is no longer
+    required - will also work with newer py3dns where TXT records are returned
+    as type bytes and not strings
+  * Accounts for new py3dns error classes coming in py3dns 3.0.2 (but fully
+    backward compatible with earlier versions)
+  * check for 7-bit ascii on TXT and SPF records
+  * fix CNAME chain duplicating TXT records
+
+Version 2.0.6 - October 27, 2011
+  * Refactor code so that 2to3 will provide a working python3 module - Now
+    requires at least python2.6
+  * Update spfquery.py, type99.py, and testspf.py to work with either python or
+    python3 (2to3 not needed for these scripts)
+    - SPF test suite can now be run from either python or python3
+  * Ensure Temperror for all DNS rcodes other than 0 and 3 per RFC 4408
+  * Parse Received-SPF header
+  * Report CIDR error only for valid mechanism
+  * Handle invalid SPF record on command line
+  * Add timeout to check2
+
+Version 2.0.5 - July 29, 2008
+  * Add TCP fallback if DNS UDP reply is truncated
+    - Fixes inconsistent results from trying to use partial UDP replies
+  * Correct Received-SPF formatting
+  * Minor updates to reflect RFC 4408 errata
+  * Added License file for RFC 4408 test suite
+  * Update RFC 4408 test suite from svn
+  * Fix Type99 conversion script to work with multi-string TXT records
+  * Timeout parameter
+
+Version 2.0.4 - January 24, 2007
+  * Correct unofficial 'best guess' processing.
+  * PTR validation processing cleanup
+  * Improved detection of exp= errors
+  * Keyword parameters on get_header()
+
+Version 2.0.3 - January 15, 2007
+  * IPv6 compatibility test fix to support Python 2.2
+  * Change DNS queries to only check Type SPF in Harsh mode
+  * pyspf requires pydns, python-pyspf requires python-pydns
+  * Record matching mechanism and add to Received-SPF header.
+  * Test for RFC4408 6.2/4, and fix spf.py to comply.
+  * Permerror for more than one exp or redirect modifier.
+  * Parse op= modifier
+
+Version 2.0.2 - January 4, 2007
   * Update openspf URLs
+  * Update Readme to better describe available pyspf interfaces
+  * Add basic description of type99.py and spfquery.py scripts
+  * Add usage instructions for type99.py DNS RR type conversion script
+  * Add spfquery.py usage instructions
+  * Incorporate downstream feedback from Debian packager
   * Fix key-value quoting in get_header
+
 Version 2.0.1 - December 08, 2006 
   * Prevent cache poisoning attack
   * Prevent malformed RR attack
   * Update license on a few files we missed last time
+
 Version 2.0 - November 20, 2006
   * Completed RFC 4408 compliance
   * Added spf.check2 for RFC 4408 compatible result codes
   * Full IP6 support
   * Fedora Core compatible RPM spec file
   * Update README, licenses
+
 Version 1.8 - July 26, 2006
   * YAML test suite syntax
   * trailing dot support (RFC4408 8.1)
+
 Version 1.7 - July 21, 2005
   * Strict processing limits per newly official SPF RFC
   * Fixed several parsing bugs under RFC 
@@ -22,6 +133,7 @@ Version 1.7 - July 21, 2005
   * Validate spf.py against test suite, and add Received-SPF support to spf.py
   * Support best_guess for SPF
   * Support SPF delegation
+
 Version 1.6 - December 18, 2003
   * Arik Baratz pointed out endian problems using socket.inet_ntoa() and
     socket.inet_aton().  Use struct.pack("!L", struct.unpack("!L") to fix.

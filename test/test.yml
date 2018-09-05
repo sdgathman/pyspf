@@ -153,6 +153,29 @@ tests:
     mailfrom: root@e1.example.com
     result: fail
     strict: 0
+  default-modifier-harsh:
+    comment: |
+      default modifier implemented in lax mode for compatibility
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: root@e1.example.com
+    result: ambiguous
+    strict: 2
+  cname-chain:
+    comment: |
+      pyspf was duplicating TXT (and other) records while following CNAME
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: foo@e2.example.com
+    result: pass
+  null-cname:
+    comment: |
+      pyspf was getting a type error for null CNAMEs
+      Thanks to Kazuhiro Ogura <kazuhiro.ogura@hde.co.jp>
+    helo: mail.example.com
+    host: 1.2.3.4
+    mailfrom: bar@e3.example.com
+    result: softfail
 zonedata:
   mail.example.com:
   - MX: [0, '']
@@ -161,3 +184,14 @@ zonedata:
   - SPF: v=spf1 -all
   e1.example.com:
   - SPF: v=spf1 default=-
+  e2.example.com:
+  - CNAME: c1.example.com.
+  c1.example.com:
+  - CNAME: c2.example.com.
+  c2.example.com:
+  - SPF: v=spf1 a a:c1.example.com -all
+  - A: 1.2.3.4
+  mx1.example.com:
+  - CNAME: ''
+  e3.example.com:
+  - SPF: v=spf1 a:mx1.example.com mx:mx1.example.com ~all

@@ -55,19 +55,19 @@ class CIDParser(xml.sax.ContentHandler):
 
   def startElement(self,tag,attr):
       if tag == 'm':
-	if self.has_servers != None and not self.has_servers:
-	  raise ValueError(
+        if self.has_servers != None and not self.has_servers:
+          raise ValueError(
     "Declared <noMailServers\> and later <m>, this CID entry is not valid."
 	  )
-	self.has_servers = True
+        self.has_servers = True
       elif tag == 'noMailServers':
-	if self.has_servers:
-	  raise ValueError(
+        if self.has_servers:
+          raise ValueError(
     "Declared <m> and later <noMailServers\>, this CID entry is not valid."
 	  )
-	self.has_servers = False
+        self.has_servers = False
       elif tag == 'ep':
-	if attr.has_key('testing') and attr.getValue('testing') == 'true':
+        if attr.has_key('testing') and attr.getValue('testing') == 'true':
 	  # A CID with 'testing' found:
 	  # From the MS-specs:
 	  #  "Documents in which such attribute is present with a true
@@ -77,26 +77,26 @@ class CIDParser(xml.sax.ContentHandler):
 	  #  "Neutral (?): The SPF client MUST proceed as if a domain did
 	  #  not publish SPF data."
 	  # So we set SPF action to "neutral":
-	  self.action = '?all'
+          self.action = '?all'
       elif tag == 'mx':
 	  # The empty MX-tag, same as SPF's MX-mechanism
-	  self.spf.append('mx')
+          self.spf.append('mx')
       self.tag = tag
 
   def characters(self,text):
-	tag = self.tag
+        tag = self.tag
 	# Remove starting and trailing spaces from text:
-	text = text.strip()
+        text = text.strip()
 
-	if tag == 'a' or tag == 'r':
+        if tag == 'a' or tag == 'r':
 	    # The A and R tags from MS-CID are both handled by the 
 	    # ipv4/6-mechanisms from SPF:
-	    if text.find(':') < 0:
-	      mechanism = 'ip4'
-	    else:
-	      mechanism = 'ip6'
-	    self.spf.append(mechanism + ':' + text)
-	elif tag == 'indirect':
+            if text.find(':') < 0:
+              mechanism = 'ip4'
+            else:
+              mechanism = 'ip6'
+            self.spf.append(mechanism + ':' + text)
+        elif tag == 'indirect':
 	    # MS-CID's indirect is "sort of" the include from SPF:
 	    # Not really true, because the <indirect> tag from MS-CID also 
 	    # provides a fallback in case the included domain doesn't provide
@@ -105,14 +105,14 @@ class CIDParser(xml.sax.ContentHandler):
 	    # domain that declared the _ep-record with the <indirect> tag.
 	    # In SPF you would use the 'mx:domain' to handle this, but this
 	    # wouldn't depend on referred domain having or not SPF-records.
-	    cid_xml = self.cid_txt(text)
-	    if cid_xml:
-	      p = CIDParser()
-	      xml.sax.parseString(cid_xml,p)
-	      if p.has_servers != False:
-		self.spf += p.spf
-	    else:
-	      self.spf.append('mx:' + text)
+            cid_xml = self.cid_txt(text)
+            if cid_xml:
+              p = CIDParser()
+              xml.sax.parseString(cid_xml,p)
+              if p.has_servers != False:
+                self.spf += p.spf
+            else:
+              self.spf.append('mx:' + text)
 
   def cid_txt(self,domain):
     q = self.spf_query
@@ -126,11 +126,11 @@ class CIDParser(xml.sax.ContentHandler):
   def endElement(self,tag):
       if tag == 'ep':
 	# This is the end... assemble what we've got
-	spf_entry = ['v=spf1']
-	if self.has_servers != False:
-	  spf_entry += self.spf
-	spf_entry.append(self.action)
-	self.spf_entry = ' '.join(spf_entry)
+        spf_entry = ['v=spf1']
+        if self.has_servers != False:
+          spf_entry += self.spf
+        spf_entry.append(self.action)
+        self.spf_entry = ' '.join(spf_entry)
 
   def spf_txt(self,cid_xml):
     if not cid_xml.startswith('<'):

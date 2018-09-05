@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 
 # Author: Stuart D. Gathman <stuart@bmsi.com>
 # Copyright 2004 Business Management Systems, Inc.
@@ -10,6 +10,20 @@
 # Emulate the spfquery command line tool used by Wayne Schlitt's SPF test suite
 
 # $Log$
+# Revision 1.4.2.3  2011/10/27 04:44:58  kitterma
+# Update spfquery.py to work with 2.6, 2.7, and 3.2:
+#  - raise ... as ...
+#  - print()
+#
+# Revision 1.4.2.2  2008/03/26 14:34:35  kitterma
+# Change shebangs to #!/usr/bin/python throughout.
+#
+# Revision 1.4.2.1  2006/12/23 05:31:22  kitterma
+# Minor updates for packaging lessons learned from Ubuntu
+#
+# Revision 1.4  2006/11/20 18:39:41  customdesigned
+# Change license on spfquery.py.  Update README.  Move tests to test directory.
+#
 # Revision 1.3  2005/07/22 02:11:57  customdesigned
 # Use dictionary to check for CNAME loops.  Check limit independently for
 # each top level name, just like for PTR.
@@ -68,21 +82,21 @@ class PerlOptionParser(OptionParser):
                 self._process_long_opt(rargs, values)
             elif arg[:1] == "-" and len(arg) > 1:
                 # process a single perl style long option
-		rargs[0] = '-' + arg
+                rargs[0] = '-' + arg
                 self._process_long_opt(rargs, values)
             elif self.allow_interspersed_args:
                 largs.append(arg)
                 del rargs[0]
             else:
-		return
+                return
 
 def format(q):
   res,code,txt = q.check()
-  print res
-  if res in ('pass','neutral','unknown'): print
-  else: print txt
-  print 'spfquery:',q.get_header_comment(res)
-  print 'Received-SPF:',q.get_header(res,'spfquery')
+  print(res)
+  if res in ('pass','neutral','unknown'): print()
+  else: print(txt)
+  print('spfquery:',q.get_header_comment(res))
+  print('Received-SPF:',q.get_header(res,'spfquery'))
 
 def main(argv):
   parser = PerlOptionParser()
@@ -110,7 +124,7 @@ def main(argv):
       ip,sender,helo,rcpt = ln.split(None,3)
       q = spf.query(ip,sender,helo,local=opts.local_policy)
       if opts.explanation:
-	q.set_default_explanation(opts.explanation)
+        q.set_default_explanation(opts.explanation)
       format(q)
     fp.close()
     
