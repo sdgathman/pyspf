@@ -7,7 +7,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           %{pythonbase}-pyspf
-Version:        2.0.12
+Version:        2.0.13
 Release:        1
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -44,6 +44,9 @@ mv $RPM_BUILD_ROOT/usr/bin/type99.py $RPM_BUILD_ROOT/usr/bin/type99
 mv $RPM_BUILD_ROOT/usr/bin/spfquery.py $RPM_BUILD_ROOT/usr/bin/spfquery
 rm -f $RPM_BUILD_ROOT/usr/bin/*.py{o,c}
 
+%check
+%{__python} spf.py
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -56,6 +59,9 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/python2.6/site-packages/pyspf-%{version}-py2.6.egg-info
 
 %changelog
+* Mon Jul 23 2018 Stuart Gathman <stuart@gathman.org> 2.0.13-1
+- dnspython support
+
 * Wed Aug  5 2015 Stuart Gathman <stuart@gathman.org> 2.0.12-1
 - Reset void_lookups at top of check() to fix bogus permerror on best_guess()
 - Ignore permerror for best_guess()

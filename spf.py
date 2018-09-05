@@ -79,7 +79,7 @@ try:
 except ImportError:
     from email.Message import Message
 try:
-    # Python standard libarary as of python3.3
+    # Python standard library as of python3.3
     import ipaddress
     if bytes is str:
       from ipaddress import Bytes
@@ -158,7 +158,7 @@ try:
 
     DNSLookup = DNSLookup_dnspython
 except:
-    import DNS    # http://pydns.sourceforge.net
+    import DNS    # https://launchpad.net/pydns
 
     if not hasattr(DNS.Type, 'SPF'):
         # patch in type99 support
@@ -169,7 +169,6 @@ except:
     # Fails on Mac OS X? Add domain to /etc/resolv.conf
     DNS.DiscoverNameServers()
     DNSLookup = DNSLookup_pydns
-
 
 RE_SPF = re.compile(br'^v=spf1$|^v=spf1 ',re.IGNORECASE)
 

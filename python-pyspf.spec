@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.12
+Version:        2.0.13
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -13,7 +13,10 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
 BuildRequires:  python-setuptools python-devel
-Requires:       python-pydns python >= 2.6 python-authres python-ipaddr >= 2.1.10
+Requires:       python-pydns 
+Requires:       python-pydns 
+Requires:	python >= 2.6
+Requires:	python-authres python-ipaddr >= 2.1.10
 # Provide pyspf *only* if not using pyspf package for non-default python
 Provides:	pyspf
 
