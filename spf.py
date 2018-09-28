@@ -79,9 +79,12 @@ except ImportError:
     from email.Message import Message
 try:
     # Python standard libarary as of python3.3
-    import ipaddress
-    if bytes is str:
-      from ipaddress import Bytes
+    if (sys.version_info > (3,0)):
+      import ipaddress
+      if bytes is str:
+        from ipaddress import Bytes
+    else:
+      raise ImportError()
 except ImportError:
     try:
         import ipaddr as ipaddress
