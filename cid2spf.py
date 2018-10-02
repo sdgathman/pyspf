@@ -36,6 +36,7 @@
 # Ernesto Baschny <ernst@baschny.de>
 #
 
+from __future__ import print_function
 import xml.sax
 import spf
 
@@ -68,7 +69,7 @@ class CIDParser(xml.sax.ContentHandler):
         self.has_servers = False
       elif tag == 'ep':
         if attr.has_key('testing') and attr.getValue('testing') == 'true':
-	  # A CID with 'testing' found:
+      # A CID with 'testing' found:
 	  # From the MS-specs:
 	  #  "Documents in which such attribute is present with a true
 	  #  value SHOULD be entirely ignored (one should act as if the
@@ -79,17 +80,17 @@ class CIDParser(xml.sax.ContentHandler):
 	  # So we set SPF action to "neutral":
           self.action = '?all'
       elif tag == 'mx':
-	  # The empty MX-tag, same as SPF's MX-mechanism
+      # The empty MX-tag, same as SPF's MX-mechanism
           self.spf.append('mx')
       self.tag = tag
 
   def characters(self,text):
         tag = self.tag
-	# Remove starting and trailing spaces from text:
+        # Remove starting and trailing spaces from text:
         text = text.strip()
 
         if tag == 'a' or tag == 'r':
-	    # The A and R tags from MS-CID are both handled by the 
+        # The A and R tags from MS-CID are both handled by the
 	    # ipv4/6-mechanisms from SPF:
             if text.find(':') < 0:
               mechanism = 'ip4'
@@ -97,7 +98,7 @@ class CIDParser(xml.sax.ContentHandler):
               mechanism = 'ip6'
             self.spf.append(mechanism + ':' + text)
         elif tag == 'indirect':
-	    # MS-CID's indirect is "sort of" the include from SPF:
+        # MS-CID's indirect is "sort of" the include from SPF:
 	    # Not really true, because the <indirect> tag from MS-CID also 
 	    # provides a fallback in case the included domain doesn't provide
 	    # _ep-records: The inbound MX-servers of the included domains
@@ -125,7 +126,7 @@ class CIDParser(xml.sax.ContentHandler):
 
   def endElement(self,tag):
       if tag == 'ep':
-	# This is the end... assemble what we've got
+        # This is the end... assemble what we've got
         spf_entry = ['v=spf1']
         if self.has_servers != False:
           spf_entry += self.spf
@@ -144,11 +145,10 @@ class CIDParser(xml.sax.ContentHandler):
 if __name__ == '__main__':
   import sys
   if len(sys.argv) < 2:
-    print >>sys.stderr, \
-      """Usage: %s "<ep xmlns='http://ms.net/1'>...</ep>" """ % sys.argv[0]
+    print("""Usage: %s "<ep xmlns='http://ms.net/1'>...</ep>" """ % sys.argv[0], file=sys.stderr)
     sys.exit(1)
 
   cid_xml = sys.argv[1]
 
   p = CIDParser()
-  print p.spf_txt(cid_xml)
+  print(p.spf_txt(cid_xml))

@@ -1559,18 +1559,18 @@ class query(object):
             return ' '.join(res)
         elif header_type == 'authres':
             if envelope_from:
-                return str(authres.AuthenticationResultsHeader(authserv_id = aid, \
-                    results = [authres.SPFAuthenticationResult(result = tag, \
-                    result_comment = comment, smtp_mailfrom = self.d, \
+                return str(authres.AuthenticationResultsHeader(authserv_id = aid,
+                    results = [authres.SPFAuthenticationResult(result = tag,
+                    result_comment = comment, smtp_mailfrom = self.d,
                     smtp_mailfrom_comment = \
-                    'sender={0}; helo={1}; client-ip={2}; receiver={3}; mechanism={4}'.format(self.s, \
+                    'sender={0}; helo={1}; client-ip={2}; receiver={3}; mechanism={4}'.format(self.s,
                     self.h, self.c, self.r, mechanism))]))
             else:
-                return str(authres.AuthenticationResultsHeader(authserv_id = aid, \
-                    results = [authres.SPFAuthenticationResult(result = tag, \
-                    result_comment = comment, smtp_helo = self.h, \
+                return str(authres.AuthenticationResultsHeader(authserv_id = aid,
+                    results = [authres.SPFAuthenticationResult(result = tag,
+                    result_comment = comment, smtp_helo = self.h,
                     smtp_helo_comment = \
-                    'sender={0}; client-ip={1}; receiver={2}; mechanism={3}'.format(self.s, \
+                    'sender={0}; client-ip={1}; receiver={2}; mechanism={3}'.format(self.s,
                     self.c, self.r, mechanism))]))
         else:
             raise SyntaxError('Unknown results header type: {0}'.format(header_type))
