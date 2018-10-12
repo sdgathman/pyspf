@@ -1,3 +1,14 @@
+
+************
+*** NOTE ***
+************
+This repo was converted from CVS, and the real "master" branch is pyspf-2_0-branch.  The CVS conversion doesn't always pick 
+the right branch to designate "master".  I am still too much of a git newbie and haven't figured out how to rename
+pyspf-2_0-branch to master.  (I had no problem creating a pyspf-2.1 branch duplicating master.)  Several hard working devs have
+posted patches against this false "master", so I thought I should at least post this note until I get git figured out enough
+to do the rename.
+
+
 SPF
 Sender-Policy-Framework queries in Python.
 
