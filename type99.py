@@ -20,7 +20,7 @@ SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 For more information about SPF, a tool against email forgery, see
     http://www.openspf.org/"""
-    
+
 # Copy Bind zonefiles to stdout, removing TYPE99 RRs and
 # adding a TYPE99 RR for each TXT RR encountered.
 # This can be used to maintain SPF records as TXT RRs
@@ -74,66 +74,70 @@ import sys
 import fileinput
 import re
 
+
 def dnstxt(txt):
-  "Convert data into DNS TXT format (sequence of pascal strings)."
-  r = []
-  while txt:
-    s,txt = txt[:255],txt[255:]
-    r.append(chr(len(s))+s)
-  return ''.join(r)
+    "Convert data into DNS TXT format (sequence of pascal strings)."
+    r = []
+    while txt:
+        s, txt = txt[:255], txt[255:]
+        r.append(chr(len(s)) + s)
+    return ''.join(r)
+
 
 RE_TXT = re.compile(r'^(?P<rr>.*\s)TXT\s"(?P<str>v=spf1.*)"(?P<eol>.*)',
-	re.DOTALL)
+                    re.DOTALL)
 RE_TYPE99 = re.compile(r'\sTYPE99\s')
 
+
 def filter(fin):
-  for line in fin:
-    if not RE_TYPE99.search(line):
-      yield line
-    m = RE_TXT.match(line)
-    if not m:
-        left = line.split('(')
-        try:
-            right = left[1].split(')')
-        except IndexError as errmsg:
-            right = left[0].split(')')
-            if len(left) == 2:
-                right = left[1]
-            else:
-                left = line.split('(')
-                right = left[0]
-        middlelist = right[0].split('"')
-        middle = ''
-        for fragment in middlelist:
-            if fragment != ' ':
-                middle = middle + fragment
-        line = left[0] + '"' + middle + '"'
+    for line in fin:
+        if not RE_TYPE99.search(line):
+            yield line
         m = RE_TXT.match(line)
-    if m:
-      phrase = dnstxt(m.group('str'))
-      dns_string = ''
-      list = m.group('str')
-      for st in list:
-        dns_string += st
-      phrase = dnstxt(dns_string)
-      s = m.group('rr') + 'TYPE99 \# %i '%len(phrase)
-      yield s+''.join(["%02x"%ord(c) for c in phrase])+m.group('eol')
-    
-USAGE="""Usage:\t%s phrase
+        if not m:
+            left = line.split('(')
+            try:
+                right = left[1].split(')')
+            except IndexError as errmsg:
+                right = left[0].split(')')
+                if len(left) == 2:
+                    right = left[1]
+                else:
+                    left = line.split('(')
+                    right = left[0]
+            middlelist = right[0].split('"')
+            middle = ''
+            for fragment in middlelist:
+                if fragment != ' ':
+                    middle = middle + fragment
+            line = left[0] + '"' + middle + '"'
+            m = RE_TXT.match(line)
+        if m:
+            phrase = dnstxt(m.group('str'))
+            dns_string = ''
+            list = m.group('str')
+            for st in list:
+                dns_string += st
+            phrase = dnstxt(dns_string)
+            s = m.group('rr') + 'TYPE99 \# %i ' % len(phrase)
+            yield s + ''.join(["%02x" % ord(c) for c in phrase]) + m.group('eol')
+
+
+USAGE = """Usage:\t%s phrase
 	%s - <zoneinfo
 """
 
 if __name__ == '__main__':
-  if len(sys.argv) < 2:
-      sys.stderr.write(USAGE % (sys.argv[0],sys.argv[0]))
-      sys.exit(1)
-
-  if sys.argv[1] == '-':
-      sys.stdout.writelines(list(filter(fileinput.input())))
-  else:
-    dns_string = ''
-    list = sys.argv[1:]
-    for st in list:
-      dns_string += st
-    phrase = dnstxt(dns_string)
-    print("\# {0} {1}".format(len(phrase), ''.join(["%02x"%ord(c) for c in phrase])))
+    if len(sys.argv) < 2:
+        sys.stderr.write(USAGE % (sys.argv[0], sys.argv[0]))
+        sys.exit(1)
+    
+    if sys.argv[1] == '-':
+        sys.stdout.writelines(list(filter(fileinput.input())))
+    else:
+        dns_string = ''
+        list = sys.argv[1:]
+        for st in list:
+            dns_string += st
+        phrase = dnstxt(dns_string)
+        print("\# {0} {1}".format(len(phrase), ''.join(["%02x" % ord(c) for c in phrase])))
