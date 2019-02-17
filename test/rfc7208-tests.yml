@@ -2603,6 +2603,16 @@ tests:
     mailfrom: test@example.org
     result: pass
     strict: 2
+  cname-aliasing:
+    description: >-
+      referencing the same TXT record through multiple CNAME aliases
+    comment: >-
+      Pyspf incorrectly reports multiple SPF records
+    spec: 3.2/1
+    helo: mail.example.org
+    host: 192.0.2.27
+    mailfrom: test@mail.example.org
+    result: pass
 zonedata:
   example.org:
     - SPF: "v=spf1 mx redirect=_spf.example.com"
@@ -2622,3 +2632,12 @@ zonedata:
     - SPF: "v=spf1 ptr:fe.example.org ptr:sgp.example.com exp=_expspf.example.org -all"
   _expspf.example.org:
     - TXT: "Sender domain not allowed from this host. Please see http://www.openspf.org/Why?s=mfrom&id=%{S}&ip=%{C}&r=%{R}"
+  a.example.org:
+   - SPF: "v=spf1 a -all"
+   - TXT: "More TXT records."
+   - A: 192.0.2.27
+  b.example.org:
+   - CNAME: "a.example.org"
+  mail.example.org:
+   - SPF: "v=spf1 include:a.example.org include:b.example.org -all"
+   - A: 192.0.2.28
