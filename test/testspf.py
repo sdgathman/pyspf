@@ -6,7 +6,7 @@
 # and disclaimer are retained in their original form.
 
 # Run SPF test cases in the YAML format specified by the SPF council.
-
+from __future__ import print_function
 import unittest
 import socket
 import sys
@@ -23,7 +23,7 @@ zonedata = {}
 RE_IP4 = re.compile(r'\.'.join(
     [r'(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])']*4)+'$')
 
-def DNSLookup(name,qtype,strict=True,timeout=None):
+def DNSLookup(name,qtype,strict=True,timeout=None,level=0):
   try:
     #print name,qtype
     timeout = True
@@ -55,6 +55,10 @@ def DNSLookup(name,qtype,strict=True,timeout=None):
       elif t in ('TXT','SPF'):
         v = tuple([s.encode('utf-8') for s in v])
       yield ((n,t),v)
+      # emulate CNAME additional info for 1 level
+      if not level and t == 'CNAME':
+        for j in DNSLookup(v,qtype,strict,timeout,1):
+          yield j
   except KeyError:
     if name.startswith('error.'):
       raise spf.TempError('DNS timeout')
@@ -87,15 +91,14 @@ def getrdata(r,name):
     try:
       for i in list(m.items()):
         t,v = i
+        if t in ('TXT','SPF') and type(v) == str:
+          v = (v,)
         if t == 'TXT':
           gen = False # no generated TXT records
         elif t == 'SPF' and gen:
           txt.append(('TXT',v,name))
-        if v != 'NONE':
-          if t in ('TXT','SPF') and type(v) == str:
-            yield (t,(v,),name)
-          else:
-            yield (t,v,name)
+        if v != ('NONE',):
+          yield (t,v,name)
     except:
       yield m
   if gen:
@@ -176,6 +179,7 @@ class SPFTestCase(unittest.TestCase):
     t = self._spftest
     zonedata = t.scenario.zonedata
     q = spf.query(i=t.host, s=t.mailfrom, h=t.helo, strict=t.strict)
+    q.verbose = verbose
     q.set_default_explanation('DEFAULT')
     res,code,exp = q.check()
     #print q.mechanism
@@ -198,6 +202,7 @@ class SPFTestCase(unittest.TestCase):
         and q.perm_error.ext[0] != t.bestguess:
       ok = False
     if not ok:
+      print('Session cache:',q.cache)
       if verbose and not t.explanation: msg += exp+'\n'
       if verbose > 1: msg += t.scenario.zonedata
       self.fail(msg+"%s in %s failed, %s" % (t.id,t.scenario.filename,t.spec))
@@ -219,20 +224,28 @@ def makeSuite(filename):
     suite.addTest(SPFTestCase(t))
   return suite
 
-def suite(): 
+def docsuite():
   suite = unittest.makeSuite(SPFTestCases,'test')
-  suite.addTest(makeSuite('test.yml'))
-  suite.addTest(makeSuite('rfc7208-tests.yml'))
-  suite.addTest(makeSuite('rfc4408-tests.yml'))
   import doctest
   suite.addTest(doctest.DocTestSuite(spf))
   return suite
 
+def suite(): 
+  suite = docsuite()
+  suite.addTest(makeSuite('test.yml'))
+  suite.addTest(makeSuite('rfc7208-tests.yml'))
+  suite.addTest(makeSuite('rfc4408-tests.yml'))
+  return suite
+
 if __name__ == '__main__':
   tc = None
+  doctest = False
   for i in sys.argv[1:]:
     if i == '-v':
       verbose += 1
+      continue
+    if i == '-d':
+      doctest = True
       continue
     # a specific test selected by id from YAML files
     if not tc:
@@ -248,11 +261,12 @@ if __name__ == '__main__':
       tc.addTest(SPFTestCase(t2[i]))
   if not tc:
     # load zonedata for doctests
-    fp = open('doctest.yml','rb')
-    try:
+    with open('doctest.yml','rb') as fp:
       zonedata = loadZone(next(yaml.safe_load_all(fp)))
-    finally: fp.close()
-    tc = suite()	# all tests, including doctests
+    if doctest:
+      tc = docsuite()   # doctests only
+    else:
+      tc = suite()	# all tests, including doctests
   runner = unittest.TextTestRunner()
   res = runner.run(tc)
   for s in warnings:

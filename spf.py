@@ -1159,6 +1159,7 @@ class query(object):
         # for performance, check for most common case of TXT first
         a = [t for t in self.dns_txt(domain) if RE_SPF.match(t)]
         if len(a) > 1:
+            if self.verbose: print('cache=',self.cache)
             raise PermError('Two or more type TXT spf records found.')
         if len(a) == 1 and self.strict < 2:
             return to_ascii(a[0])
@@ -1299,7 +1300,12 @@ class query(object):
       ('SPF','SPF'): None
     }
 
-    # FIXME: move to dnsplug
+    # FIXME: move to anydns
+    #
+    #   All types return a list of values.  TXT/SPF values are 
+    #   in turn a list of strings (as bytes), as DNS supports long
+    #   strings as shorter strings which must be concatenated.
+    #
     def dns(self, name, qtype, cnames=None, ignore_void=False):
         """DNS query.
 
@@ -1313,6 +1319,12 @@ class query(object):
 
         pre: qtype in ['A', 'AAAA', 'MX', 'PTR', 'TXT', 'SPF']
         post: isinstance(__return__, types.ListType)
+
+        Examples:
+        >>> c = query(s='strong-bad@email.example.com',
+        ...           h='parallel.kitterman.org',i='192.0.2.123')
+        >>> c.dns('parallel.kitterman.org','TXT')
+        [('v=spf1 include:long.kitterman.org include:cname.kitterman.org -all',)]
         """
         if not name:
             raise Exception('Invalid query')
@@ -1326,6 +1338,8 @@ class query(object):
         cnamek = (name,'CNAME')
         cname = self.cache.get( cnamek )
 
+        debug = self.verbose and name.startswith('cname.')
+
         if cname:
             cname = cname[0]
         else:
@@ -1338,12 +1352,16 @@ class query(object):
                 timeout = self.timeout
             timethen = time.time()
             for k, v in DNSLookup(name, qtype, self.strict, timeout):
+                if debug: print('result=',k,v)
                 # Force case insensitivity in cache, DNS servers often
                 # return random case in domain part of answers.
                 k = (k[0].lower(), k[1]) 
                 if k == cnamek:
                     cname = v
+                    #result = self.cache.get( (cname, qtype), [])
+                    #if result: break
                 if k[1] == 'CNAME' or (qtype,k[1]) in safe2cache:
+                    if debug: print('addcache=',k,v)
                     self.cache.setdefault(k, []).append(v)
                     #if ans and qtype == k[1]:
                     #    self.cache.setdefault((name,qtype), []).append(v)

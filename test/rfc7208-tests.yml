@@ -2612,7 +2612,7 @@ tests:
     helo: mail.example.org
     host: 192.0.2.27
     mailfrom: test@mail.example.org
-    result: pass
+    result: fail
 zonedata:
   example.org:
     - SPF: "v=spf1 mx redirect=_spf.example.com"
@@ -2633,11 +2633,18 @@ zonedata:
   _expspf.example.org:
     - TXT: "Sender domain not allowed from this host. Please see http://www.openspf.org/Why?s=mfrom&id=%{S}&ip=%{C}&r=%{R}"
   a.example.org:
-   - SPF: "v=spf1 a -all"
-   - TXT: "More TXT records."
-   - A: 192.0.2.27
+    - TXT: "Another TXT record."
+    - TXT: "v=spf1 ip4:192.0.2.225 ?include:webmail.pair.com ?include:relay.pair.com -all"
+    - TXT: "More TXT records."
+    - TXT: "A third TXT record."
+    - AAAA: 2001:db8:ff0:300::4
   b.example.org:
-   - CNAME: "a.example.org"
+    - CNAME: "a.example.org"
   mail.example.org:
-   - SPF: "v=spf1 include:a.example.org include:b.example.org -all"
-   - A: 192.0.2.28
+    - SPF: "v=spf1 include:a.example.org include:b.example.org -all"
+    - A: 192.0.2.28
+  webmail.pair.com:
+    - TXT: "v=spf1 ip4:66.39.3.0/24 ip4:209.68.6.94/32"
+  relay.pair.com:
+    - TXT: "v=spf1 ip4:209.68.5.9/32 ip4:209.68.5.15/32 a -all"
+    - A: 192.0.2.131
