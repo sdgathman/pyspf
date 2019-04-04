@@ -1358,8 +1358,8 @@ class query(object):
                 k = (k[0].lower(), k[1]) 
                 if k == cnamek:
                     cname = v
-                    #result = self.cache.get( (cname, qtype), [])
-                    #if result: break
+                    result = self.cache.get( (cname, qtype), [])
+                    if result: break
                 if k[1] == 'CNAME' or (qtype,k[1]) in safe2cache:
                     if debug: print('addcache=',k,v)
                     self.cache.setdefault(k, []).append(v)
