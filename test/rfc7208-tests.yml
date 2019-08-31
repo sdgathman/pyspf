@@ -156,6 +156,14 @@ tests:
     host: 192.0.2.5
     mailfrom: "silly@null.example.com"
     result: pass
+  badip4:
+    description: >-
+      Mechanisms are separated by spaces only, not any control char.
+    spec: 4.6.1/2
+    helo: foobar
+    host: 192.0.2.5
+    mailfrom: "oops@badip.example.com"
+    result: permerror
 zonedata:
   example.com:
     - TIMEOUT
@@ -186,6 +194,8 @@ zonedata:
   null.example.com:
     - SPF: [ "v=spf1 ip4:", "192.0.2.5 -all" ]
     - SPF: [ ]
+  badip.example.com:
+    - SPF:  "v=spf1 ip4:192.0.2.5\x0a include:spf.protection.outlook.com ~all"
 ---
 description: Record lookup
 tests:

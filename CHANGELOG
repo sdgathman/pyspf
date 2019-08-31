@@ -1,4 +1,5 @@
 Version 2.0.13 - UNRELEASED
+  * 
   * Catch ValueError due to improper IP address in connect IP or in ip4/ip6
     mechanisms
 
