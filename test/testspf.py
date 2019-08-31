@@ -213,10 +213,10 @@ class SPFTestCases(unittest.TestCase):
     i, s, h = '1.2.3.4','sender@domain','helo'
     q = spf.query(i=i, s=s, h=h, receiver='localhost', strict=False)
     res,code,txt = q.check('v=spf1...')
-    self.assertEquals('none',res)
+    self.assertEqual('none',res)
     q = spf.query(i=i, s=s, h=h, receiver='localhost', strict=2)
     res,code,txt = q.check('v=spf1...')
-    self.assertEquals('ambiguous',res)
+    self.assertEqual('ambiguous',res)
 
 def makeSuite(filename):
   suite = unittest.TestSuite()
@@ -226,11 +226,16 @@ def makeSuite(filename):
 
 def docsuite():
   suite = unittest.makeSuite(SPFTestCases,'test')
+  try:
+    import authres
+  except:
+    print("no authres module: skipping doctests")
+    return suite
   import doctest
   suite.addTest(doctest.DocTestSuite(spf))
   return suite
 
-def suite(): 
+def suite(skipdoc=False): 
   suite = docsuite()
   suite.addTest(makeSuite('test.yml'))
   suite.addTest(makeSuite('rfc7208-tests.yml'))
