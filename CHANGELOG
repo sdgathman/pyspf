@@ -1,4 +1,5 @@
 Version 2.0.14
+  * Fix doctest for CNAME fixes to work with python and python3
 
 Version 2.0.13 - September 2, 2019
   * Catch ValueError due to improper IP address in connect IP or in ip4/ip6

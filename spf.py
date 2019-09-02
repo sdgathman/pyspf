@@ -1323,8 +1323,8 @@ class query(object):
         Examples:
         >>> c = query(s='strong-bad@email.example.com',
         ...           h='parallel.kitterman.org',i='192.0.2.123')
-        >>> c.dns('parallel.kitterman.org','TXT')
-        [('v=spf1 include:long.kitterman.org include:cname.kitterman.org -all',)]
+        >>> "".join( chr(x) for x in bytearray(c.dns('parallel.kitterman.org', 'TXT')[0][0]) )
+        'v=spf1 include:long.kitterman.org include:cname.kitterman.org -all'
         """
         if not name:
             raise Exception('Invalid query')
