@@ -6,6 +6,10 @@
 #   - = Removed a test case or otherwise relaxed a requirement
 #   * = Fixed a bug, or made a minor improvement
 
+--- 2019.08 (UNRELEASED)
+  ! Added multiple tests for creative syntax errors in SPF records
+    that were breaking implementations.
+
 --- 2014.04 (UNRELEASED)
   ! Updates for RFC 7208 (4408bis)
     ! Updated multiple tests not to consider type SPF records under mixed

@@ -44,7 +44,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
 __email__ = "pyspf@openspf.org"
-__version__ = "2.0.13: UNRELEASED"
+__version__ = "2.0.13"
 MODULE = 'spf'
 
 USAGE = """To check an incoming mail request:

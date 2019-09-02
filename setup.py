@@ -6,7 +6,7 @@ import sys
 DESC = """SPF (Sender Policy Framework) implemented in Python."""
 
 setup(name='pyspf',
-      version='2.0.13.3',
+      version='2.0.13',
       description=DESC,
       author='Terence Way',
       author_email='terry@wayforward.net',
