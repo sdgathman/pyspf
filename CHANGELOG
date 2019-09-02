@@ -1,6 +1,9 @@
-Version 2.0.13 - UNRELEASED
+Version 2.0.14
+
+Version 2.0.13 - September 2, 2019
   * Catch ValueError due to improper IP address in connect IP or in ip4/ip6
     mechanisms
+  * Fix for CNAME processing causing incorrect permerrors
 
 Version 2.0.12 - August 5, 2015
   * Reset void_lookups at top of check()
