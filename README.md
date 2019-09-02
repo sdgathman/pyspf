@@ -1,8 +1,7 @@
-SPF
-Sender-Policy-Framework queries in Python.
+# SPF
+## Sender-Policy-Framework queries in Python.
 
-Quick Start
-===========
+### Quick Start
 
 Installation
 ------------
@@ -110,7 +109,8 @@ Note: SPF results alone are never sufficient to decide that a message should be
 accepted.  Accept, reject, or defer decisions are a function of local reciever
 policy.
 
-The RFC 4408/7208 compliant API:
+The RFC 4408/7208 compliant API::
+
         >>> import spf
         >>> spf.check2(i='69.55.226.139',
         ...           s='terry@wayforward.net',

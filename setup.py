@@ -4,10 +4,14 @@ from distutils.core import setup
 import sys
 
 DESC = """SPF (Sender Policy Framework) implemented in Python."""
+with open("README.md", "r") as fh:
+    LONG_DESC = fh.read()
 
 setup(name='pyspf',
       version='2.0.13',
       description=DESC,
+      long_description=LONG_DESC,
+      long_description_content_type="text/markdown",
       author='Terence Way',
       author_email='terry@wayforward.net',
       maintainer="Stuart D. Gathman",
