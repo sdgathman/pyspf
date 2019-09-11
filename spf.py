@@ -142,6 +142,10 @@ def DNSLookup_dnspython(name, qtype, tcpfallback=True, timeout=30):
         pass
     except dns.resolver.NXDOMAIN:
         pass
+    except dns.exception.Timeout as x:
+        raise TempError('DNS ' + str(x))
+    except dns.resolver.NoNameservers as x:
+        raise TempError('DNS ' + str(x))
     return retVal
 
 
