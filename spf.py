@@ -91,7 +91,7 @@ except ImportError:
         print('ipaddr module required: http://code.google.com/p/ipaddr-py/')
 
 
-def DNSLookup_pydns(name, qtype, tcpfallback=True, timeout=30):
+def DNSLookup_pydns(name, qtype, strict=True, timeout=20):
 
     try:
         req = DNS.DnsRequest(name, qtype=qtype, timeout=timeout)
