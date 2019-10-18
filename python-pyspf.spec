@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           python-pyspf
-Version:        2.0.13
+Version:        2.0.14
 Release:        1%{?dist}
 Summary:        Python module and programs for SPF (Sender Policy Framework).
 
@@ -58,6 +58,18 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/python2.6/site-packages/pyspf-%{version}-py2.6.egg-info
 
 %changelog
+* Thu Oct 17 2019 Stuart Gathman <stuart@gathman.org> 2.0.14-1
+- Fix doctest for CNAME fixes to work with python and python3
+- Fix dnspython integration so that SPF TempError is properly raised when
+    there are timeout or no nameserver errors
+- Restore DNSLookup API for pydnsv(DNS) for tcp fallback works again
+
+* Mon Jul 23 2018 Stuart Gathman <stuart@gathman.org> 2.0.13-1
+- Add support for use of dnspython (dns) if installed
+- Catch ValueError due to improper IP address in connect IP or in ip4/ip6
+    mechanisms
+- Fix for CNAME processing causing incorrect permerrors
+
 * Wed Aug  5 2015 Stuart Gathman <stuart@gathman.org> 2.0.12-1
 - Reset void_lookups at top of check() to fix bogus permerror on best_guess()
 - Ignore permerror for best_guess()

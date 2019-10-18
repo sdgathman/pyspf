@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
     LONG_DESC = fh.read()
 
 setup(name='pyspf',
-      version='2.0.13',
+      version='2.0.14',
       description=DESC,
       long_description=LONG_DESC,
       long_description_content_type="text/markdown",
