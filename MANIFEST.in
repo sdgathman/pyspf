@@ -1,4 +1,4 @@
-include README
+include README*
 include NOTES
 include CHANGELOG
 include spf.py
