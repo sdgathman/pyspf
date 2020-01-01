@@ -2,7 +2,9 @@ Version 2.0.14
   * Fix doctest for CNAME fixes to work with python and python3
   * Fix dnspython integration so that SPF TempError is properly raised when
     there are timeout or no nameserver errors
+  * Add missing use of timeout parameter for dnspython DNSLookup
   * Restore DNSLookup API for pydnsv(DNS) for tcp fallback works again
+  * Update Installation section of README.md
 
 Version 2.0.13 - September 2, 2019
   * Add support for use of dnspython (dns) if installed

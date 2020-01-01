@@ -5,15 +5,15 @@
 
 Installation
 ------------
-This package requires PyDNS (or Py3DNS for running with Python 3) and either
-the ipaddr or python3.3 and later.  PyDNS is available at
-http://pydns.sourceforge.net.  Binary and source RPMs for PyDNS are also
-available from http://pymilter.sourceforge.net.  Py3DNS is available on pypi
-and at https://launchpad.net/py3dns.  The ipaddr module is available from
-http://code.google.com/p/ipaddr-py or as part of the Python standard library
-starting with python3.3 (as ipaddress).  This package requires authres from
-either pypi or http://launchpad.net/authentication-results-python to process
-and generate RFC 5451 Authentication Results headers.
+This package requires either the dns (dnspython) or DNS (PyDNS/Py3DNS modules
+and either the ipaddr module or python3.3 and later.  It does not work with
+the ipaddress module backport.  For dnspython, at least version 1.16.0 is
+required.  The authres module is required to process and generate RFC 7601
+Authentication Results headers.  These can all be installed from pypi via pip.
+Additionally, they are also available via many distribution packaging systems.
+
+pyspf uses traditional python distutils, so dependencies are not installed
+automatically.  pyspf can be installed from pypi via pip or manually:
 
 After unpacking the source distribution, install this in your site-
 specific Python extension directory::
@@ -23,9 +23,7 @@ specific Python extension directory::
 	# python setup.py install
 
 The minimum Python version required is python2.6.  The spf module in this
-version has been tested with python3.2 and does not require using 2to3. It
-will work with all versions of pydns or py3dns.  It works either with the
-stand alone ipaddr module or the standard library ipaddress module.
+version has been tested with python3 versions through python3.8.
 
 Testing
 -------

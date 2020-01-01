@@ -16,7 +16,7 @@ try:
   import yaml
 except:
   print("yaml can be found at http://pyyaml.org/")
-  print("Tested with PYYAML 3.04")
+  print("Tested with PYYAML 3.04 up to 5.1.2")
   raise
 
 zonedata = {}
