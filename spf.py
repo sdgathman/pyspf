@@ -2006,5 +2006,8 @@ if __name__ == '__main__':
           print('guessed:',q.best_guess(),q.mechanism)
         if q.perm_error and q.perm_error.ext:
             print('lax:',q.perm_error.ext)
+        if q.iplist:
+            for ip in q.iplist:
+                print(ip)
     else:
         print(USAGE)
