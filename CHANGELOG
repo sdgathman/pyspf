@@ -4,6 +4,7 @@ Version 2.0.14
     there are timeout or no nameserver errors
   * Add missing use of timeout parameter for dnspython DNSLookup
   * Restore DNSLookup API for pydnsv(DNS) for tcp fallback works again
+  * Update Installation section of README.md
 
 Version 2.0.13 - September 2, 2019
   * Add support for use of dnspython (dns) if installed
