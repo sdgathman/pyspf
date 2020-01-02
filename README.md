@@ -1,7 +1,11 @@
-# SPF
-## Sender-Policy-Framework queries in Python.
+SPF
+===
 
-### Quick Start
+Sender-Policy-Framework queries in Python
+-----------------------------------------
+
+Quick Start
+===========
 
 Installation
 ------------
@@ -73,9 +77,11 @@ should be done during the MAIL FROM:<...> command.
 
 There are two ways to use this package.  The first is from the command
 line::
+
 	% python spf.py {ip-addr} {mail-from} {helo}
 
 For instance, during an SMTP exchange from client 69.55.226.139::
+
 	S: 220 mail.example.com ESMTP Postfix
 	C: EHLO mx1.wayforward.net
 	S: 250-mail.example.com
@@ -83,9 +89,9 @@ For instance, during an SMTP exchange from client 69.55.226.139::
 	S: 250 8BITMIME
 	C: MAIL FROM:<terry@wayforward.net>
 
-Then the following command line would check if this is a valid sender:
-	% ./spf.py 69.55.226.139 terry@wayforward.net mx1.wayforward.net
-	('pass', 250, 'sender SPF authorized')
+Then the following command line would check if this is a valid sender::
+
+	% ./spf.py 69.55.226.139 terry@wayforward.net mx1.wayforward.net ('pass', 250, 'sender SPF authorized')
 
 Command line calls return RFC 4408/7208 result codes, i.e. 'pass', 'fail',
 'neutral', 'softfail, 'permerror', or 'temperror'.
