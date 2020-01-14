@@ -34,8 +34,7 @@ Testing
 After this package is installed, cd into the test directory and
 execute testspf.py::
 
-    % cd test
-    % python testspf.py
+    % python test/testspf.py
     WARN: invalid-domain-long in rfc4408-tests.yml, 8.1/2, 5/10: fail preferred to temperror
     WARN: txttimeout in rfc4408-tests.yml, 4.4/1: fail preferred to temperror
     WARN: spfoverride in rfc4408-tests.yml, 4.5/5: pass preferred to fail
@@ -51,7 +50,7 @@ This runs the SPF council test-suite as of when this package was built.
 It does not test the pyDNS installation, but uses an internal driver.
 This avoids changing results due to DNS timeouts.
 
-In addition, spf.py runs an internal self-test every time it is used from the
+In addition, pyspf/spf.py runs an internal self-test every time it is used from the
 command line.
 
 If you're running on Mac OS X, and it looks like DNS.DiscoverNameServers()
@@ -78,7 +77,7 @@ should be done during the MAIL FROM:<...> command.
 There are two ways to use this package.  The first is from the command
 line::
 
-	% python spf.py {ip-addr} {mail-from} {helo}
+	% python pyspf/spf.py {ip-addr} {mail-from} {helo}
 
 For instance, during an SMTP exchange from client 69.55.226.139::
 
@@ -91,7 +90,7 @@ For instance, during an SMTP exchange from client 69.55.226.139::
 
 Then the following command line would check if this is a valid sender::
 
-	% ./spf.py 69.55.226.139 terry@wayforward.net mx1.wayforward.net ('pass', 250, 'sender SPF authorized')
+	% ./pyspf/spf.py 69.55.226.139 terry@wayforward.net mx1.wayforward.net ('pass', 250, 'sender SPF authorized')
 
 Command line calls return RFC 4408/7208 result codes, i.e. 'pass', 'fail',
 'neutral', 'softfail, 'permerror', or 'temperror'.
@@ -99,7 +98,7 @@ Command line calls return RFC 4408/7208 result codes, i.e. 'pass', 'fail',
 The second way is via the module's APIs.
 
 The legacy (pySPF 1.6) API:
-	>>> import spf
+	>>> from pyspf import spf
 	>>> spf.check(i='69.55.226.139',
 	...           s='terry@wayforward.net',
 	...           h='mx1.wayforward.net')
@@ -115,7 +114,7 @@ policy.
 
 The RFC 4408/7208 compliant API::
 
-        >>> import spf
+        >>> from pyspf import spf
         >>> spf.check2(i='69.55.226.139',
         ...           s='terry@wayforward.net',
         ...           h='mx1.wayforward.net')
@@ -131,19 +130,19 @@ Python reimplementination of Wayne Schlitt's spfquery command line tool.
 
 The type99.py script is called from the command line as follows:
 
-python type99.py "v=spf1 -all" {Note: Use your desired SPF record instead.}
+python pyspf/type99.py "v=spf1 -all" {Note: Use your desired SPF record instead.}
 \# 12 0b763d73706631202d616c6c {This is the correct result for "v=spf1 -all"}
 
 or 
 
-python type99 - {File name}
+python pyspf/type99 - {File name}
 
 The input file format is a standard BIND Zone file.  The type99 script will add
 a Type99 record for each TXT record found in the file.  Use of DNS type 99
 (type SPF) was removed from SPF in RFC 7208, so this script should be of
 historical interest only.
 
-The spfquery.py script is called with a number of possible options.  Options can
+The pyspf/spfquery.py script is called with a number of possible options.  Options can
 either use standard '-' prefix or be PERL style long options, '--'.  Supported
 options are:
 
