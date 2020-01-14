@@ -7,6 +7,15 @@ DESC = """SPF (Sender Policy Framework) implemented in Python."""
 with open("README.md", "r") as fh:
     LONG_DESC = fh.read()
 
+if sys.version_info.major == 2:
+      pydns = 'pydns==2.3.6'
+else:
+      pydns = 'py3dns==3.2.1'
+
+install_requires=[
+      'PyYaml>=5.3',
+      pydns
+]
 setup(name='pyspf',
       version='2.0.14',
       description=DESC,
@@ -18,9 +27,10 @@ setup(name='pyspf',
       maintainer_email="stuart@gathman.org",
       url='https://github.com/sdgathman/pyspf/',
       license='Python Software Foundation License',
-      py_modules=['spf'],
+      packages=['pyspf'],
+      install_requires=install_requires,
       keywords = ['spf','email','forgery'],
-      scripts = ['type99.py','spfquery.py'],
+      scripts = ['pyspf/type99.py','pyspf/spfquery.py', 'pyspf/cid2spf.py'],
       classifiers = [
 	'Development Status :: 5 - Production/Stable',
 	'Environment :: No Input/Output (Daemon)',
