@@ -2,9 +2,7 @@ include README*
 include MANIFEST.in
 include NOTES
 include CHANGELOG
-include spf.py
-include spfquery.py
-include type99.py
+include pyspf/*
 include setup.py
 include setup.cfg
 include test/*.yml
