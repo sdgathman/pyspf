@@ -17,7 +17,7 @@ install_requires=[
       pydns
 ]
 setup(name='pyspf',
-      version='2.0.14',
+      version='2.1.0',
       description=DESC,
       long_description=LONG_DESC,
       long_description_content_type="text/markdown",
