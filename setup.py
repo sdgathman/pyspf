@@ -1,14 +1,34 @@
 #!/usr/bin/python
 
-from distutils.core import setup
+from setuptools import setup
 import sys
 
 DESC = """SPF (Sender Policy Framework) implemented in Python."""
 with open("README.md", "r") as fh:
     LONG_DESC = fh.read()
 
+try:
+    import dns
+    from dns import version
+    # dnspython minimum version is for timeout support
+    if (version.MAJOR, version.MINOR) >= (1,16):
+        if sys.version_info[0] == 2:
+            install_req = ['dnspython>=1.16.0', 'authres', 'ipaddr']
+        else:
+            install_req = ['dnspython>=1.16.0', 'authres']
+    # dnspython not present in sufficient version, so require PyDNS
+    elif sys.version_info[0] == 2:
+        install_req = ['PyDNS', 'authres', 'ipaddr']
+    else:
+        install_req = ['Py3DNS', 'authres']
+except ImportError:  # If dnspython is not installed, require PyDNS
+    if sys.version_info[0] == 2:
+        install_req = ['PyDNS', 'authres', 'ipaddr']
+    else:
+        install_req = ['Py3DNS', 'authres']
+
 setup(name='pyspf',
-      version='2.0.14',
+      version='2.0.15',
       description=DESC,
       long_description=LONG_DESC,
       long_description_content_type="text/markdown",
@@ -21,6 +41,9 @@ setup(name='pyspf',
       py_modules=['spf'],
       keywords = ['spf','email','forgery'],
       scripts = ['type99.py','spfquery.py'],
+      include_package_data=True,
+      zip_safe = False,
+      install_requires=install_req,
       classifiers = [
 	'Development Status :: 5 - Production/Stable',
 	'Environment :: No Input/Output (Daemon)',
