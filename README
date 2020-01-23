@@ -1,13 +1,14 @@
 
-************
 *** NOTE ***
-************
-This repo was converted from CVS, and the real "master" branch is pyspf-2_0-branch.  The CVS conversion doesn't always pick 
-the right branch to designate "master".  I am still too much of a git newbie and haven't figured out how to rename
-pyspf-2_0-branch to master.  (I had no problem creating a pyspf-2.1 branch duplicating master.)  Several hard working devs have
-posted patches against this false "master", so I thought I should at least post this note until I get git figured out enough
-to do the rename.
+============
 
+This has commits from contributors to master before I took a deep breath and renamed branches.  The pyspf-2.1 branch is 
+an earlier snapshot.  The goal of this branch is to merge fixes from master (now pyspf-2.0) with new ideas for pyspf-2.1.
+
+ 1. Use a directory for the module.  
+ 2. use dnsplug, dnsswitch, or other separate module, perhaps under spf directory for selecting dns library.  dkimpy also 
+ needs the pluggable DNS support.
+ 3. modules for ip6 support on ancient python system - probably not terribly relevant anymore.
 
 SPF
 Sender-Policy-Framework queries in Python.
