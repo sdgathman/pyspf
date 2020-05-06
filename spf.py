@@ -23,11 +23,11 @@ AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
 SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 For more information about SPF, a tool against email forgery, see
-    http://www.openspf.net/
+    http://www.open-spf.org/
 
 For news, bugfixes, etc. visit the home page for this implementation at
-    http://cheeseshop.python.org/pypi/pyspf/
-    http://sourceforge.net/projects/pymilter/
+    https://pypi.org/project/pyspf/
+    https://github.com/sdgathman/pymilter/
     http://www.wayforward.net/spf/
 """
 
@@ -802,7 +802,7 @@ class query(object):
                 raise PermError('implicit exists not allowed', mech)
             arg = self.expand_domain(arg)
             if not arg:
-                raise PermError('empty domain:',mech)
+                raise PermError('%s empty domain:'%self.d,mech)
             if m == 'include':
                 if arg == self.d:
                     if mech != 'include':
@@ -1342,7 +1342,7 @@ class query(object):
         cnamek = (name,'CNAME')
         cname = self.cache.get( cnamek )
 
-        debug = self.verbose and name.startswith('cname.')
+        debug = self.verbose # and name.startswith('cname.')
 
         if cname:
             cname = cname[0]
