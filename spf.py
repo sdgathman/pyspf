@@ -578,6 +578,11 @@ class query(object):
     
     >>> q.check(spf='v=spf1 ip4:1.2.3.4 ?all exp=_exp.controlledmail.com')
     ('neutral', 250, 'access neither permitted nor denied')
+
+    >>> r = query(i='list', s='office@kitterman.com', h=None)
+    >>> r.check()
+    ('fail', 550, 'SPF fail - not authorized')
+
         """
         self.mech = []        # unknown mechanisms
         # If not strict, certain PermErrors (mispelled
