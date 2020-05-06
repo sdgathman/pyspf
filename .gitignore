@@ -1,2 +1,4 @@
 dist/
 pyspf.egg-info/
+__pycache__/
+*.pyc
