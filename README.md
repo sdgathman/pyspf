@@ -10,21 +10,11 @@ Quick Start
 Installation
 ------------
 This package requires either the dns (dnspython) or DNS (PyDNS/Py3DNS modules
-and either the ipaddr module or python3.3 and later.  It does not work with
-the ipaddress module backport.  For dnspython, at least version 1.16.0 is
-required.  The authres module is required to process and generate RFC 7601
-Authentication Results headers.  These can all be installed from pypi via pip.
-Additionally, they are also available via many distribution packaging systems.
-
-pyspf uses traditional python distutils, so dependencies are not installed
-automatically.  pyspf can be installed from pypi via pip or manually:
-
-After unpacking the source distribution, install this in your site-
-specific Python extension directory::
-
-	% python setup.py build
-	% su
-	# python setup.py install
+and either the ipaddress module or python3.3 and later.  For dnspython, at
+least version 1.16.0 is required.  The authres module is required to process
+and generate RFC 8601 Authentication Results headers.  These can all be
+installed from pypi via pip.  Additionally, they are also available via many
+distribution packaging systems.
 
 The minimum Python version required is python2.6.  The spf module in this
 version has been tested with python3 versions through python3.8.
@@ -194,6 +184,6 @@ http://www.wayforward.net/spf/
 Maintainers:
 Stuart Gathman stuart@gathman.org
 Scott Kitterman scott@kitterman.com
-http://cheeseshop.python.org/pypi/pyspf
+https://pypi.org/project/pyspf/
 
 Code is currently hosted at https://github.com/sdgathman/pyspf/
