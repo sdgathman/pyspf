@@ -13,22 +13,22 @@ try:
     # dnspython minimum version is for timeout support
     if (version.MAJOR, version.MINOR) >= (1,16):
         if sys.version_info[0] == 2:
-            install_req = ['dnspython>=1.16.0', 'authres', 'ipaddr']
+            install_req = ['dnspython>=1.16.0', 'authres', 'ipaddress']
         else:
             install_req = ['dnspython>=1.16.0', 'authres']
     # dnspython not present in sufficient version, so require PyDNS
     elif sys.version_info[0] == 2:
-        install_req = ['PyDNS', 'authres', 'ipaddr']
+        install_req = ['PyDNS', 'authres', 'ipaddress']
     else:
         install_req = ['Py3DNS', 'authres']
 except ImportError:  # If dnspython is not installed, require PyDNS
     if sys.version_info[0] == 2:
-        install_req = ['PyDNS', 'authres', 'ipaddr']
+        install_req = ['PyDNS', 'authres', 'ipaddress']
     else:
         install_req = ['Py3DNS', 'authres']
 
 setup(name='pyspf',
-      version='2.0.15',
+      version='2.1.0',
       description=DESC,
       long_description=LONG_DESC,
       long_description_content_type="text/markdown",

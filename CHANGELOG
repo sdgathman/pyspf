@@ -1,5 +1,8 @@
-Version 2.0.15
+Version 2.1.0
   * Switch to setuptools because "it's the future"
+  * Require ipaddress instead of ipaddr for python2
+  * Fix issue Getting list of ip networks fails if prefix is 32 or more,
+    GitHub #24
 
 Version 2.0.14 - January 1, 2020
   * Fix doctest for CNAME fixes to work with python and python3

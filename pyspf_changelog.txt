@@ -1,3 +1,10 @@
+# Revision 1.108.2.152  2016/04/26 03:57:04  kitterma
+#   * Set version and update changelog for 2.0.13 development.
+#
+# Revision 1.108.2.151  2016/04/26 03:53:04  kitterma
+#   * Catch ValueError due to improper IP address in connect IP or in ip4/ip6
+#     mechanisms
+#
 # Revision 1.108.2.150  2015/08/05 13:49:45  customdesigned
 # Forgot tabnanny
 #
