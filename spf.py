@@ -68,6 +68,7 @@ import sys
 import socket  # for inet_ntoa() and inet_aton()
 import struct  # for pack() and unpack()
 import time    # for time()
+
 try:
     import urllib.parse as urllibparse # for quote()
 except:
@@ -78,18 +79,10 @@ try:
     from email.message import Message
 except ImportError:
     from email.Message import Message
-try:
-    # Python standard library as of python3.3
-    import ipaddress
-    if bytes is str:
-      from ipaddress import Bytes
-except ImportError:
-    try:
-        import ipaddr as ipaddress
-        from ipaddr import Bytes
-    except ImportError:
-        print('ipaddr module required: http://code.google.com/p/ipaddr-py/')
-
+# Python standard library as of python3.3
+import ipaddress
+if bytes is str:
+  from ipaddress import Bytes
 
 def DNSLookup_pydns(name, qtype, strict=True, timeout=20):
 
@@ -1435,9 +1428,9 @@ class query(object):
                         if n < self.cidrmax:
                             self.iplist.append(network)
                         else:
-                            self.iplist.append(network.ip)
+                            self.iplist.append(network.ip_address)
             except AttributeError:
-                for netwrk in [ipaddress.IPNetwork(ip,strict=False) for ip in ipaddrs]:
+                for netwrk in [ipaddress.ip_network(ip,strict=False) for ip in ipaddrs]:
                     network = netwrk.supernet(new_prefix=n)
                     if isinstance(self.iplist, bool):
                         if network.__contains__(self.ipaddr):
@@ -1446,7 +1439,7 @@ class query(object):
                         if n < self.cidrmax:
                             self.iplist.append(network)
                         else:
-                            self.iplist.append(network.ip)
+                            self.iplist.append(network.network_address)
         except ValueError as x:
             raise PermError(str(x))
         return False
@@ -1999,7 +1992,7 @@ if __name__ == '__main__':
         if q.perm_error and q.perm_error.ext:
             print('lax:',q.perm_error.ext)
         if q.iplist:
-            for ip in q.iplist:
+            for ip in ipaddress.collapse_addresses(q.iplist):
                 print(ip)
     elif len(argv) == 4:
         i, s, h = argv[1:]
@@ -2012,7 +2005,7 @@ if __name__ == '__main__':
         if q.perm_error and q.perm_error.ext:
             print('lax:',q.perm_error.ext)
         if q.iplist:
-            for ip in q.iplist:
+            for ip in ipaddress.collapse_addresses(q.iplist):
                 print(ip)
     else:
         print(USAGE)
