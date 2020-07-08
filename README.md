@@ -54,7 +54,7 @@ updated to better support Max OS X.
 Description
 ===========
 SPF does email sender validation.  For more information about SPF,
-please see http://www.openspf.net/
+please see http://www.open-spf.org/
 
 One incompatible change was introduced in version 1.7.  Prior to version 1.7,
 connections from a local IP address (127...) would always return a Pass 

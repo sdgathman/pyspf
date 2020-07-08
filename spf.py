@@ -43,7 +43,7 @@ For news, bugfixes, etc. visit the home page for this implementation at
 # See pyspf_changelog.txt for earlier CVS commits.
 
 __author__ = "Terence Way, Stuart Gathman, Scott Kitterman"
-__email__ = "pyspf@openspf.org"
+__email__ = "pyspf@pymilter.org"
 __version__ = "2.1.0"
 MODULE = 'spf'
 

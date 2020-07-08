@@ -22,7 +22,7 @@ Provides:	pyspf
 
 %description
 SPF does email sender validation.  For more information about SPF,
-please see http://openspf.net
+please see http://open-spf.org
 
 This SPF client is intended to be installed on the border MTA, checking
 if incoming SMTP clients are permitted to send mail.  The SPF check
