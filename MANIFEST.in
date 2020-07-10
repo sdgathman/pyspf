@@ -2,6 +2,7 @@ include README*
 include MANIFEST.in
 include NOTES
 include CHANGELOG
+include LICENSE
 include spf.py
 include spfquery.py
 include type99.py

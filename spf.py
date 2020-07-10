@@ -5,7 +5,7 @@ from __future__ import print_function
 Copyright (c) 2003 Terence Way <terry@wayforward.net>
 Portions Copyright(c) 2004,2005,2006,2007,2008,2011,2012 Stuart Gathman <stuart@bmsi.com>
 Portions Copyright(c) 2005,2006,2007,2008,2011,2012,2013,2014 Scott Kitterman <scott@kitterman.com>
-Portions Copyright(c) 2013,2014 Stuart Gathman <stuart@gathman.org>
+Portions Copyright(c) 2013,2014,2020 Stuart Gathman <stuart@gathman.org>
 
 This module is free software, and you may redistribute it and/or modify
 it under the same terms as Python itself, so long as this copyright message
