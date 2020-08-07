@@ -1841,7 +1841,7 @@ def domainmatch(ptrs, domainsuffix):
     return False
 
 def expand_one(expansion, str, joiner):
-    if not str:
+    if not str or str.strip() == '':
         return expansion
     ln, reverse, delimiters = RE_ARGS.split(str)[1:4]
     if not delimiters:
