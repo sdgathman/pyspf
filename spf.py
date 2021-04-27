@@ -121,7 +121,13 @@ def DNSLookup_dnspython(name, qtype, tcpfallback=True, timeout=30):
     retVal = []
     try:
         # FIXME: how to disable TCP fallback in dnspython if not tcpfallback?
-        answers = dns.resolver.query(name, qtype, lifetime=timeout)
+        dns_version = dns.version.MAJOR+dns.version.MINOR/100
+        if dns_version<1.16:
+          answers = dns.resolver.query(name, qtype)
+        elif dns_version<2.0:
+          answers = dns.resolver.query(name, qtype, lifetime=timeout)
+        else: # >=2.0
+          answers = dns.resolver.resolve(name, qtype, lifetime=timeout)
         for rdata in answers:
             if qtype == 'A' or qtype == 'AAAA':
                 retVal.append(((name, qtype), rdata.address))
