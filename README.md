@@ -158,7 +158,7 @@ options are:
     logging, spf-received header construction, and providing useful rejection
     messages when messages are rejected due to SPF.
 
---default-explanation" or "-default-explanation" {explanation string}: Default
+"--default-explanation" or "-default-explanation" {explanation string}: Default
     Fail explanation string to be used.
 
 "--sanitize" or "-sanitize" and "--debug" or "-debug": These options are no-op
