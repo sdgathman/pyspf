@@ -1103,6 +1103,8 @@ class query(object):
         >>> q.p = 'mx.example.org'
         >>> q.expand('%{l}')
         'postmaster'
+        >>> q.expand('%{l')
+        '%{l'
 
         """
         # Check for invalid macro syntax
@@ -1125,7 +1127,7 @@ class query(object):
                 result += '%20'
             else:
                 letter = macro[2].lower()
-#                print letter
+#                print(letter)
                 if letter == 'p':
                     self.getp()
                 elif letter in 'crt' and stripdot:
@@ -1840,10 +1842,17 @@ def domainmatch(ptrs, domainsuffix):
 
     return False
 
-def expand_one(expansion, str, joiner):
-    if not str or str.strip() == '':
-        return expansion
-    ln, reverse, delimiters = RE_ARGS.split(str)[1:4]
+def expand_one(expansion, s, joiner=None):
+    """Expand one macro
+
+    Examples:
+    >>> expand_one('example.com','r')
+    'com.example'
+    >>> expand_one('strong-bad','-','.')
+    'strong.bad'
+    """
+    if not s: return expansion
+    ln, reverse, delimiters = RE_ARGS.split(s)[1:4]
     if not delimiters:
         delimiters = '.'
     expansion = split(expansion, delimiters, joiner)
