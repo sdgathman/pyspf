@@ -936,6 +936,8 @@ class query(object):
                 res = 'neutral'
                 continue
             elif m == 'all':
+                if result == 'pass':
+                  result = 'neutral'
                 break
 
             elif m == 'exists':
