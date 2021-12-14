@@ -1,0 +1,6 @@
+Check	Description		Justification
+E111	req indent 4		Creates more continuation lines
+E114	req indent 4 cmnt	Same
+E231	req space after ,	makes calls like print() harder to read
+E266	no ## 			Required by Doxygen
+W291	trailing spaces in cmnt	Needed for space preserving para reformat
