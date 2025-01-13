@@ -225,7 +225,7 @@ def makeSuite(filename):
   return suite
 
 def docsuite():
-  suite = unittest.makeSuite(SPFTestCases,'test')
+  suite = unittest.defaultTestLoader.loadTestsFromTestCase(SPFTestCases)
   try:
     import authres
   except:
