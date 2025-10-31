@@ -10,6 +10,8 @@ zonedata:
   - TXT: v=spf1 redirect=_spf.controlledmail.com
   parallel.kitterman.org:
   - TXT: v=spf1 include:long.kitterman.org include:cname.kitterman.org -all
+  kitterman.com:
+  - TXT: v=spf1 ip4:66.39.138.46 -all
   a.example.org:
     - TXT: "Another TXT record."
     - SPF: "v=spf1 ip4:192.0.2.225 ?include:webmail.pair.com ?include:relay.pair.com -all"
