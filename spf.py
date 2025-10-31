@@ -55,6 +55,9 @@ To test an SPF record:
     % python spf.py [-v] "v=spf1..." {ip} {sender} {helo}
     % python spf.py "v=spf1 +mx +ip4:10.0.0.1 -all" 10.0.0.1 tway@foo.com a    
 
+The helo parameter is only relevant if the record contains the '%{h}' macro.
+It does not check whether the HELO's record contains the IP.
+
 To fetch an SPF record:
     % python spf.py {domain}
     % python spf.py wayforward.net

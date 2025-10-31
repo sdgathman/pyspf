@@ -114,6 +114,9 @@ The RFC 4408/7208 compliant API::
 The first element in the tuple is one of 'pass', 'fail', 'neutral', 'softfail,
 'permerror', or 'temperror'.  The second is an explanation.
 
+For both APIs, the 'h=' parameter is only relevant if the record contains the
+'%{h}' macro. It does not check whether the HELO's record contains the IP.
+
 This package also provides two additional helper scripts; type99.py and 
 spfquery.py.  The type99.py script will convert DNS TXT strings to a binary 
 equivalent suitable for use in a BIND zone file.  The spfquery.py script is a
