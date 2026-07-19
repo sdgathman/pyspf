@@ -74,7 +74,7 @@ import time    # for time()
 
 try:
     import urllib.parse as urllibparse # for quote()
-except:
+except ImportError:
     import urllib as urllibparse
 import sys     # for version_info()
 from functools import reduce
@@ -164,7 +164,7 @@ try:
       dns.rdatatype._by_text['SPF'] = dns.rdatatype.SPF
 
     DNSLookup = DNSLookup_dnspython
-except:
+except ImportError:
     import DNS    # https://launchpad.net/pydns
 
     if not hasattr(DNS.Type, 'SPF'):
@@ -898,7 +898,7 @@ class query(object):
                         if exp and not recursion:
                             # only set explanation in base recursion level
                             self.set_explanation(exp)
-                    except: pass
+                    except Exception: pass
             elif mod == 'redirect':
                 self.check_lookups()
                 redirect = self.expand_domain(arg)
@@ -1286,7 +1286,7 @@ class query(object):
                         if len(ptrnames) == 0:
                             raise AmbiguityWarning(
                                 'No PTR records found for ptr mechanism', self.c)
-                except:
+                except Exception:
                     raise AmbiguityWarning(
                       'No PTR records found for ptr mechanism', self.c)
         else:
@@ -2028,3 +2028,4 @@ if __name__ == '__main__':
                 print(ip)
     else:
         print(USAGE)
+
